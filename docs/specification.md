@@ -181,7 +181,7 @@ Using MolRec as a library must never implicitly introduce dependencies on:
 ```text
 GitHub API
 GitHub Actions
-GitHub Pages
+Cloudflare Pages
 CI authentication
 index storage
 ```
@@ -878,7 +878,7 @@ server authentication
 runtime operational maintenance
 ```
 
-GitHub Pages supports custom GitHub Actions workflows in which site content is built, uploaded as a Pages artifact, and deployed separately.
+The site is built in this repository's CI — its own lockfile, its own node, its gates first — and the built directory is uploaded to Cloudflare Pages with wrangler. Building on the host's builders instead would put the build somewhere the gates do not reach.
 
 The intended architecture is therefore:
 
@@ -892,7 +892,7 @@ site build
 static assets
        │
        ▼
-GitHub Pages
+Cloudflare Pages
 ```
 
 The frontend performs snapshot comparison client-side.

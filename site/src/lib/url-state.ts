@@ -1,9 +1,11 @@
 /**
  * The address bar is the app's state.
  *
- * Hash-based, not pathname-based: this site is published to GitHub Pages under
- * a base path, and Pages serves 404 for any path it has no file for. A hash
- * needs no server rewrite and survives whatever `PUBLIC_BASE` is set to.
+ * Hash-based, not pathname-based. A static host serves 404 for any path it
+ * has no file for, so pathname routing needs a rewrite rule configured on the
+ * host; a hash needs nothing and survives whatever `PUBLIC_BASE` is set to.
+ * Cloudflare could do the rewrite with a `_redirects` file — this stays hash
+ * routing because it works without asking the host for anything.
  *
  *   #/molpy/conv?profile=linux-x86_64&snapshot=coverage-linux-x86_64-c3d4e5f
  *

@@ -1,0 +1,62 @@
+# Build the site and deploy it to Cloudflare Pages.
+#
+# The build happens here rather than on Cloudflare's builders so it uses this
+# repository's own lockfile and node, and so the gates run before anything is
+# published.
+name: Deploy site
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "data/**"
+      - "site/**"
+      - ".github/workflows/deploy.yml"
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+
+      # Nothing ships that has not type-checked and passed its tests.
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Cloudflare serves this at the root of the project domain. The
+          # GitHub Pages value was `/molcrafts-ci/` because Pages puts a repo
+          # under a subpath; keeping that here would 404 every asset.
+          PUBLIC_BASE: /
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: site
+          command: >-
+            pages deploy dist
+            --project-name=molcrafts-ci
+            --branch=${{ github.ref_name }}
