@@ -193,7 +193,7 @@ cd site && npm install && npm run dev
 ```
 
 - `npm run dev` — intercepts `/data/**` with `site/mock/*.mock.ts`
-- `npm run seed:mock` — `import molci as mci` ingest → `data/` + refreshes `site/mock/fixtures.ts`
+- `npm run seed:mock` — `import molci as mci` ingest → `.mock-data/` (gitignored) + refreshes `site/mock/fixtures.ts`. These snapshots carry invented commit SHAs, so they are kept out of the tracked `data/` tree.
 - `npm run dev:data` — skip mock plugin; serve real `public/data` from prepare-data
 
 Register an extra tab without editing the shell:

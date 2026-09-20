@@ -16,17 +16,20 @@ from pathlib import Path
 import molci as mci
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "data"
+# Deliberately NOT the tracked `data/`. These snapshots carry invented commit
+# SHAs and workflow ids; when they lived under `data/` they were committed and
+# published as if they were real history. The dev server reads fixtures.ts, not
+# this tree, so a scratch root serves the same purpose and cannot be committed.
+DATA = ROOT / ".mock-data"
 FIXTURES_TS = ROOT / "site" / "mock" / "fixtures.ts"
 
 MOCK_PROJECTS = ("molpy", "molrs", "molcrafts-molrec")
 
 
 def _clear_mock_trees() -> None:
-    for name in MOCK_PROJECTS:
-        for base in (DATA / "snapshots" / name, DATA / "index" / name):
-            if base.exists():
-                shutil.rmtree(base)
+    """The scratch root is rebuilt from scratch; ingest refuses to overwrite."""
+    if DATA.exists():
+        shutil.rmtree(DATA)
 
 
 def _entry(

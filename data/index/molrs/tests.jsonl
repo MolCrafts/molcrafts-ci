@@ -1,1 +1,0 @@
-{"commit": "e5f60718293a4b5c6d7e8f9012345678", "generation": 1, "path": "snapshots/molrs/tests/1/tests-linux-x86_64-e5f60718293a.json", "producer": "cargo-nextest", "profile": "linux-x86_64", "record": "tests", "ref": "refs/heads/main", "repository": "MolCrafts/molrs", "snapshot_id": "tests-linux-x86_64-e5f60718293a", "timestamp": "2026-09-20T10:22:00Z", "workflow_run": 448}
