@@ -10,7 +10,15 @@ from pathlib import Path
 from typing import Any
 
 from molcrafts_ci.gate import GateResult
+from molcrafts_ci.manifest import Manifest, Tracking
 from molcrafts_ci.persist import ingest_snapshot, read_snapshot, snapshot_path
+from molcrafts_ci.producers import (
+    detect_profile,
+    github_source,
+    read_coverage_py,
+    read_junit,
+    read_lcov,
+)
 from molcrafts_ci.snapshot import Snapshot
 
 
@@ -93,6 +101,48 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
     return _each(args.path, handle)
 
 
+def _cmd_snapshot(args: argparse.Namespace) -> int:
+    if not args.junit and not args.coverage:
+        print(
+            json.dumps({"ok": False, "error": "nothing to build: pass --junit and/or --coverage"}),
+            file=sys.stderr,
+        )
+        return 2
+
+    source = github_source(require_commit=args.track)
+    profile = args.profile or detect_profile()
+    out_dir = Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    def build(record: str, producer: str, payload: dict[str, Any]) -> dict[str, Any]:
+        snapshot = Snapshot(
+            manifest=Manifest(
+                record=record,
+                source=source,
+                producer=producer,
+                profile=profile,
+                tracking=Tracking(enabled=args.track, generation=args.generation),
+            ),
+            payload=payload,
+        )
+        path = out_dir / f"{record}.json"
+        path.write_text(snapshot.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        return {
+            "ok": True,
+            "record": record,
+            "path": str(path),
+            "snapshot_id": snapshot.snapshot_id(),
+            "tracking": args.track,
+        }
+
+    if args.junit:
+        _emit(build("tests", args.tests_producer, read_junit(Path(args.junit))))
+    if args.coverage:
+        read = read_lcov if args.coverage_format == "lcov" else read_coverage_py
+        _emit(build("coverage", args.coverage_producer, read(Path(args.coverage))))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="molcrafts-ci")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -121,6 +171,31 @@ def main(argv: list[str] | None = None) -> int:
         help="Report untracked snapshots instead of failing on them",
     )
     p_in.set_defaults(func=_cmd_ingest)
+
+    p_sn = sub.add_parser(
+        "snapshot",
+        help="Build tests/coverage Snapshots from a test run's native output",
+    )
+    p_sn.add_argument("--out", required=True, help="Directory to write the snapshots into")
+    p_sn.add_argument("--junit", help="JUnit XML (pytest --junitxml, cargo-nextest)")
+    p_sn.add_argument("--coverage", help="Coverage report; see --coverage-format")
+    p_sn.add_argument(
+        "--coverage-format",
+        choices=["coverage.py", "lcov"],
+        default="coverage.py",
+        help="coverage.py JSON (default) or an LCOV tracefile (cargo-llvm-cov, grcov)",
+    )
+    p_sn.add_argument("--tests-producer", default="pytest")
+    p_sn.add_argument("--coverage-producer", default="coverage.py")
+    p_sn.add_argument("--profile", help="Override the detected <os>-<arch> profile")
+    p_sn.add_argument("--generation", type=int, default=1)
+    p_sn.add_argument(
+        "--track",
+        action="store_true",
+        help="Mark the snapshots as project history. Only a push to the default "
+        "branch should do this; a pull request must not.",
+    )
+    p_sn.set_defaults(func=_cmd_snapshot)
 
     args = parser.parse_args(argv)
     try:

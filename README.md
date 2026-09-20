@@ -43,7 +43,34 @@ mci.ingest_snapshot(Path("data"), "molpy", snap)
 ```bash
 molci validate-snapshot path/to/snapshot.json
 molci ingest path/to/snapshot.json --project molpy --data-root data
+molci snapshot --out out/ --junit junit.xml --coverage coverage.json
 ```
+
+### `molci snapshot`
+
+Turns a test run's native output into `tests` and `coverage` snapshots, so a
+producer repository does not carry its own adapter:
+
+```bash
+# Python: pytest --junitxml=junit.xml --cov-report=json:coverage.json
+molci snapshot --out out/ --junit junit.xml --coverage coverage.json --track
+
+# Rust: cargo llvm-cov nextest --lcov --output-path lcov.info --profile ci
+molci snapshot --out out/ \
+  --junit target/nextest/ci/junit.xml \
+  --coverage lcov.info --coverage-format lcov \
+  --tests-producer cargo-nextest --coverage-producer cargo-llvm-cov --track
+```
+
+JUnit XML is the common format — pytest and cargo-nextest both emit it.
+Coverage is read from coverage.py's JSON or an LCOV tracefile
+(`cargo-llvm-cov`, `grcov`, `gcov`). Provenance comes from the `GITHUB_*`
+environment; `--track` refuses to run without a real `GITHUB_SHA`, so a
+placeholder commit can never enter published history.
+
+These two payload shapes are infrastructure, not domain semantics: the frontend
+already reads them without being told which record it is looking at. A
+benchmark payload is **not** built here — that belongs to its domain.
 
 ## Submitting data from another repository
 
@@ -92,9 +119,7 @@ Action, in `.github/workflows/ci.yml`:
 ```
 
 So the publish path runs on every push to master, not only when a downstream
-repository adopts it. `scripts/ci_snapshot.py` is the producer: it reads
-pytest's JUnit XML and coverage.py's JSON and owns those payload shapes —
-`molcrafts_ci` never interprets a payload.
+repository adopts it.
 
 Two things make the self-hosted case different from a downstream one:
 

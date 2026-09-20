@@ -32,9 +32,9 @@ jobs:
       - run: python scripts/check_repo.py
 
       # molcrafts-ci is its own first producer: it publishes what this run
-      # measured through the same Action downstream repositories call, so the
-      # publish path is exercised on every push instead of only when someone
-      # else adopts it.
+      # measured through the same Action and the same `molci snapshot` adapter
+      # downstream repositories call, so both are exercised on every push
+      # instead of only when someone else adopts them.
       #
       # These run even when a gate above failed, because a run whose tests went
       # red is exactly the run whose test record is worth keeping. The gate has
@@ -51,10 +51,10 @@ jobs:
         # request produces the same snapshots untracked, which submit validates
         # and uploads without publishing.
         run: |
-          python scripts/ci_snapshot.py \
+          molci snapshot \
+            --out .ci-out/snapshots \
             --junit .ci-out/junit.xml \
             --coverage .ci-out/coverage.json \
-            --out .ci-out/snapshots \
             ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master') && '--track' || '' }}
 
       - name: Publish to the index

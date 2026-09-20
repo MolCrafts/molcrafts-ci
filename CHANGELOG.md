@@ -47,6 +47,22 @@ snapshot, so this is a patch, not a minor.
 
 ### Changed
 
+- **`molci snapshot`** builds `tests` and `coverage` snapshots from a test run's
+  native output, so a producer repository no longer carries its own adapter.
+  JUnit XML covers pytest and cargo-nextest; coverage is read from coverage.py
+  JSON or an LCOV tracefile (`cargo-llvm-cov`, `grcov`). `scripts/ci_snapshot.py`
+  is gone — this repository's own CI uses the command it ships.
+
+  These two payload shapes are infrastructure rather than domain semantics: the
+  frontend already reads them without being told which record it is looking at.
+  Benchmark payloads remain the domain's.
+- The seeded mock data under `data/` was deleted, and `seed_mock_data.py` now
+  writes to a gitignored `.mock-data/` root. Those snapshots carried invented
+  commit SHAs (`a1b2c3d4…`), a `ref` of `refs/heads/main` for repositories that
+  are on `master`, and made-up run ids, and the published site presented them as
+  project history. `site/mock/fixtures.ts` is unchanged, so dev mocking is not
+  affected.
+
 - Every referenced Action moved to its current major: `checkout` v4 to v7,
   `setup-python` v5 to v7, `setup-node` v4 to v7, `upload-artifact` v4 to v7,
   `download-artifact` v4 to v8, `create-github-app-token` v2 to v3.
