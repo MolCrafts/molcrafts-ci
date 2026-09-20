@@ -139,6 +139,10 @@ one of:
 The Action fails with an explicit message when a tracked snapshot arrives
 without a credential, rather than going green having published nothing.
 
+The Actions it calls run on Node 24, so a **self-hosted** runner must be at
+least Actions Runner 2.327.1; GitHub-hosted runners already are. Behind an HTTP
+proxy, `create-github-app-token` v3 needs `NODE_USE_ENV_PROXY=1` on the step.
+
 If the index branch is protected, the App or PAT identity needs to be allowed to
 bypass the rule — otherwise every ingest is rejected five times and the
 producer's job fails.

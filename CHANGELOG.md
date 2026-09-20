@@ -45,6 +45,24 @@ snapshot, so this is a patch, not a minor.
 - CI now lints `scripts/` alongside `src` and `tests`, matching what the
   pre-commit hooks already covered.
 
+### Changed
+
+- Every referenced Action moved to its current major: `checkout` v4 to v7,
+  `setup-python` v5 to v7, `setup-node` v4 to v7, `upload-artifact` v4 to v7,
+  `download-artifact` v4 to v8, `create-github-app-token` v2 to v3.
+  `pypa/gh-action-pypi-publish` stays on `release/v1`, the moving pin its
+  maintainers publish.
+
+  These run on Node 24 and so **require Actions Runner 2.327.1 or later**.
+  GitHub-hosted runners qualify; a downstream repository on an older
+  self-hosted runner has to update it before calling `actions/submit`. Two
+  breaking changes in that range do not reach this repository:
+  `download-artifact` v5 changed the output path only for downloads **by id**,
+  and `release.yml` downloads by name; `setup-python` v7 dropped the
+  `pip-install` input, which nothing here used. `create-github-app-token` v3
+  removed custom proxy handling, so a proxied runner now needs
+  `NODE_USE_ENV_PROXY=1`.
+
 ### Removed
 
 - **`ingest.yml`.** The reusable workflow could not have worked: a called
