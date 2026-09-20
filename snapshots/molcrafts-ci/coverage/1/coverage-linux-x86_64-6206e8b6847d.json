@@ -1,0 +1,116 @@
+{
+  "manifest": {
+    "producer": "coverage.py",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "coverage",
+    "schema_version": "1",
+    "source": {
+      "commit": "6206e8b6847d1ecced71ab6d9ab5ba6aa1a467c7",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molcrafts-ci",
+      "run_attempt": 1,
+      "timestamp": "2026-09-20T20:01:40Z",
+      "workflow_run": 35534179487
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "files": [
+      {
+        "lines": 80.0,
+        "path": "src/molcrafts_ci/__init__.py",
+        "uncovered": [
+          23,
+          24
+        ]
+      },
+      {
+        "lines": 71.4,
+        "path": "src/molcrafts_ci/cli.py",
+        "uncovered": [
+          75,
+          76,
+          77,
+          115,
+          116,
+          120,
+          122,
+          123,
+          124,
+          125,
+          127,
+          128,
+          138,
+          139,
+          140,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153,
+          154,
+          155,
+          221,
+          222,
+          223,
+          227
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/gate.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/index.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/jsonutil.py",
+        "uncovered": []
+      },
+      {
+        "lines": 93.5,
+        "path": "src/molcrafts_ci/manifest.py",
+        "uncovered": [
+          48,
+          49
+        ]
+      },
+      {
+        "lines": 96.0,
+        "path": "src/molcrafts_ci/persist.py",
+        "uncovered": [
+          78
+        ]
+      },
+      {
+        "lines": 93.6,
+        "path": "src/molcrafts_ci/producers.py",
+        "uncovered": [
+          59,
+          60,
+          158,
+          163
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/snapshot.py",
+        "uncovered": []
+      }
+    ],
+    "totals": {
+      "branches": 79.7,
+      "lines": 87.8
+    }
+  }
+}
