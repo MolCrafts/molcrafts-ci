@@ -18,7 +18,7 @@ will never be rewritten.
 | Archetype | `workbench` |
 | Default theme | light (`.dark` palette defined, no toggle wired yet) |
 | Token layer | `site/src/styles/tokens.css` + the `@theme inline` block in `site/src/styles/tailwind.css` |
-| Last ladder stage applied | `motion` on 2026-09-20 — the full ladder (1–7) is applied |
+| Last ladder stage applied | `skeleton` re-opened and re-applied on 2026-09-20 — stages 3–7 still hold; stage 2 `info` is the next position |
 
 ## Accent
 
@@ -298,6 +298,30 @@ Only rows from `visual-language.md` § 8 may appear here.
 | Layout topology | navigator + tabbed work surface + inspector + dock | Snapshot streams are tabs of one project, not routes |
 | Panel behavior | fixed and resizable, persisted | Workbench default |
 
+## Ownership boundary — what `sync-ui` overwrites
+
+`npm run build` runs `sync-ui` first, which copies these from the sibling
+`molcrafts-ui` checkout and **silently reverts any local edit**:
+
+```
+src/components/ui/*.tsx      (button, tabs, table, scroll-area, empty-state,
+                              separator, tooltip, resizable, context-menu)
+src/components/blocks/content-section.tsx
+src/components/layout/ExplorerShell.tsx
+src/lib/utils.ts
+src/styles/constitution-base.css
+src/styles/constitution-theme.css
+```
+
+Everything else is this product's, including `styles/tokens.css` and
+`styles/tailwind.css`. A defect in a synced file is fixed either in
+molcrafts-ui or — when the fix can be expressed as style — in this product's
+own stylesheet. It is never fixed in place: the next build undoes it.
+
+This was learned the hard way. The ScrollArea overflow below was first patched
+in `components/ui/scroll-area.tsx`, typechecked clean, and was gone by the end
+of the same build.
+
 ## Known debt
 
 Everything below is blocked on something this session could not reach, or is
@@ -307,6 +331,9 @@ a toolchain decision rather than a fix.
 |---|---|---|
 | Hover, focus, transitions and the trend charts' geometry have never been looked at. No browser automation is reachable here, so they are covered by types, build and static scan only. The layout and flows *were* reviewed by the author running it — that is what caught the inspector never opening and the table rows not being clickable | — | 🟡 |
 | No screenshot baselines on the shell or the product components. They are the only thing that would catch those two defects automatically, and they need the same missing browser automation | — | 🟡 |
+| `ScrollArea` renders no horizontal `ScrollBar`, and Radix hides the native one on its viewport. Harmless now that the viewport no longer grows — overflow scrolls inside each table's own container, which keeps its scrollbar — but the fix belongs in molcrafts-ui, which this skill may not edit in the same run | `skeleton` | 🟡 |
+| Below ~520px the navigator would have to leave the layout too. The inspector now yields at 1024px; the navigator cannot, because there is no other way to reach a project. That needs a product decision, not a layout one | `skeleton` | 🟡 |
+| The information-design section below still describes the overview skeleton that commit `4fc5fbb` deleted (MetaStrip → StatusInline → primary table). Code and this record disagree until stage `info` runs | `info` | 🟡 |
 
 Cleared on 2026-09-20: bundled fonts, the four unused tokens, the dark-theme
 toggle, `ruff format` drift, the stale `site/public/data` (fixed at the

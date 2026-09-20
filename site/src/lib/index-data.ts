@@ -41,7 +41,11 @@ export function projectsFromListing(listing: IndexListing): ProjectContext[] {
 export async function loadIndexListing(): Promise<IndexListing> {
   const res = await fetch(dataUrl("index-listing.json"), { cache: "no-store" });
   if (!res.ok) {
-    return { indexes: [] };
+    // Returning an empty listing here told the reader that CI had published
+    // nothing, when the truth was that the site could not read it. Since the
+    // index moved to the `data` branch this is a cross-origin request to a
+    // CDN, so the difference is one a reader will actually meet.
+    throw new Error(`Cannot read the index listing: ${res.status} ${res.statusText}`);
   }
   const data = (await res.json()) as IndexListing;
   return { indexes: data.indexes ?? [] };

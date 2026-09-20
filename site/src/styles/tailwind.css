@@ -156,4 +156,22 @@
       transition-duration: 0.01ms !important;
     }
   }
+  /*
+   * Radix ScrollArea's viewport must not shrink-to-fit its content.
+   *
+   * The primitive wraps children in `<div style="min-width:100%;display:table">`.
+   * A `display:table` box with `width:auto` sizes to max-content, and the
+   * max-content of an `overflow-x-auto` table container is the *full* table
+   * width — so the viewport grew instead of the table scrolling. Measured at a
+   * 896px viewport with one coverage payload: 16,232px wide, with three of the
+   * four coverage measures pushed off-screen and no scrollbar to say so, since
+   * Radix also sets `scrollbar-width:none` on that element.
+   *
+   * This lives here rather than in `components/ui/scroll-area.tsx` because
+   * `sync-ui` copies that file from molcrafts-ui and would revert the fix on
+   * the next build. The styles this product owns are the right layer for it.
+   */
+  [data-radix-scroll-area-viewport] > div {
+    display: block !important;
+  }
 }

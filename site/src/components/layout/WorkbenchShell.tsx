@@ -6,6 +6,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
 
 interface DockControls {
@@ -79,6 +80,18 @@ export function WorkbenchShell({
   const dockRef = useRef<PanelImperativeHandle | null>(null);
   const [dockCollapsed, setDockCollapsed] = useState(true);
 
+  /*
+   * The inspector leaves the layout before the layout breaks.
+   *
+   * navigator 180 + work 320 + inspector 280 floors the group at ~780px while
+   * the document allows 320px, so between those widths the panels cannot be
+   * satisfied and the page scrolls sideways. The inspector is context for a
+   * selection, not the work itself, so it is the region that yields. Below
+   * ~520px the navigator would have to yield too — that needs a way to reach
+   * projects without it, which is a product decision, not a layout one.
+   */
+  const roomForInspector = useMediaQuery("(min-width: 1024px)");
+
   const toggle = () => {
     const panel = dockRef.current;
     if (!panel) return;
@@ -103,7 +116,9 @@ export function WorkbenchShell({
             /* The id set keys the persisted layout, so hiding the inspector
                does not overwrite the three-column one. */
             autoSavePanelIds={
-              inspector ? ["navigator", "work", "inspector"] : ["navigator", "work"]
+              inspector && roomForInspector
+                ? ["navigator", "work", "inspector"]
+                : ["navigator", "work"]
             }
             className="min-h-0"
           >
@@ -116,7 +131,7 @@ export function WorkbenchShell({
             <ResizablePanel id="work" minSize="320px">
               <Region>{children}</Region>
             </ResizablePanel>
-            {inspector && (
+            {inspector && roomForInspector && (
               <>
                 <ResizableHandle />
                 <ResizablePanel

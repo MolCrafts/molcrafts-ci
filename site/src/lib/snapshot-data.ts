@@ -86,7 +86,12 @@ export async function fetchRecordEntries(
     `index/${encodeURIComponent(projectId)}/${encodeURIComponent(record)}.jsonl`,
   );
   const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) return [];
+  // The listing said this index exists, so a non-OK response is a failure to
+  // read it, not an absence of history. Rendering it as "no snapshots" blamed
+  // the producer for the reader's problem.
+  if (!res.ok) {
+    throw new Error(`Cannot read ${record} for ${projectId}: ${res.status} ${res.statusText}`);
+  }
   const entries: IndexEntry[] = [];
   for (const line of (await res.text()).split("\n")) {
     const trimmed = line.trim();
@@ -100,12 +105,19 @@ export async function fetchRecordEntries(
   return entries;
 }
 
+/**
+ * One snapshot body, or null.
+ *
+ * Total on purpose — it never rejects. One unreadable body should cost its own
+ * panel, not the page: callers render "body unavailable" and move on. A
+ * rejection used to escape here and leave every caller's `settled` flag false,
+ * so a transient CDN failure left a skeleton on screen forever.
+ */
 export async function fetchSnapshot<P>(entry: IndexEntry): Promise<Snapshot<P> | null> {
   if (!entry.path) return null;
-  const url = dataUrl(entry.path);
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) return null;
   try {
+    const res = await fetch(dataUrl(entry.path), { cache: "no-store" });
+    if (!res.ok) return null;
     return (await res.json()) as Snapshot<P>;
   } catch {
     return null;

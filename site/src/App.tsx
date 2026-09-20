@@ -104,9 +104,12 @@ function Workbench({
       header={
         /* Identity once, then the breadcrumb and nothing else. */
         <header className="flex h-header shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
-          <p className="shrink-0 text-title font-semibold tracking-tight">
+          {/* The product name is the document's only h1. Without it the
+              heading outline started at h2 (sections, navigator) and screen
+              reader heading navigation had no top-level entry point. */}
+          <h1 className="shrink-0 text-title font-semibold tracking-tight">
             <span className="font-medium text-muted-foreground">MolCrafts</span> CI
-          </p>
+          </h1>
           {selected && (
             <>
               <Separator orientation="vertical" className="h-5" />
