@@ -5,8 +5,9 @@
 # no second pinned version to drift. They resolve from `pip install -e ".[dev]"`
 # and `site/node_modules`.
 #
-# Not here: `npm run build` (publish.yml). It syncs the UI registry, stages
-# data and bundles — too slow for every commit, and CI covers it on push.
+# `npm run build` is here: measured at 6.8s, cheaper than the typecheck and
+# half the cost of pytest. It was left out on an assumption that turned out
+# to be wrong.
 
 default_install_hook_types: [pre-commit]
 
@@ -60,5 +61,23 @@ repos:
         entry: npm --prefix site test
         language: system
         files: ^site/(src/|tests/|rstest\.config\.ts|package\.json)
+        pass_filenames: false
+        require_serial: true
+
+      - id: site-build
+        name: rsbuild build (site)
+        entry: npm --prefix site run build
+        language: system
+        files: ^(site/(src/|scripts/|public/|rsbuild\.config\.ts|package\.json)|data/)
+        pass_filenames: false
+        require_serial: true
+
+      # Invariants a formatter and a type checker cannot see. Each one is
+      # here because the thing it looks for already shipped and broke.
+      - id: repo-invariants
+        name: repository invariants
+        entry: python3 scripts/check_repo.py
+        language: system
+        files: ^(\.github/workflows/|site/src/.*\.tsx$|scripts/check_repo\.py)
         pass_filenames: false
         require_serial: true
