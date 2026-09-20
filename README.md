@@ -26,7 +26,7 @@ import molci as mci
 
 snap = mci.Snapshot(
     manifest=mci.Manifest(
-        kind="benchmark",
+        record="benchmark",
         source=mci.Source(repository="MolCrafts/molpy", commit="abc1234"),
         producer="pytest-benchmark",
         tracking=mci.Tracking(enabled=True, generation=1),
@@ -70,7 +70,7 @@ registerPlugin({
   id: "api",
   label: "API",
   order: 60,
-  available: (ctx) => ctx.kinds.includes("api"),
+  available: (ctx) => ctx.records.includes("api"),
   Component: ({ project }) => <div>{project.id}</div>,
 });
 ```

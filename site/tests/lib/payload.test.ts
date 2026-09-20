@@ -58,7 +58,7 @@ describe("readCoverage", () => {
 });
 
 describe("readMeasure", () => {
-  it("picks the number worth plotting, per shape not per kind name", () => {
+  it("picks the number worth plotting, per shape not per record name", () => {
     expect(readMeasure(TESTS)).toMatchObject({ label: "passed", value: 418 });
     expect(readMeasure(COVERAGE)).toMatchObject({ label: "lines", value: 82.3, unit: "%" });
     expect(readMeasure(BENCH_PYTEST)).toMatchObject({ label: "mean", value: 12.5, unit: "ns" });

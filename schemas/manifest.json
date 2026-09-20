@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://molcrafts.org/schemas/ci/manifest/v1.json",
+  "$id": "https://molcrafts.org/schemas/ci/manifest.json",
   "title": "Manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "kind", "source", "producer"],
+  "required": ["schema_version", "record", "source", "producer"],
   "properties": {
     "schema_version": { "type": "string" },
-    "kind": { "type": "string", "minLength": 1 },
+    "record": { "type": "string", "minLength": 1 },
     "source": {
       "type": "object",
       "additionalProperties": false,

@@ -6,7 +6,7 @@
 export type IndexEntry = {
   snapshot_id: string;
   path: string;
-  kind: string;
+  record: string;
   generation: number;
   profile: string;
   repository: string;
@@ -30,10 +30,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "0718293a4b5c6d7e8f90123456789012",
         "generation": 1,
-        "kind": "coverage",
         "path": "snapshots/molcrafts-molrec/coverage/1/coverage-default-0718293a4b5c.json",
         "producer": "coverage.py",
         "profile": "default",
+        "record": "coverage",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molcrafts-molrec",
         "snapshot_id": "coverage-default-0718293a4b5c",
@@ -45,10 +45,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "0718293a4b5c6d7e8f90123456789012",
         "generation": 1,
-        "kind": "molrec",
         "path": "snapshots/molcrafts-molrec/molrec/1/molrec-default-0718293a4b5c.json",
         "producer": "molrec",
         "profile": "default",
+        "record": "molrec",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molcrafts-molrec",
         "snapshot_id": "molrec-default-0718293a4b5c",
@@ -60,10 +60,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "0718293a4b5c6d7e8f90123456789012",
         "generation": 1,
-        "kind": "tests",
         "path": "snapshots/molcrafts-molrec/tests/1/tests-default-0718293a4b5c.json",
         "producer": "pytest",
         "profile": "default",
+        "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molcrafts-molrec",
         "snapshot_id": "tests-default-0718293a4b5c",
@@ -75,10 +75,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
         "generation": 1,
-        "kind": "benchmark",
         "path": "snapshots/molpy/benchmark/1/benchmark-linux-x86_64-c3d4e5f60718.json",
         "producer": "pytest-benchmark",
         "profile": "linux-x86_64",
+        "record": "benchmark",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
         "snapshot_id": "benchmark-linux-x86_64-c3d4e5f60718",
@@ -90,10 +90,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
         "generation": 1,
-        "kind": "coverage",
         "path": "snapshots/molpy/coverage/1/coverage-linux-x86_64-c3d4e5f60718.json",
         "producer": "coverage.py",
         "profile": "linux-x86_64",
+        "record": "coverage",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
         "snapshot_id": "coverage-linux-x86_64-c3d4e5f60718",
@@ -105,10 +105,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
         "generation": 1,
-        "kind": "regression",
         "path": "snapshots/molpy/regression/1/regression-linux-x86_64-c3d4e5f60718.json",
         "producer": "molpy-numerical",
         "profile": "linux-x86_64",
+        "record": "regression",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
         "snapshot_id": "regression-linux-x86_64-c3d4e5f60718",
@@ -120,10 +120,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "a1b2c3d4e5f6789012345678abcdef01",
         "generation": 1,
-        "kind": "tests",
         "path": "snapshots/molpy/tests/1/tests-linux-x86_64-a1b2c3d4e5f6.json",
         "producer": "pytest",
         "profile": "linux-x86_64",
+        "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
         "snapshot_id": "tests-linux-x86_64-a1b2c3d4e5f6",
@@ -133,10 +133,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
         "generation": 1,
-        "kind": "tests",
         "path": "snapshots/molpy/tests/1/tests-linux-x86_64-c3d4e5f60718.json",
         "producer": "pytest",
         "profile": "linux-x86_64",
+        "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
         "snapshot_id": "tests-linux-x86_64-c3d4e5f60718",
@@ -148,10 +148,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "e5f60718293a4b5c6d7e8f9012345678",
         "generation": 1,
-        "kind": "benchmark",
         "path": "snapshots/molrs/benchmark/1/benchmark-linux-x86_64-e5f60718293a.json",
         "producer": "criterion",
         "profile": "linux-x86_64",
+        "record": "benchmark",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
         "snapshot_id": "benchmark-linux-x86_64-e5f60718293a",
@@ -161,10 +161,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "e5f60718293a4b5c6d7e8f9012345678",
         "generation": 1,
-        "kind": "benchmark",
         "path": "snapshots/molrs/benchmark/1/benchmark-macos-aarch64-e5f60718293a.json",
         "producer": "criterion",
         "profile": "macos-aarch64",
+        "record": "benchmark",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
         "snapshot_id": "benchmark-macos-aarch64-e5f60718293a",
@@ -176,10 +176,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "e5f60718293a4b5c6d7e8f9012345678",
         "generation": 1,
-        "kind": "coverage",
         "path": "snapshots/molrs/coverage/1/coverage-linux-x86_64-e5f60718293a.json",
         "producer": "llvm-cov",
         "profile": "linux-x86_64",
+        "record": "coverage",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
         "snapshot_id": "coverage-linux-x86_64-e5f60718293a",
@@ -191,10 +191,10 @@ export const fixtures: MockFixtures = {
       {
         "commit": "e5f60718293a4b5c6d7e8f9012345678",
         "generation": 1,
-        "kind": "tests",
         "path": "snapshots/molrs/tests/1/tests-linux-x86_64-e5f60718293a.json",
         "producer": "cargo-nextest",
         "profile": "linux-x86_64",
+        "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
         "snapshot_id": "tests-linux-x86_64-e5f60718293a",
@@ -218,10 +218,10 @@ export const fixtures: MockFixtures = {
   "snapshots": {
     "snapshots/molcrafts-molrec/coverage/1/coverage-default-0718293a4b5c.json": {
       "manifest": {
-        "kind": "coverage",
         "producer": "coverage.py",
         "profile": "default",
         "provenance": {},
+        "record": "coverage",
         "schema_version": "1",
         "source": {
           "commit": "0718293a4b5c6d7e8f90123456789012",
@@ -267,10 +267,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molcrafts-molrec/molrec/1/molrec-default-0718293a4b5c.json": {
       "manifest": {
-        "kind": "molrec",
         "producer": "molrec",
         "profile": "default",
         "provenance": {},
+        "record": "molrec",
         "schema_version": "1",
         "source": {
           "commit": "0718293a4b5c6d7e8f90123456789012",
@@ -292,10 +292,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molcrafts-molrec/tests/1/tests-default-0718293a4b5c.json": {
       "manifest": {
-        "kind": "tests",
         "producer": "pytest",
         "profile": "default",
         "provenance": {},
+        "record": "tests",
         "schema_version": "1",
         "source": {
           "commit": "0718293a4b5c6d7e8f90123456789012",
@@ -318,10 +318,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molpy/benchmark/1/benchmark-linux-x86_64-c3d4e5f60718.json": {
       "manifest": {
-        "kind": "benchmark",
         "producer": "pytest-benchmark",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "benchmark",
         "schema_version": "1",
         "source": {
           "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
@@ -345,10 +345,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molpy/coverage/1/coverage-linux-x86_64-c3d4e5f60718.json": {
       "manifest": {
-        "kind": "coverage",
         "producer": "coverage.py",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "coverage",
         "schema_version": "1",
         "source": {
           "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
@@ -394,10 +394,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molpy/regression/1/regression-linux-x86_64-c3d4e5f60718.json": {
       "manifest": {
-        "kind": "regression",
         "producer": "molpy-numerical",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "regression",
         "schema_version": "1",
         "source": {
           "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
@@ -419,10 +419,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molpy/tests/1/tests-linux-x86_64-a1b2c3d4e5f6.json": {
       "manifest": {
-        "kind": "tests",
         "producer": "pytest",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "tests",
         "schema_version": "1",
         "source": {
           "commit": "a1b2c3d4e5f6789012345678abcdef01",
@@ -445,10 +445,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molpy/tests/1/tests-linux-x86_64-c3d4e5f60718.json": {
       "manifest": {
-        "kind": "tests",
         "producer": "pytest",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "tests",
         "schema_version": "1",
         "source": {
           "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
@@ -471,10 +471,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molrs/benchmark/1/benchmark-linux-x86_64-e5f60718293a.json": {
       "manifest": {
-        "kind": "benchmark",
         "producer": "criterion",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "benchmark",
         "schema_version": "1",
         "source": {
           "commit": "e5f60718293a4b5c6d7e8f9012345678",
@@ -496,10 +496,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molrs/benchmark/1/benchmark-macos-aarch64-e5f60718293a.json": {
       "manifest": {
-        "kind": "benchmark",
         "producer": "criterion",
         "profile": "macos-aarch64",
         "provenance": {},
+        "record": "benchmark",
         "schema_version": "1",
         "source": {
           "commit": "e5f60718293a4b5c6d7e8f9012345678",
@@ -521,10 +521,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molrs/coverage/1/coverage-linux-x86_64-e5f60718293a.json": {
       "manifest": {
-        "kind": "coverage",
         "producer": "llvm-cov",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "coverage",
         "schema_version": "1",
         "source": {
           "commit": "e5f60718293a4b5c6d7e8f9012345678",
@@ -570,10 +570,10 @@ export const fixtures: MockFixtures = {
     },
     "snapshots/molrs/tests/1/tests-linux-x86_64-e5f60718293a.json": {
       "manifest": {
-        "kind": "tests",
         "producer": "cargo-nextest",
         "profile": "linux-x86_64",
         "provenance": {},
+        "record": "tests",
         "schema_version": "1",
         "source": {
           "commit": "e5f60718293a4b5c6d7e8f9012345678",

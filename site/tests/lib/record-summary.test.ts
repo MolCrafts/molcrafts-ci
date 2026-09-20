@@ -1,12 +1,12 @@
 import { describe, expect, it } from "@rstest/core";
 
 import type { IndexEntry, Snapshot } from "@/lib/snapshot-data";
-import { headlineOf, summarise, toHistory, verdictOf } from "@/lib/stream-summary";
+import { headlineOf, profilesOf, summarise, toHistory, verdictOf } from "@/lib/record-summary";
 
 const entry = (over: Partial<IndexEntry> = {}): IndexEntry => ({
   snapshot_id: "s1",
   path: "snapshots/x.json",
-  kind: "tests",
+  record: "tests",
   generation: 1,
   profile: "linux-x86_64",
   commit: "c3d4e5f60718293a4b5c6d7e8f901234",
@@ -109,5 +109,61 @@ describe("summarise", () => {
     expect(s.status).toBe("draft");
     expect(s.entry).toBeNull();
     expect(s.history).toEqual([]);
+  });
+});
+
+describe("profilesOf", () => {
+  it("lists each profile once, sorted", () => {
+    expect(
+      profilesOf([
+        entry({ profile: "macos-aarch64" }),
+        entry({ profile: "linux-x86_64" }),
+        entry({ profile: "linux-x86_64" }),
+      ]),
+    ).toEqual(["linux-x86_64", "macos-aarch64"]);
+  });
+
+  it("drops entries with no profile rather than listing an empty option", () => {
+    expect(profilesOf([entry({ profile: undefined })])).toEqual([]);
+  });
+});
+
+describe("summarise at a chosen profile", () => {
+  /* molrs/benchmark: one commit, two machines, different results. */
+  const entries = [
+    entry({ snapshot_id: "mac", profile: "macos-aarch64", timestamp: "2026-09-20T10:00:00Z" }),
+    entry({ snapshot_id: "linux", profile: "linux-x86_64", timestamp: "2026-09-20T09:00:00Z" }),
+  ];
+  const bodies = [
+    { entry: entries[0]!, snapshot: body({ passed: 10, failed: 4 }) },
+    { entry: entries[1]!, snapshot: body({ passed: 20, failed: 0 }) },
+  ];
+
+  it("reads headline, status and series from the same profile", () => {
+    // The newest entry overall is the macos one. Choosing linux must move all
+    // three together — a green status over a red machine's chart is the bug
+    // this guards.
+    const s = summarise("benchmark", entries, bodies, "linux-x86_64");
+    expect(s.profile).toBe("linux-x86_64");
+    expect(s.entry?.snapshot_id).toBe("linux");
+    expect(s.headline).toBe("20 passed · 0 failed");
+    expect(s.status).toBe("completed");
+    expect(s.history.map((p) => p.entry.snapshot_id)).toEqual(["linux"]);
+  });
+
+  it("falls back to the newest entry when the project-wide choice is absent here", () => {
+    // A tests record that only ever ran on linux must not go blank because the
+    // reader picked macos for the project.
+    const linuxOnly = [entry({ snapshot_id: "only", profile: "linux-x86_64" })];
+    const s = summarise("tests", linuxOnly, [{ entry: linuxOnly[0]!, snapshot: body({ passed: 1 }) }], "macos-aarch64");
+    expect(s.profile).toBe("linux-x86_64");
+    expect(s.entry?.snapshot_id).toBe("only");
+  });
+
+  it("offers every profile it publishes, whichever is selected", () => {
+    expect(summarise("benchmark", entries, bodies, "linux-x86_64").profiles).toEqual([
+      "linux-x86_64",
+      "macos-aarch64",
+    ]);
   });
 });

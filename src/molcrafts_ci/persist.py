@@ -15,11 +15,11 @@ def snapshot_path(
     root: Path,
     *,
     project: str,
-    kind: str,
+    record: str,
     generation: int,
     snapshot_id: str,
 ) -> Path:
-    return root / "snapshots" / project / kind / str(generation) / f"{snapshot_id}.json"
+    return root / "snapshots" / project / record / str(generation) / f"{snapshot_id}.json"
 
 
 def write_snapshot(root: Path, project: str, snapshot: Snapshot) -> Path:
@@ -32,7 +32,7 @@ def write_snapshot(root: Path, project: str, snapshot: Snapshot) -> Path:
     path = snapshot_path(
         root,
         project=project,
-        kind=snapshot.manifest.kind,
+        record=snapshot.manifest.record,
         generation=snapshot.manifest.tracking.generation,
         snapshot_id=snapshot.snapshot_id(),
     )
@@ -52,18 +52,18 @@ class SnapshotIndex:
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def index_path(self, project: str, kind: str) -> Path:
-        return self.root / "index" / project / f"{kind}.jsonl"
+    def index_path(self, project: str, record: str) -> Path:
+        return self.root / "index" / project / f"{record}.jsonl"
 
     def append(self, project: str, snapshot: Snapshot, *, relative_path: str) -> Path:
         if not snapshot.manifest.tracking.enabled:
             raise ValueError("refusing to index: tracking.enabled is false")
-        path = self.index_path(project, snapshot.manifest.kind)
+        path = self.index_path(project, snapshot.manifest.record)
         path.parent.mkdir(parents=True, exist_ok=True)
         entry: dict[str, Any] = {
             "snapshot_id": snapshot.snapshot_id(),
             "path": relative_path,
-            "kind": snapshot.manifest.kind,
+            "record": snapshot.manifest.record,
             "generation": snapshot.manifest.tracking.generation,
             "profile": snapshot.manifest.profile,
             "repository": snapshot.manifest.source.repository,
@@ -77,8 +77,8 @@ class SnapshotIndex:
             fh.write(dumps_deterministic(entry, indent=None))
         return path
 
-    def entries(self, project: str, kind: str) -> Iterator[dict[str, Any]]:
-        path = self.index_path(project, kind)
+    def entries(self, project: str, record: str) -> Iterator[dict[str, Any]]:
+        path = self.index_path(project, record)
         if not path.exists():
             return
         for line in path.read_text(encoding="utf-8").splitlines():

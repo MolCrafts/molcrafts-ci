@@ -11,7 +11,7 @@ from molcrafts_ci.snapshot import Snapshot
 def test_cli_validate_and_ingest(tmp_path: Path, capsys) -> None:
     snap = Snapshot(
         manifest=Manifest(
-            kind="molrec",
+            record="molrec",
             source=Source(repository="MolCrafts/molcrafts-molrec", commit="deadbeefcafebabe"),
             producer="molrec",
             tracking=Tracking(enabled=True, generation=1),

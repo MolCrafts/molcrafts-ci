@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LeftExplorer } from "@/components/layout/ExplorerShell";
 import { WorkbenchShell } from "@/components/layout/WorkbenchShell";
 import { OperationsDock } from "@/components/operations-dock";
+import { ProfileSelect } from "@/components/profile-select";
 import { ProjectList } from "@/components/project-list";
 import { SnapshotInspector } from "@/components/snapshot-inspector";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -10,15 +11,18 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { loadIndexListing, projectsFromListing } from "@/lib/index-data";
-import { ProjectStreamsProvider } from "@/lib/project-streams";
+import { ProjectRecordsProvider } from "@/lib/project-records";
+import { useProjectRecords } from "@/lib/project-records";
 import { SelectionProvider, useSelection } from "@/lib/selection";
+import { useUrlState, type UrlPatch } from "@/lib/use-url-state";
+import type { UrlState } from "@/lib/url-state";
 import { pluginsFor } from "@/plugins/registry";
 import type { ProjectContext } from "@/plugins/types";
 
 export function App() {
   const [projects, setProjects] = useState<ProjectContext[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [url, setUrl] = useUrlState();
 
   useEffect(() => {
     let cancelled = false;
@@ -27,10 +31,12 @@ export function App() {
         if (cancelled) return;
         const next = projectsFromListing(listing);
         setProjects(next);
-        setSelectedId((prev) => {
-          if (prev && next.some((p) => p.id === prev)) return prev;
-          return next[0]?.id ?? null;
-        });
+        // A shared link names its project; only a bare visit picks the first.
+        setUrl((current) =>
+          current.project && next.some((p) => p.id === current.project)
+            ? {}
+            : { project: next[0]?.id ?? null },
+        );
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -44,22 +50,22 @@ export function App() {
   }, []);
 
   const selected = useMemo(
-    () => projects?.find((p) => p.id === selectedId) ?? null,
-    [projects, selectedId],
+    () => projects?.find((p) => p.id === url.project) ?? null,
+    [projects, url.project],
   );
 
   return (
-    <ProjectStreamsProvider project={selected}>
+    <ProjectRecordsProvider project={selected} profile={url.profile}>
       <SelectionProvider resetKey={selected?.id ?? null}>
         <Workbench
           projects={projects}
           loadError={loadError}
           selected={selected}
-          selectedId={selectedId}
-          onSelectProject={setSelectedId}
+          url={url}
+          setUrl={setUrl}
         />
       </SelectionProvider>
-    </ProjectStreamsProvider>
+    </ProjectRecordsProvider>
   );
 }
 
@@ -74,23 +80,23 @@ function Workbench({
   projects,
   loadError,
   selected,
-  selectedId,
-  onSelectProject,
+  url,
+  setUrl,
 }: {
   projects: ProjectContext[] | null;
   loadError: string | null;
   selected: ProjectContext | null;
-  selectedId: string | null;
-  onSelectProject: (id: string) => void;
+  url: UrlState;
+  setUrl: (patch: UrlPatch) => void;
 }) {
   const selection = useSelection();
-  const [requestedTab, setRequestedTab] = useState<string | null>(null);
+  const { profiles } = useProjectRecords();
 
   const tabs = selected ? pluginsFor(selected) : [];
-  // A requested tab that this project does not have falls back to the first,
-  // so switching projects never lands on an empty surface.
+  // A tab named in the address that this project does not have falls back to
+  // the first, so a stale link never lands on an empty surface.
   const activeTab =
-    requestedTab && tabs.some((t) => t.id === requestedTab) ? requestedTab : (tabs[0]?.id ?? null);
+    url.tab && tabs.some((t) => t.id === url.tab) ? url.tab : (tabs[0]?.id ?? null);
   const activeLabel = tabs.find((t) => t.id === activeTab)?.label ?? null;
 
   return (
@@ -119,6 +125,11 @@ function Workbench({
           )}
           {/* Breadcrumb left, the surface's verbs right. Nothing else. */}
           <span className="flex-1" />
+          <ProfileSelect
+            profiles={profiles}
+            value={selected ? (url.profile ?? profiles[0] ?? null) : null}
+            onChange={(profile) => setUrl({ profile })}
+          />
           <ThemeToggle />
         </header>
       }
@@ -133,14 +144,13 @@ function Workbench({
           ) : projects.length === 0 ? (
             <EmptyState
               title="No projects yet"
-              description="Tracked snapshots appear here after ingest and publish."
               density="compact"
             />
           ) : (
             <ProjectList
               projects={projects}
-              selectedId={selectedId}
-              onSelect={onSelectProject}
+              selectedId={selected?.id ?? null}
+              onSelect={(project) => setUrl({ project, tab: null })}
             />
           )}
         </LeftExplorer>
@@ -150,22 +160,18 @@ function Workbench({
     >
       {!selected ? (
         <div className="flex flex-1 items-center justify-center p-6">
-          <EmptyState
-            title="Select a project"
-            description="Choose a project from the left to open its snapshot streams."
-          />
+          <EmptyState title="Select a project" />
         </div>
       ) : tabs.length === 0 ? (
         <div className="flex flex-1 items-center justify-center p-6">
           <EmptyState
-            title="No published streams"
-            description={`Nothing under data/index/${selected.id}/ yet.`}
+            title={`Nothing published for ${selected.id}`}
           />
         </div>
       ) : (
         <Tabs
           value={activeTab ?? undefined}
-          onValueChange={setRequestedTab}
+          onValueChange={(tab) => setUrl({ tab })}
           className="flex min-h-0 flex-1 gap-0"
         >
           <div className="shrink-0 border-b border-border bg-surface px-3 pt-2">
@@ -185,7 +191,7 @@ function Workbench({
                 value={plugin.id}
                 className="mt-0 flex min-h-0 flex-1 flex-col outline-none"
               >
-                <Panel project={selected} openTab={setRequestedTab} />
+                <Panel project={selected} openTab={(tab) => setUrl({ tab })} />
               </TabsContent>
             );
           })}

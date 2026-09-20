@@ -22,7 +22,7 @@ export interface StatusSegment {
 }
 
 export interface StatusInlineProps {
-  /** What is being counted — "4 streams", "187 tests". */
+  /** What is being counted — "4 records", "187 tests". */
   total: string;
   segments: StatusSegment[];
   className?: string;

@@ -14,7 +14,9 @@ from molcrafts_ci.snapshot import Snapshot
 
 def _cmd_validate_snapshot(args: argparse.Namespace) -> int:
     snap = Snapshot.model_validate_json(Path(args.path).read_text(encoding="utf-8"))
-    print(json.dumps({"ok": True, "snapshot_id": snap.snapshot_id(), "kind": snap.manifest.kind}))
+    print(
+        json.dumps({"ok": True, "snapshot_id": snap.snapshot_id(), "record": snap.manifest.record})
+    )
     return 0
 
 

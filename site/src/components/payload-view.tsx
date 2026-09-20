@@ -24,7 +24,7 @@ export interface PayloadViewProps {
 /**
  * What one snapshot says, read from its shape.
  *
- * Dispatching on the payload rather than on the kind name is what lets a new
+ * Dispatching on the payload rather than on the record name is what lets a new
  * producer land without a new view: `molrs` publishing criterion metrics and
  * `molpy` publishing pytest-benchmark metrics both arrive here as scalars.
  */
@@ -37,11 +37,7 @@ export function PayloadView({
 
   if (payload == null) {
     return settled ? (
-      <EmptyState
-        title="Snapshot body unavailable"
-        description="The index entry loaded, but its snapshot file could not be read."
-        density="compact"
-      />
+      <EmptyState title="Snapshot body unavailable" density="compact" />
     ) : (
       <BandSkeleton height="measure" />
     );
@@ -104,11 +100,7 @@ export function PayloadView({
 
   if (metrics.length === 0) {
     return (
-      <EmptyState
-        title="Nothing readable in this snapshot"
-        description="Its payload carries no scalar values."
-        density="compact"
-      />
+      <EmptyState title="Nothing readable in this snapshot" density="compact" />
     );
   }
 

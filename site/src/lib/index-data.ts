@@ -5,8 +5,8 @@ export interface IndexListing {
 }
 
 /**
- * Parse published index paths into per-project kind sets.
- * Paths look like: data/index/<project>/<kind>.jsonl
+ * Parse published index paths into per-project record sets.
+ * Paths look like: data/index/<project>/<record>.jsonl
  */
 export function projectsFromListing(listing: IndexListing): ProjectContext[] {
   const byId = new Map<string, Set<string>>();
@@ -19,20 +19,20 @@ export function projectsFromListing(listing: IndexListing): ProjectContext[] {
     const project = parts[indexAt + 1];
     const file = parts[indexAt + 2];
     if (!project || !file?.endsWith(".jsonl")) continue;
-    const kind = file.slice(0, -".jsonl".length);
-    if (!kind) continue;
+    const record = file.slice(0, -".jsonl".length);
+    if (!record) continue;
     let set = byId.get(project);
     if (!set) {
       set = new Set();
       byId.set(project, set);
     }
-    set.add(kind);
+    set.add(record);
   }
 
   return [...byId.entries()]
-    .map(([id, kinds]) => ({
+    .map(([id, records]) => ({
       id,
-      kinds: [...kinds].sort(),
+      records: [...records].sort(),
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }

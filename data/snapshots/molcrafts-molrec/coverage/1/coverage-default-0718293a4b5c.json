@@ -1,9 +1,9 @@
 {
   "manifest": {
-    "kind": "coverage",
     "producer": "coverage.py",
     "profile": "default",
     "provenance": {},
+    "record": "coverage",
     "schema_version": "1",
     "source": {
       "commit": "0718293a4b5c6d7e8f90123456789012",

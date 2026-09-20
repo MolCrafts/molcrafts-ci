@@ -1,8 +1,8 @@
 /**
- * What one snapshot stream says about itself.
+ * What one snapshot record says about itself.
  *
- * The overview has to state a project's posture in one row per stream, and the
- * payload shape differs per kind. These are pure functions over an already
+ * The overview has to state a project's posture in one row per record, and the
+ * payload shape differs per record. These are pure functions over an already
  * fetched snapshot so the rules stay readable and testable.
  */
 import type { SnapshotStatus } from "@/components/snapshot-status";
@@ -18,9 +18,9 @@ import {
 } from "@/lib/payload";
 import type { IndexEntry, Snapshot } from "@/lib/snapshot-data";
 
-export interface StreamVerdict {
+export interface RecordVerdict {
   status: SnapshotStatus;
-  /** What the status means for this stream, e.g. "passed", "3 failed". */
+  /** What the status means for this record, e.g. "passed", "3 failed". */
   statusLabel: string;
 }
 
@@ -31,11 +31,13 @@ export interface HistoryPoint {
   failed: boolean;
 }
 
-export interface StreamSummary extends StreamVerdict {
-  /** The profile the history is plotted for; a series must not mix them. */
+export interface RecordSummary extends RecordVerdict {
+  /** The profile everything in this summary is read at; never mixed. */
   profile: string | null;
-  /** The project's own spelling of the kind, as published. */
-  kind: string;
+  /** Every profile this record publishes under, so a selector can offer them. */
+  profiles: string[];
+  /** The project's own spelling of the record, as published. */
+  record: string;
   /** Every published generation, newest first. The publish log reads these. */
   entries: IndexEntry[];
   /** Newest entry in the index, or null when the index is empty. */
@@ -52,7 +54,7 @@ export interface StreamSummary extends StreamVerdict {
  * Reading order across the whole app: what needs attention first.
  *
  * The overview table, the navigator and the problems tab all sort by this, so
- * a failing stream is in the same place wherever the reader looks.
+ * a failing record is in the same place wherever the reader looks.
  */
 export const STATUS_ORDER: SnapshotStatus[] = [
   "failed",
@@ -71,10 +73,10 @@ export const STATUS_ORDER: SnapshotStatus[] = [
  *
  * Only a pass/fail count is a verdict the schema actually records. Coverage
  * targets and benchmark thresholds are not in the snapshot schema yet, so those
- * streams report `ready` — published, no verdict — rather than borrowing a
+ * records report `ready` — published, no verdict — rather than borrowing a
  * threshold this code invented.
  */
-export function verdictOf(payload: unknown): StreamVerdict {
+export function verdictOf(payload: unknown): RecordVerdict {
   const tests = readTests(payload);
   if (!tests) return { status: "ready", statusLabel: "no verdict" };
   if (tests.failed > 0) return { status: "failed", statusLabel: `${tests.failed} failed` };
@@ -82,10 +84,10 @@ export function verdictOf(payload: unknown): StreamVerdict {
 }
 
 /**
- * The headline for a stream row.
+ * The headline for a record row.
  *
- * Keyed on what the payload contains rather than on the kind name, so a project
- * that spells a kind differently still gets a real headline.
+ * Keyed on what the payload contains rather than on the record name, so a project
+ * that spells a record differently still gets a real headline.
  */
 export function headlineOf(payload: unknown): string {
   const tests = readTests(payload);
@@ -108,7 +110,7 @@ export function headlineOf(payload: unknown): string {
 /**
  * One point per generation whose body was read, oldest first.
  *
- * Restricted to a single profile. A stream can publish the same commit under
+ * Restricted to a single profile. A record can publish the same commit under
  * several profiles — `molrs/benchmark` ships linux-x86_64 and macos-aarch64 of
  * one commit — and laying those along a time axis would draw a trend out of
  * two machines rather than two moments.
@@ -127,33 +129,57 @@ export function toHistory(
     }));
 }
 
+/** Every profile a record publishes under, sorted, with unprofiled last. */
+export function profilesOf(entries: IndexEntry[]): string[] {
+  return [...new Set(entries.flatMap((e) => (e.profile ? [e.profile] : [])))].sort();
+}
+
+/**
+ * One record, read at one profile.
+ *
+ * The profile decides everything downstream — headline, status and series all
+ * come from the same machine. Reading the status from the newest entry while
+ * charting a different profile would put two machines in one row.
+ *
+ * `preferred` is the project-wide choice; a record that does not publish it
+ * falls back to its own newest entry rather than rendering empty.
+ */
 export function summarise(
-  kind: string,
+  record: string,
   entries: IndexEntry[],
   bodies: { entry: IndexEntry; snapshot: Snapshot | null }[],
-): StreamSummary {
-  const entry = entries[0] ?? null;
-  const snapshot = bodies[0]?.snapshot ?? null;
-  const profile = entry?.profile ?? null;
+  preferred: string | null = null,
+): RecordSummary {
+  const profiles = profilesOf(entries);
+  const profile =
+    preferred && profiles.includes(preferred) ? preferred : (entries[0]?.profile ?? null);
+
+  const inProfile = entries.filter((e) => (e.profile ?? null) === profile);
+  const entry = inProfile[0] ?? null;
+  const snapshot = bodies.find(({ entry: e }) => e.snapshot_id === entry?.snapshot_id)?.snapshot ?? null;
+
   if (!entry) {
     return {
-      kind,
+      record,
       entries,
       entry: null,
       snapshot: null,
-      profile: null,
+      profile,
+      profiles,
       history: [],
       headline: "—",
       status: "draft",
       statusLabel: "no snapshot",
     };
   }
+
   return {
-    kind,
+    record,
     entries,
     entry,
     snapshot,
     profile,
+    profiles,
     history: toHistory(bodies, profile),
     headline: snapshot ? headlineOf(snapshot.payload) : "—",
     ...(snapshot

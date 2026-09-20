@@ -1,5 +1,6 @@
 import type { JSX } from "react";
 
+import { CommitLink } from "@/components/commit-link";
 import { RowsSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -10,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { relativeTime, shortCommit, type IndexEntry } from "@/lib/snapshot-data";
+import { relativeTime, type IndexEntry } from "@/lib/snapshot-data";
 import { cn } from "@/lib/utils";
 
 export interface SnapshotTableProps {
@@ -24,7 +25,7 @@ export interface SnapshotTableProps {
 }
 
 /**
- * Every published generation of one stream.
+ * Every published generation of one record.
  *
  * The detail tab's job is the complete inventory, so this carries no verdict
  * and no headline — the overview already stated those. Selecting a row is what
@@ -54,17 +55,15 @@ export function SnapshotTable({
       <TableHeader>
         <TableRow>
           <TableHead>Snapshot</TableHead>
-          <TableHead className="w-40">Producer</TableHead>
-          <TableHead className="w-40">Profile</TableHead>
           <TableHead className="w-28">Commit</TableHead>
-          <TableHead className="w-24 text-right">Generation</TableHead>
+          <TableHead className="w-20 text-right">Gen</TableHead>
           <TableHead className="w-28 text-right">Published</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {entries === null ? (
           <TableRow>
-            <TableCell colSpan={6}>
+            <TableCell colSpan={4}>
               <RowsSkeleton />
             </TableCell>
           </TableRow>
@@ -94,14 +93,8 @@ export function SnapshotTable({
                     {entry.snapshot_id ?? entry.path ?? `entry ${i + 1}`}
                   </button>
                 </TableCell>
-                <TableCell className="truncate font-mono text-muted-foreground">
-                  {entry.producer ?? "—"}
-                </TableCell>
-                <TableCell className="truncate font-mono text-muted-foreground">
-                  {entry.profile ?? "—"}
-                </TableCell>
-                <TableCell className="font-mono text-muted-foreground">
-                  {shortCommit(entry.commit)}
+                <TableCell className="text-muted-foreground">
+                  <CommitLink repository={entry.repository} commit={entry.commit} />
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
                   {entry.generation ?? "—"}

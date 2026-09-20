@@ -1,9 +1,9 @@
 {
   "manifest": {
-    "kind": "tests",
     "producer": "pytest",
     "profile": "default",
     "provenance": {},
+    "record": "tests",
     "schema_version": "1",
     "source": {
       "commit": "0718293a4b5c6d7e8f90123456789012",

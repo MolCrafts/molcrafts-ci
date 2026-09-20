@@ -1,9 +1,9 @@
 {
   "manifest": {
-    "kind": "coverage",
     "producer": "llvm-cov",
     "profile": "linux-x86_64",
     "provenance": {},
+    "record": "coverage",
     "schema_version": "1",
     "source": {
       "commit": "e5f60718293a4b5c6d7e8f9012345678",

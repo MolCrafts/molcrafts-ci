@@ -16,19 +16,19 @@ export default defineMock([
     body: () => ({ indexes: store.value.indexes }),
   },
   {
-    url: "/data/index/:project/:kind.jsonl",
+    url: "/data/index/:project/:record.jsonl",
     method: "GET",
     headers: { "Content-Type": "application/x-ndjson; charset=utf-8" },
     body: ({ params }) => {
-      const key = `${params.project}/${params.kind}`;
+      const key = `${params.project}/${params.record}`;
       return toJsonl(store.value.entries[key] ?? []);
     },
   },
   {
-    url: "/data/snapshots/:project/:kind/:generation/:file",
+    url: "/data/snapshots/:project/:record/:generation/:file",
     method: "GET",
     body: ({ params }) => {
-      const key = `snapshots/${params.project}/${params.kind}/${params.generation}/${params.file}`;
+      const key = `snapshots/${params.project}/${params.record}/${params.generation}/${params.file}`;
       const snap = store.value.snapshots?.[key];
       if (!snap) {
         return { error: "snapshot not found", key };

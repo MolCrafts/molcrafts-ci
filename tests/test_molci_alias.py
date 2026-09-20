@@ -16,7 +16,7 @@ def test_molci_alias_exports_core_types() -> None:
 def test_molci_builds_snapshot() -> None:
     snap = mci.Snapshot(
         manifest=mci.Manifest(
-            kind="benchmark",
+            record="benchmark",
             source=mci.Source(repository="MolCrafts/molpy", commit="abc1234567890"),
             producer="test",
             tracking=mci.Tracking(enabled=False),

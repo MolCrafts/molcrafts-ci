@@ -1,9 +1,9 @@
 {
   "manifest": {
-    "kind": "tests",
     "producer": "cargo-nextest",
     "profile": "linux-x86_64",
     "provenance": {},
+    "record": "tests",
     "schema_version": "1",
     "source": {
       "commit": "e5f60718293a4b5c6d7e8f9012345678",

@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { useEffect, useState, type JSX, type ReactNode } from "react";
 
+import { CommitLink } from "@/components/commit-link";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSelect, useSelection } from "@/lib/selection";
@@ -35,7 +36,7 @@ const Group = ({ title, fields }: { title: string; fields: Field[] }): JSX.Eleme
 /**
  * Where the selected snapshot came from.
  *
- * Only provenance: what it *says* is already on the work surface, and the kind
+ * Only provenance: what it *says* is already on the work surface, and the record
  * is already the open tab. Ten fields, not seventeen — a panel that restates
  * the centre is the thing it was built to remove.
  */
@@ -72,7 +73,7 @@ export function SnapshotInspector(): JSX.Element | null {
 
   if (!selection) return null;
 
-  const { entry, stream } = selection;
+  const { entry, record } = selection;
   const snapshot = selection.snapshot ?? (body?.id === entryId ? body.snapshot : null);
   const settled = selection.snapshot != null || (!loading && body?.id === entryId);
   const source = snapshot?.manifest?.source;
@@ -82,7 +83,7 @@ export function SnapshotInspector(): JSX.Element | null {
     <>
       <header className="flex h-toolbar-compact shrink-0 items-center gap-2 border-b border-border pl-3 pr-1">
         <span className="min-w-0 flex-1 truncate font-mono text-label text-foreground">
-          {entry.snapshot_id ?? stream}
+          {entry.snapshot_id ?? record}
         </span>
         <Button
           variant="ghost"
@@ -103,7 +104,7 @@ export function SnapshotInspector(): JSX.Element | null {
       )}
       {settled && !snapshot && (
         <p className="border-b border-border px-3 py-2 text-label text-muted-foreground">
-          Body not published — showing what the index knows.
+          Body not published
         </p>
       )}
 
@@ -113,7 +114,15 @@ export function SnapshotInspector(): JSX.Element | null {
           fields={[
             { label: "Repository", value: source?.repository ?? entry.repository ?? DASH },
             { label: "Ref", value: source?.ref ?? entry.ref ?? DASH },
-            { label: "Commit", value: source?.commit ?? entry.commit ?? DASH },
+            {
+              label: "Commit",
+              value: (
+                <CommitLink
+                  repository={source?.repository ?? entry.repository}
+                  commit={source?.commit ?? entry.commit}
+                />
+              ),
+            },
             {
               label: "Workflow run",
               value:

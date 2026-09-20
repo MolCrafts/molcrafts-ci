@@ -1,16 +1,16 @@
 /**
  * One owner for published snapshot data.
  *
- * Every surface reads the same two things — a kind's index (`data/index/<project>/<kind>.jsonl`)
+ * Every surface reads the same two things — a record's index (`data/index/<project>/<record>.jsonl`)
  * and a snapshot body (`data/<path>`) — so the fetchers, the alias table, and the
  * "which entry is current" rule live here rather than once per tab.
  */
 
-/** One line of a published `<kind>.jsonl` index. */
+/** One line of a published `<record>.jsonl` index. */
 export interface IndexEntry {
   snapshot_id?: string;
   path?: string;
-  kind?: string;
+  record?: string;
   generation?: number;
   profile?: string;
   producer?: string;
@@ -22,10 +22,10 @@ export interface IndexEntry {
   [key: string]: unknown;
 }
 
-/** A snapshot file: the manifest the producer wrote plus its kind-specific payload. */
+/** A snapshot file: the manifest the producer wrote plus its record-specific payload. */
 export interface Snapshot<P = unknown> {
   manifest?: {
-    kind?: string;
+    record?: string;
     producer?: string;
     profile?: string;
     schema_version?: string;
@@ -43,11 +43,11 @@ export interface Snapshot<P = unknown> {
 }
 
 /**
- * On-disk kind names a tab answers to.
+ * On-disk record names a tab answers to.
  *
- * `conv` is the short URL for Coverage; the snapshot kind on disk is `coverage`.
+ * `conv` is the short URL for Coverage; the snapshot record on disk is `coverage`.
  */
-export const KIND_ALIASES: {
+export const RECORD_ALIASES: {
   tests: string[];
   coverage: string[];
   benchmark: string[];
@@ -64,8 +64,8 @@ export const KIND_ALIASES: {
 };
 
 /** The project's own spelling of the first alias it publishes, or null. */
-export function resolveKind(kinds: string[], aliases: string[]): string | null {
-  const lower = new Map(kinds.map((k) => [k.toLowerCase(), k]));
+export function resolveRecord(records: string[], aliases: string[]): string | null {
+  const lower = new Map(records.map((k) => [k.toLowerCase(), k]));
   for (const alias of aliases) {
     const hit = lower.get(alias.toLowerCase());
     if (hit) return hit;
@@ -73,11 +73,11 @@ export function resolveKind(kinds: string[], aliases: string[]): string | null {
   return null;
 }
 
-export async function fetchKindEntries(
+export async function fetchRecordEntries(
   projectId: string,
-  kind: string,
+  record: string,
 ): Promise<IndexEntry[]> {
-  const url = `./data/index/${encodeURIComponent(projectId)}/${encodeURIComponent(kind)}.jsonl`;
+  const url = `./data/index/${encodeURIComponent(projectId)}/${encodeURIComponent(record)}.jsonl`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) return [];
   const entries: IndexEntry[] = [];

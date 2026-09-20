@@ -4,7 +4,7 @@ import type { ProjectContext } from "@/plugins/types";
 /**
  * The navigator: find and select a project.
  *
- * Flat, because the tabs already are the stream navigation — a tree that
+ * Flat, because the tabs already are the record navigation — a tree that
  * expands to the same six names the tab strip shows is a second copy of one
  * control. It carries no counts or status either: those belong to the surface
  * the selection opens.

@@ -1,9 +1,9 @@
 {
   "manifest": {
-    "kind": "benchmark",
     "producer": "criterion",
     "profile": "macos-aarch64",
     "provenance": {},
+    "record": "benchmark",
     "schema_version": "1",
     "source": {
       "commit": "e5f60718293a4b5c6d7e8f9012345678",

@@ -2,11 +2,11 @@ import type { ComponentType } from "react";
 
 export interface ProjectContext {
   id: string;
-  /** Snapshot kinds present in the published index for this project. */
-  kinds: string[];
+  /** Snapshot records present in the published index for this project. */
+  records: string[];
 }
 
-export interface KindTabPanelProps {
+export interface RecordTabPanelProps {
   project: ProjectContext;
   /**
    * Open another registered tab.
@@ -17,10 +17,10 @@ export interface KindTabPanelProps {
   openTab?: (tabId: string) => void;
 }
 
-export interface KindTabPlugin {
+export interface RecordTabPlugin {
   id: string;
   label: string;
   order?: number;
   available: (ctx: ProjectContext) => boolean;
-  Component: ComponentType<KindTabPanelProps>;
+  Component: ComponentType<RecordTabPanelProps>;
 }

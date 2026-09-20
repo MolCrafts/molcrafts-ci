@@ -22,7 +22,7 @@ class Snapshot(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
     def snapshot_id(self) -> str:
-        """Stable filename stem derived from source + kind + profile."""
+        """Stable filename stem derived from source + record + profile."""
         m = self.manifest
         short = m.source.commit[:12]
-        return f"{m.kind}-{m.profile}-{short}"
+        return f"{m.record}-{m.profile}-{short}"

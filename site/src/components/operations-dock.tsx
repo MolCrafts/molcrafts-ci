@@ -2,20 +2,21 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, type JSX } from "react";
 
 import { useDock } from "@/components/layout/WorkbenchShell";
+import { CommitLink } from "@/components/commit-link";
 import { StatusMark } from "@/components/snapshot-status";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useProjectStreams } from "@/lib/project-streams";
+import { useProjectRecords } from "@/lib/project-records";
 import { useSelect } from "@/lib/selection";
-import { relativeTime, shortCommit, type IndexEntry } from "@/lib/snapshot-data";
+import { relativeTime, type IndexEntry } from "@/lib/snapshot-data";
 import { cn } from "@/lib/utils";
-import type { StreamSummary } from "@/lib/stream-summary";
+import type { RecordSummary } from "@/lib/record-summary";
 
 type DockTab = "log" | "problems";
 
 interface LogLine {
-  stream: StreamSummary;
+  record: RecordSummary;
   entry: IndexEntry;
 }
 
@@ -23,27 +24,27 @@ interface LogLine {
  * Live operations: what was published, and what is wrong.
  *
  * One region with tabs, never separate routes — a reader fixes a problem while
- * still looking at the stream that reported it. Collapsing leaves the tab strip
+ * still looking at the record that reported it. Collapsing leaves the tab strip
  * in place so the counts stay readable.
  */
 export function OperationsDock(): JSX.Element {
-  const { streams, error } = useProjectStreams();
+  const { records, error } = useProjectRecords();
   const { collapsed, toggle } = useDock();
   const select = useSelect();
   const [tab, setTab] = useState<DockTab>("log");
 
-  const lines: LogLine[] = (streams ?? [])
-    .flatMap((stream) => stream.entries.map((entry) => ({ stream, entry })))
+  const lines: LogLine[] = (records ?? [])
+    .flatMap((record) => record.entries.map((entry) => ({ record, entry })))
     .sort((a, b) => (b.entry.timestamp ?? "").localeCompare(a.entry.timestamp ?? ""));
 
-  const problems = (streams ?? []).filter((s) => s.status === "failed");
+  const problems = (records ?? []).filter((s) => s.status === "failed");
   const problemCount = problems.length + (error ? 1 : 0);
 
   return (
     <>
       <div className="flex h-8 shrink-0 items-stretch gap-hairline border-b border-border px-2">
-        <DockTabButton active={tab === "log"} onClick={() => setTab("log")} label="Publish log">
-          {streams && (
+        <DockTabButton active={tab === "log"} onClick={() => setTab("log")} label="Log">
+          {records && (
             <span className="font-mono text-micro tabular-nums text-muted-foreground">
               {lines.length}
             </span>
@@ -76,35 +77,41 @@ export function OperationsDock(): JSX.Element {
 
       <ScrollArea className="min-h-0 flex-1">
         {tab === "log" ? (
-          streams === null ? (
+          records === null ? (
             <DockSkeleton />
           ) : lines.length === 0 ? (
             <EmptyState title="Nothing published yet" density="inline" className="px-3 py-2" />
           ) : (
             <ul className="py-1">
-              {lines.map(({ stream, entry }, i) => (
-                <li key={entry.snapshot_id ?? `${stream.kind}-${i}`}>
+              {lines.map(({ record, entry }, i) => (
+                <li
+                  key={entry.snapshot_id ?? `${record.record}-${i}`}
+                  className="flex h-5 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
+                  onClick={() => select({ record: record.record, entry, snapshot: null })}
+                >
+                  <span className="shrink-0 font-mono text-micro tabular-nums text-muted-foreground">
+                    {entry.timestamp?.slice(0, 16).replace("T", " ") ?? "—"}
+                  </span>
                   <button
                     type="button"
-                    className="flex h-5 w-full items-baseline gap-3 px-3 text-left hover:bg-interactive"
-                    onClick={() => select({ stream: stream.kind, entry, snapshot: null })}
+                    className="w-24 shrink-0 truncate rounded-hairline text-left font-mono text-micro text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      select({ record: record.record, entry, snapshot: null });
+                    }}
                   >
-                    <span className="shrink-0 font-mono text-micro tabular-nums text-muted-foreground">
-                      {entry.timestamp?.slice(0, 16).replace("T", " ") ?? "—"}
-                    </span>
-                    <span className="w-24 shrink-0 truncate font-mono text-micro text-foreground">
-                      {stream.kind}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
-                      gen {entry.generation ?? "—"} · {shortCommit(entry.commit)} ·{" "}
-                      {entry.snapshot_id ?? entry.path ?? "—"}
-                    </span>
+                    {record.record}
                   </button>
+                  <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
+                    gen {entry.generation ?? "—"} ·{" "}
+                    <CommitLink repository={entry.repository} commit={entry.commit} /> ·{" "}
+                    {entry.snapshot_id ?? entry.path ?? "—"}
+                  </span>
                 </li>
               ))}
             </ul>
           )
-        ) : streams === null ? (
+        ) : records === null ? (
           <DockSkeleton />
         ) : problemCount === 0 ? (
           <EmptyState title="No problems" density="inline" className="px-3 py-2" />
@@ -116,29 +123,39 @@ export function OperationsDock(): JSX.Element {
                 <span className="truncate font-mono text-micro text-foreground">{error}</span>
               </li>
             )}
-            {problems.map((stream) => (
-              <li key={stream.kind}>
+            {problems.map((record) => (
+              <li
+                key={record.record}
+                className="flex h-5 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
+                onClick={() =>
+                  record.entry &&
+                  select({ record: record.record, entry: record.entry, snapshot: record.snapshot })
+                }
+              >
+                <StatusMark status="failed" className="self-center" />
                 <button
                   type="button"
-                  className="flex h-5 w-full items-baseline gap-3 px-3 text-left hover:bg-interactive"
-                  onClick={() =>
-                    stream.entry &&
-                    select({
-                      stream: stream.kind,
-                      entry: stream.entry,
-                      snapshot: stream.snapshot,
-                    })
-                  }
+                  className="w-24 shrink-0 truncate rounded-hairline text-left font-mono text-micro text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (record.entry)
+                      select({
+                        record: record.record,
+                        entry: record.entry,
+                        snapshot: record.snapshot,
+                      });
+                  }}
                 >
-                  <StatusMark status="failed" className="self-center" />
-                  <span className="w-24 shrink-0 truncate font-mono text-micro text-foreground">
-                    {stream.kind}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
-                    {stream.statusLabel} · {stream.headline} ·{" "}
-                    {shortCommit(stream.entry?.commit)} · {relativeTime(stream.entry?.timestamp)}
-                  </span>
+                  {record.record}
                 </button>
+                  <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
+                    {record.statusLabel} · {record.headline} ·{" "}
+                    <CommitLink
+                      repository={record.entry?.repository}
+                      commit={record.entry?.commit}
+                    />{" "}
+                    · {relativeTime(record.entry?.timestamp)}
+                </span>
               </li>
             ))}
           </ul>

@@ -15,7 +15,7 @@ from molcrafts_ci.snapshot import Snapshot
 def _snap(*, tracking: bool = True, generation: int = 1) -> Snapshot:
     return Snapshot(
         manifest=Manifest(
-            kind="benchmark",
+            record="benchmark",
             source=Source(
                 repository="MolCrafts/molpy",
                 commit="abcdef1234567890",
@@ -51,7 +51,7 @@ def test_ingest_writes_snapshot_and_index(tmp_path: Path) -> None:
     path = ingest_snapshot(tmp_path, "molpy", snap)
     assert path.exists()
     loaded = json.loads(path.read_text(encoding="utf-8"))
-    assert loaded["manifest"]["kind"] == "benchmark"
+    assert loaded["manifest"]["record"] == "benchmark"
     assert loaded["payload"]["metrics"]["mean_ns"] == 12.5
 
     entries = list(SnapshotIndex(tmp_path).entries("molpy", "benchmark"))

@@ -2,10 +2,10 @@ import { describe, expect, it } from "@rstest/core";
 
 import { projectsFromListing } from "@/lib/index-data";
 import {
-  KIND_ALIASES,
+  RECORD_ALIASES,
   newestFirst,
   relativeTime,
-  resolveKind,
+  resolveRecord,
   shortCommit,
 } from "@/lib/snapshot-data";
 
@@ -33,17 +33,17 @@ describe("newestFirst", () => {
   });
 });
 
-describe("resolveKind", () => {
+describe("resolveRecord", () => {
   it("returns the project's own spelling, not the alias asked for", () => {
-    expect(resolveKind(["Coverage"], KIND_ALIASES.coverage)).toBe("Coverage");
+    expect(resolveRecord(["Coverage"], RECORD_ALIASES.coverage)).toBe("Coverage");
   });
 
   it("prefers the first alias that matches", () => {
-    expect(resolveKind(["conv", "coverage"], KIND_ALIASES.coverage)).toBe("coverage");
+    expect(resolveRecord(["conv", "coverage"], RECORD_ALIASES.coverage)).toBe("coverage");
   });
 
   it("returns null when the project publishes none of them", () => {
-    expect(resolveKind(["tests"], KIND_ALIASES.coverage)).toBeNull();
+    expect(resolveRecord(["tests"], RECORD_ALIASES.coverage)).toBeNull();
   });
 });
 
@@ -73,7 +73,7 @@ describe("relativeTime", () => {
 });
 
 describe("projectsFromListing", () => {
-  it("groups published index paths into projects and kinds", () => {
+  it("groups published index paths into projects and records", () => {
     const projects = projectsFromListing({
       indexes: [
         "data/index/molpy/tests.jsonl",
@@ -82,14 +82,14 @@ describe("projectsFromListing", () => {
       ],
     });
     expect(projects).toEqual([
-      { id: "molpy", kinds: ["coverage", "tests"] },
-      { id: "molrs", kinds: ["tests"] },
+      { id: "molpy", records: ["coverage", "tests"] },
+      { id: "molrs", records: ["tests"] },
     ]);
   });
 
   it("ignores paths that are not an index entry", () => {
     expect(
       projectsFromListing({ indexes: ["data/index/molpy", "README.md", "./data/index/x/y.jsonl"] }),
-    ).toEqual([{ id: "x", kinds: ["y"] }]);
+    ).toEqual([{ id: "x", records: ["y"] }]);
   });
 });

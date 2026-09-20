@@ -1,9 +1,9 @@
 {
   "manifest": {
-    "kind": "tests",
     "producer": "pytest",
     "profile": "linux-x86_64",
     "provenance": {},
+    "record": "tests",
     "schema_version": "1",
     "source": {
       "commit": "a1b2c3d4e5f6789012345678abcdef01",

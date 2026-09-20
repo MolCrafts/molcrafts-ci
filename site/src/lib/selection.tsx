@@ -3,8 +3,8 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { IndexEntry, Snapshot } from "@/lib/snapshot-data";
 
 export interface SnapshotSelection {
-  /** The on-disk kind this snapshot belongs to. */
-  stream: string;
+  /** The on-disk record this snapshot belongs to. */
+  record: string;
   entry: IndexEntry;
   /** Body, when the surface that selected it had already read one. */
   snapshot: Snapshot | null;

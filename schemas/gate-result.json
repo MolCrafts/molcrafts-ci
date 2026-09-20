@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://molcrafts.org/schemas/ci/gate-result/v1.json",
+  "$id": "https://molcrafts.org/schemas/ci/gate-result.json",
   "title": "GateResult",
   "type": "object",
   "additionalProperties": false,

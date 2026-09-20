@@ -1,10 +1,10 @@
 /**
  * Reading a snapshot payload by its shape.
  *
- * Producers differ per kind and per project, and the kind name is only a hint —
+ * Producers differ per record and per project, and the record name is only a hint —
  * `molrs` publishes `benchmark` from criterion while `molpy` publishes it from
  * pytest-benchmark. So every reader here keys on what the payload *contains*.
- * A hand-written view per kind name would drift the first time a project spells
+ * A hand-written view per record name would drift the first time a project spells
  * one differently.
  */
 
@@ -79,7 +79,7 @@ export interface TestsReading {
   failed: number;
 }
 
-/** A test payload: the one kind whose result is a verdict the schema records. */
+/** A test payload: the one record whose result is a verdict the schema records. */
 export function readTests(payload: unknown): TestsReading | null {
   const p = asRecord(payload);
   if (!p) return null;
@@ -148,7 +148,7 @@ export interface MeasureReading {
 }
 
 /**
- * The one number a stream is worth plotting over time.
+ * The one number a record is worth plotting over time.
  *
  * Keyed on shape like every other reader here, so a producer this code has
  * never seen still contributes a series as long as it publishes a scalar.

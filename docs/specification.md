@@ -269,7 +269,7 @@ Snapshot
 │
 ├── Manifest
 │   ├── schema version
-│   ├── kind
+│   ├── record
 │   ├── source
 │   ├── producer
 │   ├── profile
@@ -286,14 +286,14 @@ The domain implementation understands the `Payload`.
 For example:
 
 ```text
-kind = benchmark
+record = benchmark
 Payload = BenchmarkResult
 ```
 
 while:
 
 ```text
-kind = molrec
+record = molrec
 Payload = MolRec schema/conformance state
 ```
 
@@ -693,13 +693,13 @@ A conceptual storage layout is:
 data/
 ├── snapshots/
 │   ├── <project>/
-│   │   ├── <kind>/
+│   │   ├── <record>/
 │   │   │   ├── <generation>/
 │   │   │   │   └── <snapshot>.json
 │
 ├── index/
 │   ├── <project>/
-│   │   └── <kind>.jsonl
+│   │   └── <record>.jsonl
 │
 └── schemas/
     └── ...
@@ -810,7 +810,7 @@ Layout:
 └─────────────┴──────────────────────────────┘
 ```
 
-Each right-hand tab is a **KindTabPlugin**:
+Each right-hand tab is a **RecordTabPlugin**:
 
 ```text
 id, label, order, available(project) → bool, Component
@@ -820,7 +820,7 @@ Builtin plugins register at load time. Additional domains register by importing
 a module that calls `registerPlugin` — the shell does not hard-code tab lists.
 
 A tab is shown only when `available(project)` is true for the selected project
-(typically when the project's index lists a matching snapshot `kind`).
+(typically when the project's index lists a matching snapshot `record`).
 
 Conceptual data flow:
 
@@ -1081,7 +1081,7 @@ For example:
 repository
 workflow run
 artifact
-snapshot kind
+snapshot record
 profile
 commit
 ```
@@ -1217,11 +1217,11 @@ from which point persistent compatibility history begins.
 
 ---
 
-# 28. Extensible snapshot kinds
+# 28. Extensible snapshot records
 
 The architecture SHOULD support future engineering domains without changing the infrastructure contract.
 
-Potential kinds include:
+Potential records include:
 
 ```text
 benchmark
@@ -1307,7 +1307,7 @@ numerical error summaries
 
 This allows inspection of numerical drift rather than only binary pass/fail testing.
 
-These capabilities SHALL be added as independent domains or snapshot kinds, not as fields in an ever-growing universal snapshot payload.
+These capabilities SHALL be added as independent domains or snapshot records, not as fields in an ever-growing universal snapshot payload.
 
 ---
 
@@ -1415,7 +1415,7 @@ MolRecCompatibilityPolicy
 
 Generic names SHOULD only be used for genuinely generic concepts.
 
-Snapshot `kind` values remain short discriminators (`benchmark`, `molrec`, …) and are not repository names.
+Snapshot `record` values remain short discriminators (`benchmark`, `molrec`, …) and are not repository names.
 
 
 ---

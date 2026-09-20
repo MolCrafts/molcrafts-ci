@@ -1,2 +1,2 @@
-export type { KindTabPanelProps, KindTabPlugin, ProjectContext } from "./types";
-export { listPlugins, pluginForKind, pluginsFor, registerPlugin } from "./registry";
+export type { RecordTabPanelProps, RecordTabPlugin, ProjectContext } from "./types";
+export { listPlugins, pluginForRecord, pluginsFor, registerPlugin } from "./registry";

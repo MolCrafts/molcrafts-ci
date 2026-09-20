@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -30,13 +31,31 @@ class Source(BaseModel):
     timestamp: str | None = None
 
 
+def schema_version() -> str:
+    """
+    The schema version, taken from the package's minor.
+
+    The shape of a manifest and the release that defines it move together, so
+    there is nothing to keep in step by hand — bumping the minor *is* bumping
+    the schema.
+
+    Caveat for 1.0: while the project is 0.x the minor is the breaking-change
+    axis, so it works. Once major becomes that axis this has to follow major
+    instead, or 1.0.0 would emit "0" and read as a step backwards.
+    """
+    try:
+        return version("molcrafts-ci").split(".")[1]
+    except PackageNotFoundError:  # running from a source tree, uninstalled
+        return "0"
+
+
 class Manifest(BaseModel):
     """Infrastructure metadata describing a snapshot. Domains own the payload."""
 
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: str = "1"
-    kind: str
+    schema_version: str = Field(default_factory=lambda: schema_version())
+    record: str
     source: Source
     producer: str
     profile: str = "default"

@@ -31,7 +31,7 @@ def _clear_mock_trees() -> None:
 
 def _entry(
     *,
-    kind: str,
+    record: str,
     project_repo: str,
     commit: str,
     profile: str,
@@ -42,7 +42,7 @@ def _entry(
 ) -> mci.Snapshot:
     return mci.Snapshot(
         manifest=mci.Manifest(
-            kind=kind,
+            record=record,
             source=mci.Source(
                 repository=project_repo,
                 commit=commit,
@@ -68,8 +68,8 @@ def _export_fixtures() -> None:
             rel = path.relative_to(DATA).as_posix()
             indexes.append(f"data/{rel}")
             project = path.parent.name
-            kind = path.stem
-            key = f"{project}/{kind}"
+            record = path.stem
+            key = f"{project}/{record}"
             rows: list[dict] = []
             for line in path.read_text(encoding="utf-8").splitlines():
                 line = line.strip()
@@ -94,7 +94,7 @@ def _export_fixtures() -> None:
         "export type IndexEntry = {\n"
         "  snapshot_id: string;\n"
         "  path: string;\n"
-        "  kind: string;\n"
+        "  record: string;\n"
         "  generation: number;\n"
         "  profile: string;\n"
         "  repository: string;\n"
@@ -123,7 +123,7 @@ def main() -> None:
         (
             "molpy",
             _entry(
-                kind="tests",
+                record="tests",
                 project_repo="MolCrafts/molpy",
                 commit="a1b2c3d4e5f6789012345678abcdef01",
                 profile="linux-x86_64",
@@ -136,7 +136,7 @@ def main() -> None:
         (
             "molpy",
             _entry(
-                kind="tests",
+                record="tests",
                 project_repo="MolCrafts/molpy",
                 commit="c3d4e5f60718293a4b5c6d7e8f901234",
                 profile="linux-x86_64",
@@ -149,7 +149,7 @@ def main() -> None:
         (
             "molpy",
             _entry(
-                kind="benchmark",
+                record="benchmark",
                 project_repo="MolCrafts/molpy",
                 commit="c3d4e5f60718293a4b5c6d7e8f901234",
                 profile="linux-x86_64",
@@ -162,7 +162,7 @@ def main() -> None:
         (
             "molpy",
             _entry(
-                kind="regression",
+                record="regression",
                 project_repo="MolCrafts/molpy",
                 commit="c3d4e5f60718293a4b5c6d7e8f901234",
                 profile="linux-x86_64",
@@ -175,7 +175,7 @@ def main() -> None:
         (
             "molrs",
             _entry(
-                kind="tests",
+                record="tests",
                 project_repo="MolCrafts/molrs",
                 commit="e5f60718293a4b5c6d7e8f9012345678",
                 profile="linux-x86_64",
@@ -188,7 +188,7 @@ def main() -> None:
         (
             "molrs",
             _entry(
-                kind="benchmark",
+                record="benchmark",
                 project_repo="MolCrafts/molrs",
                 commit="e5f60718293a4b5c6d7e8f9012345678",
                 profile="linux-x86_64",
@@ -201,7 +201,7 @@ def main() -> None:
         (
             "molrs",
             _entry(
-                kind="benchmark",
+                record="benchmark",
                 project_repo="MolCrafts/molrs",
                 commit="e5f60718293a4b5c6d7e8f9012345678",
                 profile="macos-aarch64",
@@ -214,7 +214,7 @@ def main() -> None:
         (
             "molrs",
             _entry(
-                kind="coverage",
+                record="coverage",
                 project_repo="MolCrafts/molrs",
                 commit="e5f60718293a4b5c6d7e8f9012345678",
                 profile="linux-x86_64",
@@ -246,7 +246,7 @@ def main() -> None:
         (
             "molcrafts-molrec",
             _entry(
-                kind="tests",
+                record="tests",
                 project_repo="MolCrafts/molcrafts-molrec",
                 commit="0718293a4b5c6d7e8f90123456789012",
                 profile="default",
@@ -259,7 +259,7 @@ def main() -> None:
         (
             "molcrafts-molrec",
             _entry(
-                kind="coverage",
+                record="coverage",
                 project_repo="MolCrafts/molcrafts-molrec",
                 commit="0718293a4b5c6d7e8f90123456789012",
                 profile="default",
@@ -291,7 +291,7 @@ def main() -> None:
         (
             "molpy",
             _entry(
-                kind="coverage",
+                record="coverage",
                 project_repo="MolCrafts/molpy",
                 commit="c3d4e5f60718293a4b5c6d7e8f901234",
                 profile="linux-x86_64",
@@ -323,7 +323,7 @@ def main() -> None:
         (
             "molcrafts-molrec",
             _entry(
-                kind="molrec",
+                record="molrec",
                 project_repo="MolCrafts/molcrafts-molrec",
                 commit="0718293a4b5c6d7e8f90123456789012",
                 profile="default",
