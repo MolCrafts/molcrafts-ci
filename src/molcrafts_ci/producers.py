@@ -23,9 +23,35 @@ from typing import Any
 
 from molcrafts_ci.manifest import Source
 
-# A file with thousands of uncovered lines would bloat every snapshot that
-# mentions it without telling a reader more than the percentage already does.
-MAX_UNCOVERED_PER_FILE = 200
+# A file with hundreds of uncovered lines bloats every snapshot that mentions
+# it, and the dashboard renders the list as one joined cell that stops being
+# readable long before that. Measured on molrs: 369 files, a median of 22
+# uncovered lines each. Anything truncated is reported as `uncovered_total`,
+# so a reader is never shown a partial list that looks complete.
+MAX_UNCOVERED_PER_FILE = 50
+
+
+def _uncovered(lines: list[int]) -> dict[str, Any]:
+    kept = sorted(lines)[:MAX_UNCOVERED_PER_FILE]
+    out: dict[str, Any] = {"uncovered": kept}
+    if len(lines) > len(kept):
+        out["uncovered_total"] = len(lines)
+    return out
+
+
+def _relative(path: str, source_root: Path | None) -> str:
+    """Coverage tools report build paths; a snapshot should carry repo paths.
+
+    cargo-llvm-cov writes absolute paths, so an unprocessed payload records the
+    runner's directory layout and never matches the same file measured
+    elsewhere. coverage.py already reports relative paths and is left alone.
+    """
+    if source_root is None:
+        return path
+    try:
+        return Path(path).relative_to(source_root).as_posix()
+    except ValueError:
+        return path
 
 
 def detect_profile() -> str:
@@ -79,7 +105,7 @@ def _percent(hit: float, found: float) -> float | None:
     return round(100.0 * hit / found, 1) if found else None
 
 
-def read_coverage_py(path: Path) -> dict[str, Any]:
+def read_coverage_py(path: Path, *, source_root: Path | None = None) -> dict[str, Any]:
     """coverage.py's JSON report (`--cov-report=json`).
 
     coverage.py measures statements and branches but not functions, and its
@@ -98,9 +124,9 @@ def read_coverage_py(path: Path) -> dict[str, Any]:
 
     out["files"] = [
         {
-            "path": name,
+            "path": _relative(name, source_root),
             "lines": round(info.get("summary", {}).get("percent_covered", 0.0), 1),
-            "uncovered": info.get("missing_lines", [])[:MAX_UNCOVERED_PER_FILE],
+            **_uncovered(info.get("missing_lines", [])),
         }
         for name, info in sorted(data.get("files", {}).items())
     ]
@@ -110,7 +136,7 @@ def read_coverage_py(path: Path) -> dict[str, Any]:
 _LCOV_FIELD = re.compile(r"^(SF|DA|LF|LH|BRF|BRH|FNF|FNH):(.*)$")
 
 
-def read_lcov(path: Path) -> dict[str, Any]:
+def read_lcov(path: Path, *, source_root: Path | None = None) -> dict[str, Any]:
     """LCOV tracefile, which cargo-llvm-cov, grcov and gcov all emit.
 
     Totals are summed from the per-file counters rather than read from a
@@ -160,9 +186,9 @@ def read_lcov(path: Path) -> dict[str, Any]:
         "totals": out_totals,
         "files": [
             {
-                "path": f["path"],
+                "path": _relative(f["path"], source_root),
                 "lines": _percent(f["_lh"], f["_lf"]) or 0.0,
-                "uncovered": sorted(f["uncovered"])[:MAX_UNCOVERED_PER_FILE],
+                **_uncovered(f["uncovered"]),
             }
             for f in sorted(files, key=lambda f: f["path"])
         ],

@@ -139,7 +139,9 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
         _emit(build("tests", args.tests_producer, read_junit(Path(args.junit))))
     if args.coverage:
         read = read_lcov if args.coverage_format == "lcov" else read_coverage_py
-        _emit(build("coverage", args.coverage_producer, read(Path(args.coverage))))
+        root = Path(args.source_root).resolve()
+        payload = read(Path(args.coverage), source_root=root)
+        _emit(build("coverage", args.coverage_producer, payload))
     return 0
 
 
@@ -188,6 +190,12 @@ def main(argv: list[str] | None = None) -> int:
     p_sn.add_argument("--tests-producer", default="pytest")
     p_sn.add_argument("--coverage-producer", default="coverage.py")
     p_sn.add_argument("--profile", help="Override the detected <os>-<arch> profile")
+    p_sn.add_argument(
+        "--source-root",
+        default=".",
+        help="Strip this prefix from coverage file paths (default: the working "
+        "directory), so a snapshot records repo paths and not the runner's layout",
+    )
     p_sn.add_argument("--generation", type=int, default=1)
     p_sn.add_argument(
         "--track",

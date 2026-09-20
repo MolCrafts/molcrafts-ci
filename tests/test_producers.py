@@ -115,14 +115,43 @@ class TestCoverageFromLcov:
         assert files["src/a.rs"]["lines"] == pytest.approx(33.3)
         assert files["src/b.rs"]["uncovered"] == []
 
-    def test_caps_uncovered_lines(self, tmp_path) -> None:
-        """A file with thousands of uncovered lines must not bloat every snapshot."""
+    def test_caps_uncovered_lines_and_says_so(self, tmp_path) -> None:
+        """A truncated list must not read as a complete one."""
         count = MAX_UNCOVERED_PER_FILE + 50
         body = "\n".join(f"DA:{n},0" for n in range(1, count + 1))
         path = tmp_path / "lcov.info"
         path.write_text(f"SF:src/big.rs\n{body}\nLF:{count}\nLH:0\nend_of_record\n", "utf-8")
 
-        assert len(read_lcov(path)["files"][0]["uncovered"]) == MAX_UNCOVERED_PER_FILE
+        entry = read_lcov(path)["files"][0]
+        assert len(entry["uncovered"]) == MAX_UNCOVERED_PER_FILE
+        assert entry["uncovered_total"] == count
+
+    def test_leaves_a_short_list_unlabelled(self, tmp_path) -> None:
+        path = tmp_path / "lcov.info"
+        path.write_text("SF:src/a.rs\nDA:1,0\nLF:1\nLH:0\nend_of_record\n", encoding="utf-8")
+
+        assert "uncovered_total" not in read_lcov(path)["files"][0]
+
+    def test_relativises_build_paths(self, tmp_path) -> None:
+        """cargo-llvm-cov writes absolute paths; a snapshot should carry repo paths."""
+        root = tmp_path / "checkout"
+        root.mkdir()
+        path = tmp_path / "lcov.info"
+        path.write_text(
+            f"SF:{root}/molrs/src/a.rs\nDA:1,1\nLF:1\nLH:1\nend_of_record\n",
+            encoding="utf-8",
+        )
+
+        assert read_lcov(path, source_root=root)["files"][0]["path"] == "molrs/src/a.rs"
+
+    def test_keeps_a_path_outside_the_source_root(self, tmp_path) -> None:
+        """A dependency compiled from the cargo registry is not under the checkout."""
+        path = tmp_path / "lcov.info"
+        path.write_text("SF:/opt/registry/dep.rs\nLF:1\nLH:1\nend_of_record\n", encoding="utf-8")
+
+        assert read_lcov(path, source_root=tmp_path / "checkout")["files"][0]["path"] == (
+            "/opt/registry/dep.rs"
+        )
 
 
 class TestGithubSource:

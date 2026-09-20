@@ -56,6 +56,17 @@ snapshot, so this is a patch, not a minor.
   These two payload shapes are infrastructure rather than domain semantics: the
   frontend already reads them without being told which record it is looking at.
   Benchmark payloads remain the domain's.
+
+  Coverage file paths are made relative to `--source-root` (the working
+  directory by default). cargo-llvm-cov reports absolute build paths, so an
+  unprocessed payload recorded the runner's directory layout and never matched
+  the same file measured anywhere else.
+
+  The per-file uncovered-line cap drops from 200 to 50, and a truncated list
+  now carries `uncovered_total`. Measured on molrs: 369 files, a median of 22
+  uncovered lines each, and the dashboard joins the list into one cell that is
+  unreadable long before 200. A partial list that looked complete was the worse
+  problem; the size (330 KB to 190 KB per snapshot) was the cheaper one.
 - The seeded mock data under `data/` was deleted, and `seed_mock_data.py` now
   writes to a gitignored `.mock-data/` root. Those snapshots carried invented
   commit SHAs (`a1b2c3d4…`), a `ref` of `refs/heads/main` for repositories that
