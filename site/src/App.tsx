@@ -5,6 +5,7 @@ import { WorkbenchShell } from "@/components/layout/WorkbenchShell";
 import { OperationsDock } from "@/components/operations-dock";
 import { ProjectList } from "@/components/project-list";
 import { SnapshotInspector } from "@/components/snapshot-inspector";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -116,6 +117,9 @@ function Workbench({
               </nav>
             </>
           )}
+          {/* Breadcrumb left, the surface's verbs right. Nothing else. */}
+          <span className="flex-1" />
+          <ThemeToggle />
         </header>
       }
       navigator={

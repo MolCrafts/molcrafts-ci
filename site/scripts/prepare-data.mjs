@@ -4,7 +4,7 @@
  * Builds data/index-listing.json from ../data/index (all .jsonl files).
  */
 
-import { cp, mkdir, readdir, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -30,6 +30,10 @@ async function* walkJsonl(dir, base = dir) {
 }
 
 async function main() {
+  // Rebuild from scratch. Copying over a previous run leaves streams that
+  // ../data no longer publishes sitting in the output, and they ship: a kind
+  // deleted upstream would keep serving its old index to the site.
+  await rm(publicData, { recursive: true, force: true });
   await mkdir(publicData, { recursive: true });
 
   const indexSrc = path.join(dataRoot, "index");

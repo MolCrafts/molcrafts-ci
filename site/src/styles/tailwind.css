@@ -16,12 +16,10 @@
 
 @theme inline {
   --color-background: var(--mc-canvas);
-  --color-canvas-tinted: var(--mc-canvas-tinted);
   --color-surface: var(--mc-surface);
   --color-surface-strong: var(--mc-surface-strong);
   --color-sunken: var(--mc-surface-muted);
   --color-interactive: var(--mc-action-soft);
-  --color-interactive-active: var(--mc-action-line);
   --color-interactive-foreground: var(--mc-text);
   --color-foreground: var(--mc-text);
   --color-muted-foreground: var(--mc-text-muted);
@@ -32,7 +30,6 @@
   --color-ring: var(--mc-focus);
   --color-accent: var(--mc-action);
   --color-accent-hover: var(--mc-action-hover);
-  --color-accent-active: var(--mc-action-active);
   --color-accent-foreground: var(--mc-action-foreground);
   --color-accent-ink: var(--mc-action);
   --color-accent-soft: var(--mc-action-soft);
@@ -86,7 +83,6 @@
   /* Selected row in the vendored table primitive. */
   --color-accent-muted: var(--mc-action-soft);
 
-  --font-display: var(--mc-font-display);
   --font-sans: var(--mc-font-ui);
   --font-mono: var(--mc-font-mono);
   --shadow-overlay: var(--mc-shadow-md);

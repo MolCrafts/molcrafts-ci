@@ -12,4 +12,3 @@ site/dist/
 site/public/data/
 
 # Keep mock index fixtures under data/index/**; ignore only empty placeholders if needed
-

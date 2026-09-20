@@ -17,7 +17,6 @@
    * which is below the floor for text at any size this app uses. */
   --molci-subtle: #636a72;
   --molci-canvas: #eef1f4;
-  --molci-canvas-tinted: #e4e9ef;
   --molci-surface: #f8fafb;
   --molci-surface-muted: #e8edf2;
   --molci-cream: #f8fafb;
@@ -32,11 +31,10 @@
   --molci-warning: #a15c09;
   --molci-warning-surface: rgba(242, 198, 121, 0.35);
 
-  /* visual-language.md section 1 fixes the families: Geist (or Inter) for UI,
-   * JetBrains Mono for anything read as a quantity. Neither is bundled or
-   * fetched, so an install without them falls through to the system stack. */
-  --mc-font-display: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --mc-font-ui: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* visual-language.md section 1 fixes the families: Geist for UI, JetBrains
+   * Mono for anything read as a quantity. Both are bundled from @fontsource
+   * (see src/index.tsx); the stacks below are the fallback while they load. */
+  --mc-font-ui: "Geist Sans", "Geist", ui-sans-serif, system-ui, sans-serif;
   --mc-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
 
   /* Exactly one elevation, and only overlays may use it. Resident surfaces
@@ -44,7 +42,6 @@
   --mc-shadow-md: 0 0.35rem 0.95rem rgba(26, 35, 50, 0.1);
 
   --mc-canvas: var(--molci-canvas);
-  --mc-canvas-tinted: var(--molci-canvas-tinted);
   --mc-surface: var(--molci-surface);
   --mc-surface-muted: var(--molci-surface-muted);
   --mc-surface-strong: var(--molci-slate);
@@ -102,7 +99,6 @@
 .dark {
   color-scheme: dark;
   --mc-canvas: #121820;
-  --mc-canvas-tinted: #171e28;
   --mc-surface: #1a2330;
   --mc-surface-muted: #222d3c;
   --mc-surface-strong: #0c1018;

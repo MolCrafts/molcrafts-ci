@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,5 +14,23 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
+      # Same invocations as .pre-commit-config.yaml, minus --fix.
       - run: ruff check src tests
+      - run: ruff format --check src tests
       - run: pytest -q
+
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+        working-directory: site
+      # rsbuild does not type-check, so publish.yml building cleanly says
+      # nothing about types. This is the only place tsc runs.
+      - run: npm run typecheck
+        working-directory: site

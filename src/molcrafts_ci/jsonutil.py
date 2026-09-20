@@ -12,13 +12,16 @@ def dumps_deterministic(data: Any, *, indent: int | None = 2) -> str:
 
     Pass ``indent=None`` for a single-line JSONL record (still sorted keys).
     """
-    return json.dumps(
-        data,
-        ensure_ascii=False,
-        indent=indent,
-        sort_keys=True,
-        allow_nan=False,
-    ) + "\n"
+    return (
+        json.dumps(
+            data,
+            ensure_ascii=False,
+            indent=indent,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n"
+    )
 
 
 def loads(text: str) -> Any:

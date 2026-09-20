@@ -19,14 +19,7 @@ def snapshot_path(
     generation: int,
     snapshot_id: str,
 ) -> Path:
-    return (
-        root
-        / "snapshots"
-        / project
-        / kind
-        / str(generation)
-        / f"{snapshot_id}.json"
-    )
+    return root / "snapshots" / project / kind / str(generation) / f"{snapshot_id}.json"
 
 
 def write_snapshot(root: Path, project: str, snapshot: Snapshot) -> Path:

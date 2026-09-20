@@ -1,0 +1,56 @@
+# Commit-time half of the CI gate.
+#
+# Every project-tool hook is `repo: local` + `language: system` running the
+# exact command .github/workflows/ci.yml runs, so there is one invocation and
+# no second pinned version to drift. They resolve from `pip install -e ".[dev]"`
+# and `site/node_modules`.
+#
+# Not here: `npm run build` (publish.yml). It syncs the UI registry, stages
+# data and bundles — too slow for every commit, and CI covers it on push.
+
+default_install_hook_types: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=512]
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: python3 -m ruff check --fix
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format
+        entry: python3 -m ruff format
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: pytest
+        name: pytest
+        entry: python3 -m pytest -q
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+
+      - id: site-typecheck
+        name: tsc --noEmit (site)
+        entry: npm --prefix site run typecheck
+        language: system
+        files: ^site/(src/|tsconfig\.json|package\.json)
+        pass_filenames: false
+        require_serial: true
