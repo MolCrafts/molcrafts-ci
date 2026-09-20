@@ -3,6 +3,8 @@
     "index/molcrafts-ci/coverage.jsonl",
     "index/molcrafts-ci/tests.jsonl",
     "index/molpy/coverage.jsonl",
-    "index/molpy/tests.jsonl"
+    "index/molpy/tests.jsonl",
+    "index/molrs/coverage.jsonl",
+    "index/molrs/tests.jsonl"
   ]
 }
