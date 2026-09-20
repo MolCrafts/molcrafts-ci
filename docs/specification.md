@@ -878,7 +878,7 @@ server authentication
 runtime operational maintenance
 ```
 
-The site is built in this repository's CI — its own lockfile, its own node, its gates first — and the built directory is uploaded to Cloudflare Pages with wrangler. Building on the host's builders instead would put the build somewhere the gates do not reach.
+Cloudflare Pages is connected to the repository and builds it: root directory `site`, `npm run build`, output `dist`. No deploy workflow and no API token live here. `sync-ui` finds no sibling molcrafts-ui checkout on the builder and falls back to the vendored sources under `site/src`, which is why they are committed.
 
 The intended architecture is therefore:
 

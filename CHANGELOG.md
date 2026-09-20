@@ -26,8 +26,9 @@ First release. `manifest.schema_version` is `1`.
   append-only index at `data/index/<project>/<record>.jsonl`.
 - **CLI** — `molci validate-snapshot`, `molci validate-gate`, `molci ingest`.
   `molcrafts_ci` is the package; `molci` is the short import.
-- **Workflows** — `ingest` (artifact to index), `deploy` (static site to
-  Cloudflare Pages), `ci`, and this `release`.
+- **Workflows** — `ingest` (artifact to index), `ci`, and this `release`.
+  The site is deployed by Cloudflare Pages' own Git integration, not from
+  here.
 - **Site** — a snapshot browser under `site/`, built on the molcrafts-ui
   registry. One shell for every surface: navigator, work surface, an
   inspector that opens on a selection, and a collapsible operations dock,
