@@ -34,3 +34,5 @@ jobs:
       # nothing about types. This is the only place tsc runs.
       - run: npm run typecheck
         working-directory: site
+      - run: npm test
+        working-directory: site

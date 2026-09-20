@@ -51,6 +51,14 @@ repos:
         name: tsc --noEmit (site)
         entry: npm --prefix site run typecheck
         language: system
-        files: ^site/(src/|tsconfig\.json|package\.json)
+        files: ^site/(src/|tests/|tsconfig\.json|package\.json)
+        pass_filenames: false
+        require_serial: true
+
+      - id: site-test
+        name: rstest (site)
+        entry: npm --prefix site test
+        language: system
+        files: ^site/(src/|tests/|rstest\.config\.ts|package\.json)
         pass_filenames: false
         require_serial: true

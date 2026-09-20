@@ -307,12 +307,24 @@ a toolchain decision rather than a fix.
 |---|---|---|
 | Hover, focus, transitions and the trend charts' geometry have never been looked at. No browser automation is reachable here, so they are covered by types, build and static scan only. The layout and flows *were* reviewed by the author running it — that is what caught the inspector never opening and the table rows not being clickable | — | 🟡 |
 | No screenshot baselines on the shell or the product components. They are the only thing that would catch those two defects automatically, and they need the same missing browser automation | — | 🟡 |
-| `plugins/stream-kinds.ts` is pure and was exercised ad hoc against the real fixtures, but the project has no JS test runner, so nothing is committed. Adding vitest is a toolchain decision, not a side effect of a UI run | `tester` | 🟡 |
 
 Cleared on 2026-09-20: bundled fonts, the four unused tokens, the dark-theme
-toggle, `ruff format` drift, and the stale `site/public/data` (fixed at the
-source — `prepare-data.mjs` now prunes before staging). The destructive-red
-contrast was closed as an upstream property, not a product defect; see the
-token layer above.
+toggle, `ruff format` drift, the stale `site/public/data` (fixed at the
+source — `prepare-data.mjs` now prunes before staging), and the missing test
+runner. The destructive-red contrast was closed as an upstream property, not
+a product defect; see the token layer above.
+
+## Tests
+
+`site/tests/` mirrors `site/src/`, run by **`@rstest/core`** — the toolchain
+is Rspack-family only, so not vitest. It reuses the same `resolve.alias`
+shape as `rsbuild.config.ts`, so `@/` needed no second declaration.
+
+43 tests over the pure layers: the payload readers, the stream summaries and
+the kind → tab resolution. Components are not rendered here; the shell and
+the product components are screenshot-baseline territory, which is still
+open. The cases worth keeping are the ones real data caught — a series must
+stay inside one profile, a producer that publishes no number must not be
+charted, and coverage must not be scored as pass or fail.
 
 <!-- mol:ui:end -->
