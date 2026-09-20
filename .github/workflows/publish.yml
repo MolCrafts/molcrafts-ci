@@ -1,0 +1,82 @@
+# Reusable / scheduled workflow: publish static site from data/index + snapshots.
+name: Publish site
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "site/**"
+      - ".github/workflows/publish.yml"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install and build site
+        run: |
+          npm ci
+          npm run build
+        env:
+          PUBLIC_BASE: /molcrafts-ci/
+
+      - name: Assemble Pages artifact
+        working-directory: .
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp -R site/dist/* dist/
+          mkdir -p dist/data
+          if [[ -d data ]]; then
+            cp -R data/* dist/data/ || true
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("data/index")
+          listing = []
+          if root.exists():
+              for path in sorted(root.rglob("*.jsonl")):
+                  listing.append(path.as_posix())
+          Path("dist/data/index-listing.json").write_text(
+              json.dumps({"indexes": listing}, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

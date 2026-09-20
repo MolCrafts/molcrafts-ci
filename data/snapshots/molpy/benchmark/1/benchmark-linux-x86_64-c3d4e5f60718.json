@@ -1,0 +1,27 @@
+{
+  "manifest": {
+    "kind": "benchmark",
+    "producer": "pytest-benchmark",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "schema_version": "1",
+    "source": {
+      "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+      "producer_version": null,
+      "ref": "refs/heads/main",
+      "repository": "MolCrafts/molpy",
+      "run_attempt": null,
+      "timestamp": "2026-09-20T08:12:00Z",
+      "workflow_run": 1215
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "metrics": {
+      "mean_ns": 12.5
+    }
+  }
+}

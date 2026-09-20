@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "molcrafts-ci"
+version = "0.1.0"
+description = "Shared CI engineering infrastructure for MolCrafts: snapshots, gates, index, and publish."
+requires-python = ">=3.12"
+license = { text = "BSD-3-Clause" }
+authors = [{ name = "MolCrafts" }]
+readme = "README.md"
+dependencies = [
+  "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.11",
+]
+
+[project.scripts]
+molcrafts-ci = "molcrafts_ci.cli:main"
+molci = "molcrafts_ci.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/MolCrafts/molcrafts-ci"
+Specification = "https://github.com/MolCrafts/molcrafts-ci/blob/main/docs/specification.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/molcrafts_ci", "src/molci"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

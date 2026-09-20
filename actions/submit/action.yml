@@ -1,0 +1,51 @@
+name: Submit MolCrafts CI snapshot
+description: >
+  Validate a Snapshot JSON, upload it as a workflow artifact, and optionally
+  notify molcrafts-ci ingest when tracking is enabled.
+inputs:
+  snapshot-path:
+    description: Path to the Snapshot JSON file
+    required: true
+  artifact-name:
+    description: Name of the uploaded workflow artifact
+    required: false
+    default: molcrafts-ci-snapshot
+  tracking-enabled:
+    description: Whether to dispatch ingest notification (true/false)
+    required: false
+    default: "false"
+  project:
+    description: Project key used by the central index (required when tracking)
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Validate snapshot
+      shell: bash
+      run: |
+        set -euo pipefail
+        python -m pip install -q "${{ github.action_path }}/../.."
+        molcrafts-ci validate-snapshot "${{ inputs.snapshot-path }}"
+
+    - name: Upload snapshot artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.snapshot-path }}
+        if-no-files-found: error
+
+    - name: Notify ingest (tracking)
+      if: inputs.tracking-enabled == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        if [[ -z "${{ inputs.project }}" ]]; then
+          echo "project is required when tracking-enabled=true" >&2
+          exit 1
+        fi
+        # Placeholder: producers with a GitHub App should repository_dispatch
+        # MolCrafts/molcrafts-ci with metadata only (not the payload).
+        echo "tracking enabled for project=${{ inputs.project }}; ingest dispatch is configured centrally"

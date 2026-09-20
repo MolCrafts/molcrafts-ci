@@ -1,0 +1,25 @@
+{
+  "manifest": {
+    "kind": "molrec",
+    "producer": "molrec",
+    "profile": "default",
+    "provenance": {},
+    "schema_version": "1",
+    "source": {
+      "commit": "0718293a4b5c6d7e8f90123456789012",
+      "producer_version": null,
+      "ref": "refs/heads/main",
+      "repository": "MolCrafts/molcrafts-molrec",
+      "run_attempt": null,
+      "timestamp": "2026-09-20T11:10:00Z",
+      "workflow_run": 92
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "schema_version": "0.1.0"
+  }
+}

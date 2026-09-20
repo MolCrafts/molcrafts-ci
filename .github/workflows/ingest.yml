@@ -1,0 +1,74 @@
+# Reusable workflow: ingest a tracked snapshot into data/ + index.
+# Callers should pass metadata only; the snapshot is fetched from an artifact.
+name: Ingest snapshot
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: Project key under data/snapshots/<project>/
+        required: true
+        type: string
+      artifact-name:
+        description: Artifact containing the Snapshot JSON
+        required: true
+        type: string
+      snapshot-file:
+        description: Filename inside the artifact
+        required: false
+        type: string
+        default: snapshot.json
+  workflow_dispatch:
+    inputs:
+      project:
+        required: true
+        type: string
+      artifact-name:
+        required: true
+        type: string
+      snapshot-file:
+        required: false
+        type: string
+        default: snapshot.json
+
+permissions:
+  contents: write
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install molcrafts-ci
+        run: pip install .
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: /tmp/molcrafts-ci-artifact
+
+      - name: Ingest
+        run: |
+          set -euo pipefail
+          molcrafts-ci ingest "/tmp/molcrafts-ci-artifact/${{ inputs.snapshot-file }}" \
+            --project "${{ inputs.project }}" \
+            --data-root data
+
+      - name: Commit index update
+        run: |
+          set -euo pipefail
+          git config user.name "molcrafts-ci[bot]"
+          git config user.email "molcrafts-ci[bot]@users.noreply.github.com"
+          git add data
+          if git diff --staged --quiet; then
+            echo "no changes"
+          else
+            git commit -m "ingest: ${{ inputs.project }}"
+            git push
+          fi

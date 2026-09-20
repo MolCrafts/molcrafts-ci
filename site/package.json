@@ -1,0 +1,50 @@
+{
+  "name": "@molcrafts/molcrafts-ci-site",
+  "description": "MolCrafts CI engineering snapshot browser",
+  "author": {
+    "name": "Roy Kid"
+  },
+  "license": "BSD-3-Clause",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "sync-ui": "node scripts/sync-ui.mjs",
+    "prepare-data": "node scripts/prepare-data.mjs",
+    "seed:mock": "python3 ../scripts/seed_mock_data.py",
+    "dev": "npm run sync-ui && rsbuild dev",
+    "dev:data": "npm run sync-ui && npm run prepare-data && PUBLIC_USE_MOCK=0 rsbuild dev",
+    "build": "npm run sync-ui && npm run prepare-data && PUBLIC_USE_MOCK=0 rsbuild build",
+    "preview": "rsbuild preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@radix-ui/react-context-menu": "^2.2.16",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-tooltip": "^1.2.12",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.544.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-resizable-panels": "^4.11.2",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^2.1.10",
+    "@rsbuild/plugin-react": "^2.1.0",
+    "@rsbuild/plugin-tailwindcss": "^2.0.3",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "rspack-plugin-mock": "^2.2.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.7.0"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.3.3"
+  }
+}

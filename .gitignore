@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+dist/
+*.egg-info/
+.coverage
+htmlcov/
+site/node_modules/
+site/dist/
+site/public/data/
+
+# Keep mock index fixtures under data/index/**; ignore only empty placeholders if needed
+

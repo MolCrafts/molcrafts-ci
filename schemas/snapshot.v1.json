@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://molcrafts.org/schemas/ci/snapshot/v1.json",
+  "title": "Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifest", "payload"],
+  "properties": {
+    "manifest": { "$ref": "manifest.v1.json" },
+    "payload": { "type": "object" }
+  }
+}

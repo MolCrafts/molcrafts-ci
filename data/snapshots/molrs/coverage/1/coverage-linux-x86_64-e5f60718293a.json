@@ -1,0 +1,49 @@
+{
+  "manifest": {
+    "kind": "coverage",
+    "producer": "llvm-cov",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "schema_version": "1",
+    "source": {
+      "commit": "e5f60718293a4b5c6d7e8f9012345678",
+      "producer_version": null,
+      "ref": "refs/heads/main",
+      "repository": "MolCrafts/molrs",
+      "run_attempt": null,
+      "timestamp": "2026-09-20T10:40:00Z",
+      "workflow_run": 448
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "files": [
+      {
+        "lines": 94.2,
+        "path": "molrs/src/spatial/neighbors.rs",
+        "uncovered": [
+          412,
+          418
+        ]
+      },
+      {
+        "lines": 81.0,
+        "path": "molrs/src/md/lj.rs",
+        "uncovered": [
+          88,
+          91,
+          120
+        ]
+      }
+    ],
+    "totals": {
+      "branches": 71.2,
+      "functions": 93.0,
+      "lines": 88.4,
+      "statements": 87.1
+    }
+  }
+}

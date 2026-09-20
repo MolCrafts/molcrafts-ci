@@ -1,0 +1,137 @@
+/*
+ * MolCrafts CI product tokens — engineering teal / slate.
+ * Constitution (geometry, motion, status) is imported separately from synced files.
+ */
+
+:root {
+  --molci-teal: #0d7377;
+  --molci-teal-hover: #0a5f62;
+  --molci-teal-active: #074548;
+  --molci-teal-soft: rgba(13, 115, 119, 0.12);
+  --molci-teal-line: rgba(13, 115, 119, 0.28);
+  --molci-slate: #1a2332;
+  --molci-slate-mid: #2c3a4f;
+  --molci-ink: #14202e;
+  --molci-muted: #5a6b7d;
+  /* 4.65:1 on the lightest surface it lands on. The old #8494a7 was 2.96:1,
+   * which is below the floor for text at any size this app uses. */
+  --molci-subtle: #636a72;
+  --molci-canvas: #eef1f4;
+  --molci-canvas-tinted: #e4e9ef;
+  --molci-surface: #f8fafb;
+  --molci-surface-muted: #e8edf2;
+  --molci-cream: #f8fafb;
+  --molci-border: rgba(26, 35, 50, 0.12);
+  --molci-border-strong: rgba(26, 35, 50, 0.2);
+  --molci-focus: #14919b;
+  /* Status hues are fixed by the constitution (visual-language.md section 5),
+   * so the product does not get its own red. These aliases stay only so call
+   * sites can keep reading --mc-danger. */
+  --molci-danger: var(--status-failed);
+  --molci-danger-surface: var(--status-failed-soft);
+  --molci-warning: #a15c09;
+  --molci-warning-surface: rgba(242, 198, 121, 0.35);
+
+  /* visual-language.md section 1 fixes the families: Geist (or Inter) for UI,
+   * JetBrains Mono for anything read as a quantity. Neither is bundled or
+   * fetched, so an install without them falls through to the system stack. */
+  --mc-font-display: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --mc-font-ui: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --mc-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  /* Exactly one elevation, and only overlays may use it. Resident surfaces
+   * separate by border and background lightness (section 4). */
+  --mc-shadow-md: 0 0.35rem 0.95rem rgba(26, 35, 50, 0.1);
+
+  --mc-canvas: var(--molci-canvas);
+  --mc-canvas-tinted: var(--molci-canvas-tinted);
+  --mc-surface: var(--molci-surface);
+  --mc-surface-muted: var(--molci-surface-muted);
+  --mc-surface-strong: var(--molci-slate);
+  --mc-text: var(--molci-ink);
+  --mc-text-muted: var(--molci-muted);
+  --mc-text-subtle: var(--molci-subtle);
+  --mc-text-inverse: var(--molci-cream);
+  --mc-action: var(--molci-teal);
+  --mc-action-hover: var(--molci-teal-hover);
+  --mc-action-active: var(--molci-teal-active);
+  --mc-action-foreground: var(--molci-cream);
+  --mc-action-soft: var(--molci-teal-soft);
+  --mc-action-line: var(--molci-teal-line);
+  --mc-border: var(--molci-border);
+  --mc-border-strong: var(--molci-border-strong);
+  --mc-focus: var(--molci-focus);
+  --mc-chart: var(--molci-chart);
+  --mc-code-surface: #e2e8ef;
+  --mc-code-text: #243447;
+  --mc-warning: var(--molci-warning);
+  --mc-warning-surface: var(--molci-warning-surface);
+  --mc-danger: var(--molci-danger);
+  --mc-danger-surface: var(--molci-danger-surface);
+
+  /* Chart data hue.
+   *
+   * Not the brand accent: #0d7377 has chroma 0.083 and "reads gray" as a data
+   * mark — the palette validator flags it. This is the nearest step in the same
+   * hue (191) that passes all six checks against the light surface, so a chart
+   * still looks like this product without failing legibility. Chart and
+   * colormap choices are permitted variance (visual-language.md section 8). */
+  --molci-chart: #008f8c;
+
+  /* Status washes.
+   *
+   * constitution-base.css ships soft roles for running / completed / failed /
+   * warning and mixes them against --card, which this product binds to
+   * --mc-surface. These five complete the ramp in the same idiom; the four it
+   * already ships are not restated. Mixing against the surface is what makes a
+   * wash follow the theme without a second .dark block. */
+  --status-draft-soft: color-mix(in oklab, var(--status-draft) 12%, var(--mc-surface));
+  --status-ready-soft: color-mix(in oklab, var(--status-ready) 12%, var(--mc-surface));
+  --status-queued-soft: color-mix(in oklab, var(--status-queued) 12%, var(--mc-surface));
+  --status-cancelled-soft: color-mix(in oklab, var(--status-cancelled) 12%, var(--mc-surface));
+  --status-cached-soft: color-mix(in oklab, var(--status-cached) 14%, var(--mc-surface));
+
+  /* Rebind constitution / shadcn accent slots */
+  --accent: var(--mc-action);
+  --background: var(--mc-canvas);
+  --foreground: var(--mc-text);
+  --card: var(--mc-surface);
+  --border: var(--mc-border);
+}
+
+.dark {
+  color-scheme: dark;
+  --mc-canvas: #121820;
+  --mc-canvas-tinted: #171e28;
+  --mc-surface: #1a2330;
+  --mc-surface-muted: #222d3c;
+  --mc-surface-strong: #0c1018;
+  --mc-text: #e8eef4;
+  --mc-text-muted: rgba(232, 238, 244, 0.68);
+  /* 4.85:1 on --mc-surface-muted. The constitution's dark value (L 0.60) is
+   * tuned against darker surfaces than this product ships and measures 4.03. */
+  --mc-text-subtle: #9399a1;
+  --mc-action: #2dd4bf;
+  --mc-action-hover: #5eead4;
+  --mc-action-active: #99f6e4;
+  --mc-action-foreground: #0c1018;
+  --mc-action-soft: rgba(45, 212, 191, 0.14);
+  --mc-action-line: rgba(45, 212, 191, 0.28);
+  --mc-border: rgba(232, 238, 244, 0.12);
+  --mc-border-strong: rgba(232, 238, 244, 0.2);
+  --mc-focus: #5eead4;
+  /* Dark mode wants a narrower band (L 0.48-0.67); the dark brand accent
+   * #2dd4bf sits at 0.785 and fails it. This step passes all six. */
+  --mc-chart: #00a9a4;
+  --mc-code-surface: #1a2533;
+  --mc-code-text: #d5dee8;
+  --mc-warning: #f2c27c;
+  --mc-warning-surface: #3a2b18;
+  /* --mc-danger and its surface follow the role and the theme; no override. */
+  --mc-shadow-md: 0 0.4rem 1.05rem rgba(0, 0, 0, 0.35);
+  --accent: var(--mc-action);
+  --background: var(--mc-canvas);
+  --foreground: var(--mc-text);
+  --card: var(--mc-surface);
+  --border: var(--mc-border);
+}

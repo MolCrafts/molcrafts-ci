@@ -1,0 +1,163 @@
+/* MolCrafts CI product stylesheet.
+ *
+ * Constitution (motion, status roles, shared geometry):
+ *   ./constitution-theme.css + ./constitution-base.css
+ *   source: molcrafts-ui (`npm run sync-ui`)
+ * Brand teal/slate palette: ./tokens.css
+ */
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./constitution-theme.css";
+@import "./constitution-base.css";
+/* No density layer: this is an instrument an operator holds open, not a page a
+ * visitor reads once, so the constitution's own 13px / 32px density applies. */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--mc-canvas);
+  --color-canvas-tinted: var(--mc-canvas-tinted);
+  --color-surface: var(--mc-surface);
+  --color-surface-strong: var(--mc-surface-strong);
+  --color-sunken: var(--mc-surface-muted);
+  --color-interactive: var(--mc-action-soft);
+  --color-interactive-active: var(--mc-action-line);
+  --color-interactive-foreground: var(--mc-text);
+  --color-foreground: var(--mc-text);
+  --color-muted-foreground: var(--mc-text-muted);
+  --color-subtle-foreground: var(--mc-text-subtle);
+  --color-border: var(--mc-border);
+  --color-border-strong: var(--mc-border-strong);
+  --color-input: var(--mc-border-strong);
+  --color-ring: var(--mc-focus);
+  --color-accent: var(--mc-action);
+  --color-accent-hover: var(--mc-action-hover);
+  --color-accent-active: var(--mc-action-active);
+  --color-accent-foreground: var(--mc-action-foreground);
+  --color-accent-ink: var(--mc-action);
+  --color-accent-soft: var(--mc-action-soft);
+  --color-accent-line: var(--mc-action-line);
+  --color-primary: var(--mc-action);
+  --color-primary-foreground: var(--mc-action-foreground);
+  --color-card: var(--mc-surface);
+  --color-card-foreground: var(--mc-text);
+  --color-popover: var(--mc-surface);
+  --color-popover-foreground: var(--mc-text);
+  --color-muted: var(--mc-surface-muted);
+  --color-secondary: var(--mc-surface-muted);
+  --color-secondary-foreground: var(--mc-text);
+  --color-chart: var(--mc-chart);
+  --color-code: var(--mc-code-surface);
+  --color-code-foreground: var(--mc-code-text);
+  --color-destructive: var(--mc-danger);
+  --color-destructive-foreground: var(--mc-text-inverse);
+  --color-status-failed: var(--mc-danger);
+  --color-status-failed-hover: color-mix(in srgb, var(--mc-danger) 88%, black);
+  --color-scrim: rgb(12 16 24 / 58%);
+
+  /* Status ramp. The roles live in constitution-base.css as plain custom
+   * properties; this block is the only place they become Tailwind colors.
+   * `failed` keeps the brand danger above so one red serves both the
+   * destructive action and the failed state. */
+  --color-status-draft: var(--status-draft);
+  --color-status-ready: var(--status-ready);
+  --color-status-queued: var(--status-queued);
+  --color-status-running: var(--status-running);
+  --color-status-completed: var(--status-completed);
+  --color-status-cancelled: var(--status-cancelled);
+  --color-status-cached: var(--status-cached);
+  --color-status-warning: var(--status-warning);
+
+  /* Washes a status word sits on. Plain var() references, not color-mix
+   * here: an inline mix makes Tailwind emit a fallback rule that paints the
+   * solid role, which would put near-black ink on saturated red. Referencing
+   * the role means a browser without color-mix drops the background instead
+   * of making the label unreadable. */
+  --color-status-draft-soft: var(--status-draft-soft);
+  --color-status-ready-soft: var(--status-ready-soft);
+  --color-status-queued-soft: var(--status-queued-soft);
+  --color-status-running-soft: var(--status-running-soft);
+  --color-status-completed-soft: var(--status-completed-soft);
+  --color-status-failed-soft: var(--status-failed-soft);
+  --color-status-cancelled-soft: var(--status-cancelled-soft);
+  --color-status-cached-soft: var(--status-cached-soft);
+  --color-status-warning-soft: var(--status-warning-soft);
+
+  /* Selected row in the vendored table primitive. */
+  --color-accent-muted: var(--mc-action-soft);
+
+  --font-display: var(--mc-font-display);
+  --font-sans: var(--mc-font-ui);
+  --font-mono: var(--mc-font-mono);
+  --shadow-overlay: var(--mc-shadow-md);
+  /* The band that names the window is the constitution's toolbar height; the
+   * navigator's width is the shell's, not a token (WorkbenchShell.tsx). */
+  --spacing-header: var(--spacing-toolbar);
+
+  /* Motion.
+   *
+   * constitution-base.css sets --default-transition-* as plain custom
+   * properties, but Tailwind reads its own theme keys, so every
+   * `transition-*` utility was still easing on Tailwind's curve. These three
+   * lines are what actually bind the utilities to the constitution: 150ms on
+   * cubic-bezier(0.2, 0, 0, 1), and a pending pulse at the duration the
+   * constitution already ships for one (--motion-progress-pulse, 1200ms)
+   * rather than Tailwind's 2s. */
+  --default-transition-duration: var(--motion-base);
+  --default-transition-timing-function: var(--motion-ease);
+  --animate-pulse: pulse var(--motion-progress-pulse) var(--motion-ease) infinite;
+
+  /* A status dot is a mark, not an icon: it must read beside 12-13px text
+   * without out-weighing the word it is paired with. Off the 4px ladder for
+   * that reason, so it is named rather than left looking like drift. */
+  --spacing-status-dot: 0.375rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--mc-border);
+  }
+
+  html {
+    min-width: 20rem;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--mc-canvas);
+    color: var(--mc-text);
+    font-family: var(--mc-font-ui);
+    font-size: var(--text-body);
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  ::selection {
+    background: var(--mc-action-soft);
+    color: var(--mc-text);
+  }
+
+  /*
+   * Motion is removed, not shortened (visual-language.md section 6). The
+   * skeletons stop at full opacity, which still reads as a placeholder, and
+   * every colour transition resolves instantly instead of easing.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
