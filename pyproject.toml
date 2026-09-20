@@ -30,6 +30,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  # The self-published coverage record (scripts/ci_snapshot.py) reads
+  # coverage.py's JSON report.
+  "pytest-cov>=5.0",
   "ruff>=0.11",
 ]
 

@@ -78,6 +78,6 @@ repos:
         name: repository invariants
         entry: python3 scripts/check_repo.py
         language: system
-        files: ^(\.github/workflows/|site/src/.*\.tsx$|scripts/check_repo\.py)
+        files: ^(\.github/workflows/|actions/|site/src/.*\.tsx$|scripts/check_repo\.py)
         pass_filenames: false
         require_serial: true
