@@ -338,9 +338,14 @@ runs:
         import json, sys
         with open(sys.argv[1], encoding="utf-8") as fh:
             for line in fh:
-                if line.strip():
-                    r = json.loads(line)
-                    print(f"| `{r['snapshot_id']}` | {r['record']} | {r['status']} |")
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                # The report also carries rows that are not about a snapshot,
+                # such as the index listing being rewritten.
+                if "snapshot_id" not in r:
+                    continue
+                print(f"| `{r['snapshot_id']}` | {r['record']} | {r['status']} |")
         PY
         } >> "$GITHUB_STEP_SUMMARY"
 
