@@ -1,0 +1,86 @@
+{
+  "manifest": {
+    "producer": "coverage.py",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "coverage",
+    "schema_version": "1",
+    "source": {
+      "commit": "d1493660bc025d8b54ba12345a28b1e723a704f8",
+      "producer_version": "0.1.0",
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molcrafts-ci",
+      "run_attempt": 1,
+      "timestamp": "2026-09-20T17:06:46Z",
+      "workflow_run": 35524806460
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "files": [
+      {
+        "lines": 80.0,
+        "path": "src/molcrafts_ci/__init__.py",
+        "uncovered": [
+          23,
+          24
+        ]
+      },
+      {
+        "lines": 89.0,
+        "path": "src/molcrafts_ci/cli.py",
+        "uncovered": [
+          62,
+          63,
+          64,
+          128,
+          129,
+          130,
+          134
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/gate.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/index.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/jsonutil.py",
+        "uncovered": []
+      },
+      {
+        "lines": 93.5,
+        "path": "src/molcrafts_ci/manifest.py",
+        "uncovered": [
+          48,
+          49
+        ]
+      },
+      {
+        "lines": 95.7,
+        "path": "src/molcrafts_ci/persist.py",
+        "uncovered": [
+          78
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/snapshot.py",
+        "uncovered": []
+      }
+    ],
+    "totals": {
+      "branches": 86.4,
+      "lines": 93.3
+    }
+  }
+}
