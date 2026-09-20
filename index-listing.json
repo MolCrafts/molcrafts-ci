@@ -1,0 +1,6 @@
+{
+  "indexes": [
+    "index/molcrafts-ci/coverage.jsonl",
+    "index/molcrafts-ci/tests.jsonl"
+  ]
+}
