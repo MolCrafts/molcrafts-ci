@@ -880,6 +880,13 @@ runtime operational maintenance
 
 Cloudflare Pages is connected to the repository and builds it: root directory `site`, `npm run build`, output `dist`. No deploy workflow and no API token live here. `sync-ui` finds no sibling molcrafts-ui checkout on the builder and falls back to the vendored sources under `site/src`, which is why they are committed.
 
+The index is **not** bundled into that build. It lives on the `data` branch, as the diagram below has always said, and the browser reads it at runtime from `raw.githubusercontent.com`, which serves it with `Access-Control-Allow-Origin: *` and a five-minute cache. Two properties follow, and both were faults before:
+
+* a snapshot published between deploys appears without a rebuild — bundling meant the dashboard showed whatever was true at the last commit to `master`;
+* the deployment stops growing with history — bundling carried every snapshot ever published into every deploy.
+
+Keeping the data off `master` is also what keeps ingest commits out of the code history. `molci ingest` maintains `index-listing.json` at the data root, because HTTP offers nothing to enumerate and a reader has to be told which index files exist.
+
 The intended architecture is therefore:
 
 ```text

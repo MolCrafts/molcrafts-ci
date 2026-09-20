@@ -7,6 +7,11 @@ import { pluginMockServer } from "rspack-plugin-mock/rsbuild";
 const root = import.meta.dirname;
 const assetPrefix = (process.env.PUBLIC_BASE ?? "auto").trim() || "auto";
 const useMock = process.env.PUBLIC_USE_MOCK !== "0";
+// Where the browser reads published data from. A relative default keeps the dev
+// mock and `dev:data` working; production points at the `data` branch, and then
+// there is nothing local to copy into the bundle.
+const dataBase = (process.env.PUBLIC_DATA_BASE ?? "./data").trim() || "./data";
+const bundlesData = dataBase.startsWith(".") || dataBase.startsWith("/");
 
 export default defineConfig({
   root,
@@ -34,6 +39,9 @@ export default defineConfig({
     entry: {
       index: "./src/index.tsx",
     },
+    define: {
+      "process.env.PUBLIC_DATA_BASE": JSON.stringify(dataBase),
+    },
   },
   html: {
     title: "MolCrafts CI",
@@ -44,12 +52,14 @@ export default defineConfig({
       root: path.resolve(root, "dist"),
     },
     assetPrefix,
-    copy: [
-      {
-        from: path.resolve(root, "public/data"),
-        to: "data",
-      },
-    ],
+    copy: bundlesData
+      ? [
+          {
+            from: path.resolve(root, "public/data"),
+            to: "data",
+          },
+        ]
+      : [],
   },
   server: {
     port: 4174,

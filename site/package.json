@@ -13,11 +13,13 @@
     "prepare-data": "node scripts/prepare-data.mjs",
     "seed:mock": "python3 ../scripts/seed_mock_data.py",
     "dev": "npm run sync-ui && rsbuild dev",
-    "dev:data": "npm run sync-ui && npm run prepare-data && PUBLIC_USE_MOCK=0 rsbuild dev",
-    "build": "npm run sync-ui && npm run prepare-data && PUBLIC_USE_MOCK=0 rsbuild build",
+    "dev:data": "npm run sync-ui && npm run fetch-data && npm run prepare-data && PUBLIC_USE_MOCK=0 rsbuild dev",
+    "build": "npm run sync-ui && npm run clean-public-data && PUBLIC_USE_MOCK=0 PUBLIC_DATA_BASE=https://raw.githubusercontent.com/MolCrafts/molcrafts-ci/data rsbuild build",
     "preview": "rsbuild preview",
     "typecheck": "tsc --noEmit",
-    "test": "rstest run"
+    "test": "rstest run",
+    "fetch-data": "node scripts/fetch-data.mjs",
+    "clean-public-data": "node scripts/clean-public-data.mjs"
   },
   "dependencies": {
     "@fontsource/geist-sans": "^5.3.0",

@@ -22,6 +22,13 @@ inputs:
       a snapshot has tracking.enabled.
     required: false
     default: ""
+  ssh-key:
+    description: >
+      Private half of a deploy key with write access to index-repository. The
+      narrowest credential that works: it reaches exactly one repository and
+      can only push git, unlike a PAT. Takes precedence over `token`.
+    required: false
+    default: ""
   app-id:
     description: >
       MolCrafts GitHub App id. With private-key, mints a short-lived
@@ -39,13 +46,16 @@ inputs:
     required: false
     default: MolCrafts/molcrafts-ci
   index-branch:
-    description: "Branch to ingest into (default: the index repository default branch)"
-    required: false
-    default: ""
-  data-root:
-    description: Data root inside the index repository
+    description: >
+      Branch holding the index. Data lives on its own branch so the code
+      history stays free of ingest commits and a clone of the source does not
+      carry every snapshot ever published.
     required: false
     default: data
+  data-root:
+    description: Data root within the index branch, whose root holds index/ and snapshots/
+    required: false
+    default: "."
 
   artifact-name:
     description: Name of the uploaded workflow artifact
@@ -175,7 +185,7 @@ runs:
 
     - name: Mint GitHub App token
       id: app-token
-      if: steps.validate.outputs.tracked != '0' && inputs.app-id != ''
+      if: steps.validate.outputs.tracked != '0' && inputs.app-id != '' && inputs.ssh-key == ''
       uses: actions/create-github-app-token@v3
       with:
         app-id: ${{ inputs.app-id }}
@@ -192,6 +202,7 @@ runs:
         PY: ${{ steps.install.outputs.python }}
         LIST: ${{ steps.resolve.outputs.list }}
         TOKEN: ${{ steps.app-token.outputs.token || inputs.token }}
+        SSH_KEY: ${{ inputs.ssh-key }}
         INDEX_REPOSITORY: ${{ inputs.index-repository }}
         INDEX_BRANCH: ${{ inputs.index-branch }}
         DATA_ROOT: ${{ inputs.data-root }}
@@ -200,20 +211,42 @@ runs:
       run: |
         set -euo pipefail
 
-        if [ -z "$TOKEN" ]; then
-          echo "::error::${{ steps.validate.outputs.tracked }} snapshot(s) have tracking enabled, which writes to $INDEX_REPOSITORY, but no credential was given. Pass app-id + private-key, or token (a fine-grained PAT with contents:write). The workflow GITHUB_TOKEN cannot reach another repository."
+        if [ -z "$SSH_KEY" ] && [ -z "$TOKEN" ]; then
+          echo "::error::${{ steps.validate.outputs.tracked }} snapshot(s) have tracking enabled, which writes to $INDEX_REPOSITORY, but no credential was given. Pass ssh-key (a deploy key), app-id + private-key, or token. The workflow GITHUB_TOKEN cannot reach another repository."
           exit 1
         fi
-        echo "::add-mask::$TOKEN"
-        auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TOKEN" | base64 | tr -d '\n')"
-        echo "::add-mask::${auth#AUTHORIZATION: basic }"
 
         work="$RUNNER_TEMP/molcrafts-ci/index"
         rm -rf "$work"
-        # Credentials are passed per invocation, never written into .git/config.
-        git -c http.extraheader="$auth" clone --quiet --depth 1 \
+        mkdir -p "$work"
+
+        # Either transport works; the credential is passed per invocation and
+        # never written into .git/config.
+        if [ -n "$SSH_KEY" ]; then
+          echo "::add-mask::$SSH_KEY"
+          key="$RUNNER_TEMP/molcrafts-ci/deploy_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$SSH_KEY" > "$key"
+          # Host keys from GitHub's own metadata rather than accept-new: a
+          # fresh runner trusts nothing, so accept-new is not verification.
+          hosts="$RUNNER_TEMP/molcrafts-ci/known_hosts"
+          curl -fsS https://api.github.com/meta \
+            | python3 -c 'import json,sys; [print("github.com " + k) for k in json.load(sys.stdin)["ssh_keys"]]' \
+            > "$hosts"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$hosts"
+          remote="git@github.com:$INDEX_REPOSITORY.git"
+          auth_args=()
+        else
+          echo "::add-mask::$TOKEN"
+          basic=$(printf 'x-access-token:%s' "$TOKEN" | base64 | tr -d '\n')
+          echo "::add-mask::$basic"
+          remote="$GITHUB_SERVER_URL/$INDEX_REPOSITORY.git"
+          auth_args=(-c "http.extraheader=AUTHORIZATION: basic $basic")
+        fi
+
+        git "${auth_args[@]}" clone --quiet --depth 1 \
           ${INDEX_BRANCH:+--branch "$INDEX_BRANCH"} \
-          "$GITHUB_SERVER_URL/$INDEX_REPOSITORY.git" "$work"
+          "$remote" "$work"
         cd "$work"
         branch="${INDEX_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
         git config user.name "molcrafts-ci[bot]"
@@ -229,7 +262,7 @@ runs:
         # the branch as it now stands. The ingest is idempotent, so this
         # converges instead of duplicating or clobbering history.
         for attempt in 1 2 3 4 5; do
-          git -c http.extraheader="$auth" fetch --quiet --depth 1 origin "$branch"
+          git "${auth_args[@]}" fetch --quiet --depth 1 origin "$branch"
           git reset --quiet --hard FETCH_HEAD
           # Drops the previous attempt's writes; a no-op on the first pass.
           git clean -qfd -- "$DATA_ROOT"
@@ -263,7 +296,7 @@ runs:
             break
           fi
 
-          if git -c http.extraheader="$auth" push --quiet origin "HEAD:$branch"; then
+          if git "${auth_args[@]}" push --quiet origin "HEAD:$branch"; then
             pushed=true
             commit=$(git rev-parse HEAD)
             break

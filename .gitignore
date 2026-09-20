@@ -19,3 +19,6 @@ site/public/data/
 .ci-out/
 coverage.json
 junit.xml
+
+# The published index lives on the `data` branch, fetched by site/scripts/fetch-data.mjs
+/data/

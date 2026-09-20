@@ -97,8 +97,7 @@ jobs:
         with:
           snapshot-path: out/*.json
           project: molpy
-          app-id: ${{ vars.MOLCRAFTS_APP_ID }}
-          private-key: ${{ secrets.MOLCRAFTS_APP_PRIVATE_KEY }}
+          ssh-key: ${{ secrets.MOLCRAFTS_CI_SSH_KEY }}
 ```
 
 `snapshot-path` takes a path, a glob, or a newline-separated list, so one run
@@ -149,17 +148,32 @@ went red is exactly the run whose `tests` record is worth keeping.
 So a pull-request run and a merge run can use the identical step; only the
 snapshot the producer wrote differs.
 
+### Where the data goes
+
+Snapshots are ingested into the **`data` branch**, not `master`. That branch is
+orphaned, its root is the data root (`index/`, `snapshots/`,
+`index-listing.json`), and nothing but this Action writes to it. Keeping it off
+`master` is what keeps ingest commits out of the code history and keeps a clone
+of the source from carrying every snapshot ever published.
+
+The site reads that branch at runtime from `raw.githubusercontent.com`, so a
+published snapshot appears within the CDN's five-minute cache with no rebuild,
+and the deployment does not grow with history.
+
 ### Credentials
 
 Pushing into this repository is a cross-repository write, and a workflow's
 `GITHUB_TOKEN` is scoped to the repository it runs in — it cannot do this. Use
 one of:
 
-- **a MolCrafts GitHub App** (preferred, per the specification): pass `app-id`
-  and `private-key`; the Action mints a token that expires with the run. Grant
-  the installation `contents: write` on `molcrafts-ci` only.
-- **a fine-grained PAT** with `contents: write` on `molcrafts-ci`, passed as
-  `token:`.
+- **a deploy key** (what the MolCrafts producers use): pass the private half as
+  `ssh-key`. It is the narrowest credential that works — it reaches exactly one
+  repository and can only push git, unlike a PAT that carries the whole `repo`
+  scope.
+- **a MolCrafts GitHub App**: pass `app-id` and `private-key`; the Action mints
+  a token that expires with the run. The best posture, but a GitHub App cannot
+  be created from the API, so it takes a trip to the browser.
+- **a fine-grained PAT** with `contents: write` on `molcrafts-ci`, as `token:`.
 
 The Action fails with an explicit message when a tracked snapshot arrives
 without a credential, rather than going green having published nothing.
@@ -186,9 +200,9 @@ already indexed, so:
 
 | Input | Default | Purpose |
 | --- | --- | --- |
-| `index-repository` | `MolCrafts/molcrafts-ci` | where `data/` lives |
-| `index-branch` | the default branch | branch to ingest into |
-| `data-root` | `data` | data root inside that repository |
+| `index-repository` | `MolCrafts/molcrafts-ci` | repository holding the index |
+| `index-branch` | `data` | branch to ingest into |
+| `data-root` | `.` | data root within that branch |
 | `artifact-name` | `molcrafts-ci-snapshot` | uploaded artifact name |
 | `upload-artifact` | `true` | upload the snapshots as a run artifact |
 | `dry-run` | `false` | validate and ingest into a scratch clone, never push |
@@ -219,7 +233,8 @@ cd site && npm install && npm run dev
 
 - `npm run dev` — intercepts `/data/**` with `site/mock/*.mock.ts`
 - `npm run seed:mock` — `import molci as mci` ingest → `.mock-data/` (gitignored) + refreshes `site/mock/fixtures.ts`. These snapshots carry invented commit SHAs, so they are kept out of the tracked `data/` tree.
-- `npm run dev:data` — skip mock plugin; serve real `public/data` from prepare-data
+- `npm run dev:data` — skip mock plugin; fetch the `data` branch and serve it locally
+- `npm run build` — reads the `data` branch at runtime; bundles no data at all
 
 Register an extra tab without editing the shell:
 

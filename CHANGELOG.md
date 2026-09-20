@@ -47,6 +47,29 @@ snapshot, so this is a patch, not a minor.
 
 ### Changed
 
+- **The index moved to a `data` branch, and the site reads it at runtime.**
+  Section 18 of the specification always described the data as living on its
+  own branch; keeping it on `master` meant the ingest bot committed there,
+  putting a machine-generated commit between every pair of human ones. The
+  branch is orphaned and its root is the data root, so `actions/submit` now
+  defaults to `index-branch: data` and `data-root: .`.
+
+  The browser fetches that branch from `raw.githubusercontent.com` instead of
+  reading a bundled copy. Bundling had two faults: a snapshot published between
+  deploys did not appear until the next commit to `master`, and every deploy
+  carried the whole history. A production build now ships no data at all — 29 KB
+  — and new snapshots appear within the CDN's five-minute cache.
+
+  `molci ingest` maintains `index-listing.json` at the data root, since HTTP has
+  nothing to enumerate. `site/scripts/fetch-data.mjs` fetches the branch for
+  `dev:data`, and `clean-public-data.mjs` keeps a leftover local copy from
+  shipping in a production build and being served as if it were current.
+- **`actions/submit` takes an `ssh-key`.** A deploy key is the narrowest
+  credential that works for a cross-repository push — one repository, git only —
+  and, unlike a GitHub App or a PAT, it can be created from the API. Host keys
+  come from GitHub's own metadata rather than `accept-new`, which on a fresh
+  runner verifies nothing.
+
 - **`molci snapshot`** builds `tests` and `coverage` snapshots from a test run's
   native output, so a producer repository no longer carries its own adapter.
   JUnit XML covers pytest and cargo-nextest; coverage is read from coverage.py

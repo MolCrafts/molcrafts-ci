@@ -11,7 +11,12 @@ from typing import Any
 
 from molcrafts_ci.gate import GateResult
 from molcrafts_ci.manifest import Manifest, Tracking
-from molcrafts_ci.persist import ingest_snapshot, read_snapshot, snapshot_path
+from molcrafts_ci.persist import (
+    ingest_snapshot,
+    read_snapshot,
+    snapshot_path,
+    write_index_listing,
+)
 from molcrafts_ci.producers import (
     detect_profile,
     github_source,
@@ -98,7 +103,12 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
         out = ingest_snapshot(data_root, args.project, snap, if_exists=args.if_exists)
         return {**common, "status": "skipped" if existed else "ingested", "stored": str(out)}
 
-    return _each(args.path, handle)
+    code = _each(args.path, handle)
+    if (data_root / "index").exists():
+        # Rewritten from the tree rather than appended to, so it stays correct
+        # even when a record is removed or an earlier run half-finished.
+        _emit({"ok": True, "status": "listed", "path": str(write_index_listing(data_root))})
+    return code
 
 
 def _cmd_snapshot(args: argparse.Namespace) -> int:

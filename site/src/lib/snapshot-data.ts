@@ -1,10 +1,15 @@
 /**
  * One owner for published snapshot data.
  *
- * Every surface reads the same two things — a record's index (`data/index/<project>/<record>.jsonl`)
- * and a snapshot body (`data/<path>`) — so the fetchers, the alias table, and the
- * "which entry is current" rule live here rather than once per tab.
+ * Every surface reads the same two things — a record's index
+ * (`index/<project>/<record>.jsonl`) and a snapshot body (`<entry.path>`) — so
+ * the fetchers, the alias table, and the "which entry is current" rule live
+ * here rather than once per tab. Both resolve against the data root through
+ * `dataUrl`, which is what decides whether that root is bundled or the
+ * published `data` branch.
  */
+
+import { dataUrl } from "@/lib/data-source";
 
 /** One line of a published `<record>.jsonl` index. */
 export interface IndexEntry {
@@ -77,7 +82,9 @@ export async function fetchRecordEntries(
   projectId: string,
   record: string,
 ): Promise<IndexEntry[]> {
-  const url = `./data/index/${encodeURIComponent(projectId)}/${encodeURIComponent(record)}.jsonl`;
+  const url = dataUrl(
+    `index/${encodeURIComponent(projectId)}/${encodeURIComponent(record)}.jsonl`,
+  );
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) return [];
   const entries: IndexEntry[] = [];
@@ -95,7 +102,7 @@ export async function fetchRecordEntries(
 
 export async function fetchSnapshot<P>(entry: IndexEntry): Promise<Snapshot<P> | null> {
   if (!entry.path) return null;
-  const url = `./data/${entry.path.replace(/^\.?\/?/, "")}`;
+  const url = dataUrl(entry.path);
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) return null;
   try {

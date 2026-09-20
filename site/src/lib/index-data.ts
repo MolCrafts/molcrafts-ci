@@ -1,3 +1,4 @@
+import { dataUrl } from "@/lib/data-source";
 import type { ProjectContext } from "@/plugins/types";
 
 export interface IndexListing {
@@ -38,7 +39,7 @@ export function projectsFromListing(listing: IndexListing): ProjectContext[] {
 }
 
 export async function loadIndexListing(): Promise<IndexListing> {
-  const res = await fetch("./data/index-listing.json", { cache: "no-store" });
+  const res = await fetch(dataUrl("index-listing.json"), { cache: "no-store" });
   if (!res.ok) {
     return { indexes: [] };
   }

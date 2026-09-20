@@ -68,7 +68,7 @@ repos:
         name: rsbuild build (site)
         entry: npm --prefix site run build
         language: system
-        files: ^(site/(src/|scripts/|public/|rsbuild\.config\.ts|package\.json)|data/)
+        files: ^site/(src/|scripts/|public/|rsbuild\.config\.ts|package\.json)
         pass_filenames: false
         require_serial: true
 

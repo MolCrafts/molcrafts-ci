@@ -109,6 +109,21 @@ class SnapshotIndex:
                 yield json.loads(line)
 
 
+def write_index_listing(data_root: Path) -> Path:
+    """Publish the set of index files, so a reader needs no directory listing.
+
+    The site fetches the index over plain HTTP, where there is nothing to
+    enumerate — it has to be told what exists. This used to be generated at
+    build time, which meant new data only appeared when the site was rebuilt;
+    writing it here puts it next to the data it describes.
+    """
+    index_root = data_root / "index"
+    listing = sorted(path.relative_to(data_root).as_posix() for path in index_root.rglob("*.jsonl"))
+    path = data_root / "index-listing.json"
+    write_json(path, {"indexes": listing})
+    return path
+
+
 def ingest_snapshot(
     data_root: Path,
     project: str,
