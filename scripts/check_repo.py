@@ -20,10 +20,10 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def current_branch() -> str | None:
+def _git(*args: str) -> str | None:
     try:
         out = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            ["git", *args],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -34,6 +34,23 @@ def current_branch() -> str | None:
         return None
 
 
+def default_branch() -> str | None:
+    """The branch a push-triggered workflow has to name to ever run.
+
+    Read from the remote rather than from HEAD: the check is about where the
+    repository publishes from, not about where the author happens to be
+    standing. Comparing against the current branch made every feature branch
+    fail this check.
+    """
+    head = _git("symbolic-ref", "--short", "refs/remotes/origin/HEAD")
+    if head:
+        return head.split("/", 1)[1] if "/" in head else head
+    # No remote (a fresh clone-less tree, or a fork without origin/HEAD): fall
+    # back to where we are, which is the best guess available.
+    branch = _git("rev-parse", "--abbrev-ref", "HEAD")
+    return None if branch in (None, "HEAD") else branch
+
+
 def check_workflow_branches() -> list[str]:
     """
     A push-triggered workflow must list the branch it is meant to run on.
@@ -42,8 +59,8 @@ def check_workflow_branches() -> list[str]:
     `master`, so the site would have deployed on no push at all — green CI,
     nothing published, no error anywhere.
     """
-    branch = current_branch()
-    if branch is None or branch == "HEAD":  # detached, e.g. a tag build
+    branch = default_branch()
+    if branch is None:  # detached with no remote, e.g. a tag build
         return []
 
     problems = []
@@ -58,7 +75,7 @@ def check_workflow_branches() -> list[str]:
         if branches and branch not in branches:
             problems.append(
                 f"{path.relative_to(ROOT)}: push.branches={branches} "
-                f"does not include the current branch {branch!r}"
+                f"does not include the default branch {branch!r}"
             )
     return problems
 
@@ -105,8 +122,32 @@ def check_no_hardcoded_base() -> list[str]:
     return problems
 
 
+CROSS_REPO_TOKEN = re.compile(r"github\.token|secrets\.GITHUB_TOKEN")
+
+
+def check_action_credentials() -> list[str]:
+    """
+    A composite action that writes to another repository cannot use GITHUB_TOKEN.
+
+    The submit action shipped telling callers to notify molcrafts-ci with
+    `GH_TOKEN: ${{ github.token }}`. That token is scoped to the repository
+    running the workflow, so the call could only ever 404 — and because the
+    step was a placeholder that echoed instead of calling, nothing failed.
+    """
+    problems = []
+    for path in sorted((ROOT / "actions").rglob("action.yml")):
+        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if CROSS_REPO_TOKEN.search(line):
+                problems.append(
+                    f"{path.relative_to(ROOT)}:{i}: GITHUB_TOKEN cannot reach "
+                    f"another repository; take an App or PAT credential as an input"
+                )
+    return problems
+
+
 CHECKS = {
     "workflow branch filters": check_workflow_branches,
+    "cross-repository credentials": check_action_credentials,
     "interactive nesting": check_interactive_nesting,
     "hard-coded asset prefix": check_no_hardcoded_base,
 }

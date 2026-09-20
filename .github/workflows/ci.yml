@@ -5,9 +5,19 @@ on:
     branches: [main, master]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   python:
     runs-on: ubuntu-latest
+    permissions:
+      # The publish steps push this run's own tests and coverage into data/.
+      # Same repository, so GITHUB_TOKEN is the right credential — and since
+      # GitHub does not start a workflow from a GITHUB_TOKEN push, it is also
+      # what keeps the ingest commit from triggering another CI run. Cloudflare
+      # Pages builds from its own webhook, so the site still redeploys.
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -15,11 +25,47 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       # Same invocations as .pre-commit-config.yaml, minus --fix.
-      - run: ruff check src tests
-      - run: ruff format --check src tests
+      - run: ruff check src tests scripts
+      - run: ruff format --check src tests scripts
       - run: pytest -q
       - run: pip install pyyaml
       - run: python scripts/check_repo.py
+
+      # molcrafts-ci is its own first producer: it publishes what this run
+      # measured through the same Action downstream repositories call, so the
+      # publish path is exercised on every push instead of only when someone
+      # else adopts it.
+      #
+      # These run even when a gate above failed, because a run whose tests went
+      # red is exactly the run whose test record is worth keeping. The gate has
+      # already decided the job's verdict; measuring again must not change it.
+      - name: Measure this run
+        if: ${{ !cancelled() }}
+        run: |
+          pytest -q --junitxml=.ci-out/junit.xml \
+            --cov=molcrafts_ci --cov-branch --cov-report=json:.ci-out/coverage.json || true
+
+      - name: Build snapshots
+        if: ${{ !cancelled() && hashFiles('.ci-out/junit.xml') != '' }}
+        # Only a push to the default branch becomes project history; a pull
+        # request produces the same snapshots untracked, which submit validates
+        # and uploads without publishing.
+        run: |
+          python scripts/ci_snapshot.py \
+            --junit .ci-out/junit.xml \
+            --coverage .ci-out/coverage.json \
+            --out .ci-out/snapshots \
+            ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master') && '--track' || '' }}
+
+      - name: Publish to the index
+        if: ${{ !cancelled() && hashFiles('.ci-out/snapshots/*.json') != '' }}
+        uses: ./actions/submit
+        with:
+          snapshot-path: .ci-out/snapshots/*.json
+          project: molcrafts-ci
+          artifact-name: molcrafts-ci-self-snapshot
+          # Writing to its own repository is the one case GITHUB_TOKEN covers.
+          token: ${{ github.token }}
 
   site:
     runs-on: ubuntu-latest

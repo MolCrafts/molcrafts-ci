@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from molcrafts_ci.jsonutil import dumps_deterministic, read_json, write_json
 from molcrafts_ci.snapshot import Snapshot
@@ -22,8 +22,24 @@ def snapshot_path(
     return root / "snapshots" / project / record / str(generation) / f"{snapshot_id}.json"
 
 
-def write_snapshot(root: Path, project: str, snapshot: Snapshot) -> Path:
-    """Persist an immutable snapshot file. Refuses to overwrite."""
+IfExists = Literal["fail", "skip"]
+
+
+def write_snapshot(
+    root: Path,
+    project: str,
+    snapshot: Snapshot,
+    *,
+    if_exists: IfExists = "fail",
+) -> Path:
+    """Persist an immutable snapshot file.
+
+    A snapshot id is derived from its source, so the same CI commit re-running
+    produces the same path. ``if_exists="fail"`` keeps that collision loud;
+    ``if_exists="skip"`` returns the existing path untouched, which is what a
+    retried or concurrent ingest needs — the file is immutable, so the one
+    already on disk is the one this call would have written.
+    """
     if not snapshot.manifest.tracking.enabled:
         raise ValueError(
             "refusing to persist: tracking.enabled is false "
@@ -37,6 +53,8 @@ def write_snapshot(root: Path, project: str, snapshot: Snapshot) -> Path:
         snapshot_id=snapshot.snapshot_id(),
     )
     if path.exists():
+        if if_exists == "skip":
+            return path
         raise FileExistsError(f"snapshot already exists: {path}")
     write_json(path, snapshot.model_dump(mode="json"))
     return path
@@ -77,6 +95,10 @@ class SnapshotIndex:
             fh.write(dumps_deterministic(entry, indent=None))
         return path
 
+    def has(self, project: str, record: str, snapshot_id: str) -> bool:
+        """Whether this snapshot is already indexed."""
+        return any(e.get("snapshot_id") == snapshot_id for e in self.entries(project, record))
+
     def entries(self, project: str, record: str) -> Iterator[dict[str, Any]]:
         path = self.index_path(project, record)
         if not path.exists():
@@ -87,9 +109,22 @@ class SnapshotIndex:
                 yield json.loads(line)
 
 
-def ingest_snapshot(data_root: Path, project: str, snapshot: Snapshot) -> Path:
-    """Write immutable snapshot and append an index entry (tracking must be on)."""
-    snap_path = write_snapshot(data_root, project, snapshot)
+def ingest_snapshot(
+    data_root: Path,
+    project: str,
+    snapshot: Snapshot,
+    *,
+    if_exists: IfExists = "fail",
+) -> Path:
+    """Write immutable snapshot and append an index entry (tracking must be on).
+
+    Idempotent under ``if_exists="skip"``: the index entry is appended only when
+    this snapshot is not indexed yet, so re-running the call converges instead of
+    growing a duplicate history.
+    """
+    snap_path = write_snapshot(data_root, project, snapshot, if_exists=if_exists)
     rel = snap_path.relative_to(data_root).as_posix()
-    SnapshotIndex(data_root).append(project, snapshot, relative_path=rel)
+    index = SnapshotIndex(data_root)
+    if not index.has(project, snapshot.manifest.record, snapshot.snapshot_id()):
+        index.append(project, snapshot, relative_path=rel)
     return snap_path

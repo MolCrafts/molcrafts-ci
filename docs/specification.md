@@ -976,10 +976,29 @@ Purpose:
 validate Manifest
 package Snapshot
 upload CI artifact
-submit ingestion metadata when tracking is enabled
+ingest into the index and push, when tracking is enabled
 ```
 
-This is the strongest candidate for a shared infrastructure Action.
+This is the strongest candidate for a shared infrastructure Action, and it is
+the only one a producer has to call: one step carries a snapshot from the run
+that measured it to the published site.
+
+The Action runs the ingest **inside the producer's own workflow run**, against a
+shallow clone of the index repository. A rejected push means another producer
+committed first, so the Action re-runs the ingest on the branch as it now stands
+and pushes again. The ingest is idempotent — a snapshot id is derived from its
+source, the stored file is immutable, and an index entry is appended only when
+that id is absent — so a retry, a re-run and a lost race all converge instead of
+duplicating or clobbering history.
+
+`molcrafts-ci` SHALL be its own first producer. Its CI publishes its own `tests`
+and `coverage` records through this Action, so the publish path is exercised on
+every push to the default branch rather than only when a domain repository
+adopts it. The self-hosted case is the one where `GITHUB_TOKEN` suffices (§23),
+because the write is to the repository the workflow already runs in; it is also
+loop-free, because GitHub does not start a workflow from a `GITHUB_TOKEN` push,
+while the Cloudflare Pages webhook is not subject to that rule and still
+redeploys.
 
 ### Domain-specific gate Actions
 
@@ -1004,46 +1023,47 @@ No other Action should be created until repeated usage demonstrates a need.
 
 `molcrafts-ci` MAY provide reusable workflows for infrastructure-owned multi-job processes.
 
-Likely candidates are:
-
-```text
-ingest
-reconcile
-publish
-```
+None are currently justified.
 
 ### Ingest
 
-Receives notification that a repository has produced a tracked snapshot.
+Ingestion is **not** a reusable workflow and not a workflow in the index
+repository at all. It is a step of the `submit` Action, so it runs in the
+producer's own workflow run.
 
-It:
+A reusable workflow was tried and removed. It failed in two ways that are worth
+recording, because both are invisible until a real producer calls it:
 
-```text
-authenticates
-retrieves artifact
-validates manifest
-validates digest
-writes immutable snapshot
-updates index
-```
+* a called workflow runs with the **caller's** `GITHUB_TOKEN`, which cannot push
+  to the index repository (§23), so the credential problem is not solved by
+  moving the job;
+* a workflow in the index repository cannot read an artifact belonging to a run
+  in another repository without that same cross-repository credential, so the
+  artifact hand-off buys nothing over ingesting the file that is already on disk
+  in the producer's workspace.
+
+Running the ingest in the producer's run also puts the failure where the
+engineer who caused it is already looking: the run that measured the data turns
+red, rather than a separate run in a repository they may not watch.
 
 The component that performs this work is the `Ingester`.
 
 ### Reconcile
 
-Periodically verifies that tracked CI artifacts have corresponding index entries.
+A periodic sweep that verifies tracked artifacts have index entries.
 
-This provides recovery from:
+This was specified to recover from a failed notification. With ingestion inside
+the producer's run there is no notification to lose: the ingest either succeeds
+before the producer's job goes green, or the job fails and the operator re-runs
+it. Re-running is safe because the ingest is idempotent.
 
-```text
-failed dispatch
-temporary API failure
-interrupted ingest
-```
+Reconcile therefore remains unimplemented, and SHOULD stay that way unless an
+asynchronous transport is reintroduced.
 
 ### Publish
 
-Builds the frontend from the current index and deploys the static site.
+Cloudflare Pages builds and deploys from its own Git integration (§18), so no
+publish workflow exists here. The ingest push **is** the deploy trigger.
 
 ---
 
@@ -1097,6 +1117,14 @@ The event is a notification:
 ```
 
 not the artifact itself.
+
+This transport is **not** currently used. `repository_dispatch` needs the same
+cross-repository credential as a direct push (§23), and it is fire-and-forget:
+the producer's job goes green whether or not the ingest that follows succeeds,
+which is the failure mode `reconcile` existed to repair. Ingesting synchronously
+in the producer's run removes the event, the transport and the repair job at
+once. This section stands as the design to return to if ingestion ever has to
+become asynchronous — a rate limit on the index repository would be the reason.
 
 ---
 

@@ -13,6 +13,64 @@ schema version to keep in step.
 
 ## [Unreleased]
 
+`manifest.schema_version` is unchanged: nothing here alters the shape of a
+snapshot, so this is a patch, not a minor.
+
+### Added
+
+- **`actions/submit` carries a snapshot all the way to the site.** It resolves
+  paths and globs, validates, uploads the run artifact and — for snapshots with
+  `tracking.enabled` — ingests into the index repository and pushes, which is
+  what triggers the Cloudflare Pages rebuild. Producers call one step and are
+  done. A GitHub App (`app-id` + `private-key`) or a fine-grained PAT (`token`)
+  supplies the cross-repository credential; the step fails loudly when a tracked
+  snapshot arrives without one.
+- **`molci ingest --if-exists skip` and `--skip-untracked`**, and multiple paths
+  per invocation, so one CI run submits its benchmark, coverage and test records
+  together. `validate-snapshot` now reports `tracking`, `profile` and
+  `generation`; both commands emit one JSON object per line and report every bad
+  file rather than only the first.
+- `SnapshotIndex.has()`, and an `if_exists` argument on `write_snapshot` and
+  `ingest_snapshot` (keyword-only, defaulting to the previous behaviour).
+- A repository invariant rejecting `github.token` inside `actions/**` — the
+  token that cannot reach another repository.
+- **Self-hosting.** `molcrafts-ci` now publishes its own `tests` and `coverage`
+  records through its own `actions/submit`, so every push to master exercises
+  the path a downstream repository depends on. `scripts/ci_snapshot.py` reads
+  pytest's JUnit XML and coverage.py's JSON; `pytest-cov` joins the dev extra.
+  The self-push uses `GITHUB_TOKEN` — the push is to its own repository, and
+  because GitHub does not start a workflow from a `GITHUB_TOKEN` push, the
+  ingest commit cannot trigger another ingest. Cloudflare Pages is unaffected
+  and still redeploys.
+- CI now lints `scripts/` alongside `src` and `tests`, matching what the
+  pre-commit hooks already covered.
+
+### Removed
+
+- **`ingest.yml`.** The reusable workflow could not have worked: a called
+  workflow runs with the caller's `GITHUB_TOKEN`, and `download-artifact`
+  without `run-id` only ever sees artifacts from its own run, so it could not
+  reach the producer's. Ingestion now happens in the producer's run. See the
+  specification, §22.
+
+### Fixed
+
+- The "Notify ingest" step of `actions/submit` echoed a line and exited 0. Every
+  tracked snapshot since the Action shipped was validated, uploaded and then
+  silently dropped — with a green check.
+- The workflow-branch invariant compared `push.branches` against the *current*
+  branch, so every feature branch failed it and could not be committed. It now
+  compares against the repository's default branch, which is what the check was
+  always about.
+
+### Notes
+
+- Ingestion is idempotent: a snapshot id derives from its source, the stored
+  file is immutable, and an index entry is appended only when that id is absent.
+  A re-run publishes nothing the second time, and a producer that loses the push
+  race re-runs its ingest on the updated branch instead of rebasing an append
+  into a conflict.
+
 ## [0.1.0] - 2026-09-20
 
 First release. `manifest.schema_version` is `1`.
@@ -50,7 +108,8 @@ First release. `manifest.schema_version` is `1`.
 - `GateResult` is modelled and validated but nothing produces, ingests or
   displays one — the Gate box in the architecture is not wired end to end.
 - No `reconcile` workflow, so a dropped ingest is not detected; ingest does
-  not verify an artifact digest.
+  not verify an artifact digest. (Unreleased: ingestion moved into the
+  producer's run, so there is no asynchronous hand-off left to drop.)
 - No screenshot baselines; hover, focus and chart geometry are unverified.
 
 ## Releasing

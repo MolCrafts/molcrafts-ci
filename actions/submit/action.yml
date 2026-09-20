@@ -1,51 +1,315 @@
 name: Submit MolCrafts CI snapshot
 description: >
-  Validate a Snapshot JSON, upload it as a workflow artifact, and optionally
-  notify molcrafts-ci ingest when tracking is enabled.
+  Validate the snapshots a CI run produced, upload them as a workflow artifact,
+  and — for tracked snapshots — ingest them into the MolCrafts CI index
+  repository. That push is what rebuilds the published site.
+
 inputs:
   snapshot-path:
-    description: Path to the Snapshot JSON file
+    description: >
+      Snapshot JSON to submit: a path, a glob, or a newline-separated list of
+      either. Every pattern must match at least one file.
     required: true
+  project:
+    description: Project key under data/snapshots/<project>/
+    required: true
+
+  token:
+    description: >
+      Token with contents:write on index-repository. The workflow GITHUB_TOKEN
+      is scoped to its own repository and will NOT work here; use an App
+      installation token (see app-id) or a fine-grained PAT. Only required when
+      a snapshot has tracking.enabled.
+    required: false
+    default: ""
+  app-id:
+    description: >
+      MolCrafts GitHub App id. With private-key, mints a short-lived
+      installation token for this run — the authentication the specification
+      prefers over a long-lived token. Takes precedence over `token`.
+    required: false
+    default: ""
+  private-key:
+    description: Private key of the App named by app-id
+    required: false
+    default: ""
+
+  index-repository:
+    description: Repository holding data/ and the published site
+    required: false
+    default: MolCrafts/molcrafts-ci
+  index-branch:
+    description: "Branch to ingest into (default: the index repository default branch)"
+    required: false
+    default: ""
+  data-root:
+    description: Data root inside the index repository
+    required: false
+    default: data
+
   artifact-name:
     description: Name of the uploaded workflow artifact
     required: false
     default: molcrafts-ci-snapshot
-  tracking-enabled:
-    description: Whether to dispatch ingest notification (true/false)
+  upload-artifact:
+    description: Upload the snapshots as a workflow artifact (true/false)
+    required: false
+    default: "true"
+  dry-run:
+    description: Validate and ingest into a scratch clone, but never push (true/false)
     required: false
     default: "false"
-  project:
-    description: Project key used by the central index (required when tracking)
-    required: false
-    default: ""
+
+outputs:
+  count:
+    description: Snapshots submitted
+    value: ${{ steps.resolve.outputs.count }}
+  tracked:
+    description: Snapshots with tracking enabled
+    value: ${{ steps.validate.outputs.tracked }}
+  ingested:
+    description: Snapshots newly written to the index repository
+    value: ${{ steps.ingest.outputs.ingested }}
+  skipped:
+    description: Snapshots already present in the index repository
+    value: ${{ steps.ingest.outputs.skipped }}
+  pushed:
+    description: Whether a commit was pushed (true/false)
+    value: ${{ steps.ingest.outputs.pushed }}
+  commit:
+    description: SHA of the pushed ingest commit, empty when nothing was pushed
+    value: ${{ steps.ingest.outputs.commit }}
+
 runs:
   using: composite
   steps:
-    - name: Validate snapshot
+    - name: Resolve inputs
+      id: resolve
+      shell: bash
+      env:
+        PATTERNS: ${{ inputs.snapshot-path }}
+        INDEX_REPOSITORY: ${{ inputs.index-repository }}
+      run: |
+        set -euo pipefail
+
+        if [[ "$INDEX_REPOSITORY" != */* ]]; then
+          echo "::error::index-repository must be owner/name, got '$INDEX_REPOSITORY'"
+          exit 1
+        fi
+        # The App token is scoped to this one repository, so it needs the owner
+        # and the bare name apart.
+        echo "index-owner=${INDEX_REPOSITORY%%/*}" >> "$GITHUB_OUTPUT"
+        echo "index-name=${INDEX_REPOSITORY##*/}" >> "$GITHUB_OUTPUT"
+        work="$RUNNER_TEMP/molcrafts-ci"
+        mkdir -p "$work"
+        list="$work/snapshots.txt"
+        : > "$list"
+        while IFS= read -r pattern; do
+          [ -n "$pattern" ] || continue
+          if [ -f "$pattern" ]; then
+            matches=("$pattern")
+          else
+            # Unquoted on purpose: this is where a glob is expanded.
+            matches=($pattern)
+          fi
+          found=0
+          for f in "${matches[@]}"; do
+            [ -f "$f" ] || continue
+            printf '%s\n' "$(cd "$(dirname "$f")" && pwd)/$(basename "$f")" >> "$list"
+            found=1
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "::error::no snapshot file matched '$pattern'"
+            exit 1
+          fi
+        done <<< "$PATTERNS"
+        sort -u -o "$list" "$list"
+        echo "count=$(wc -l < "$list" | tr -d ' ')" >> "$GITHUB_OUTPUT"
+        echo "list=$list" >> "$GITHUB_OUTPUT"
+
+    - name: Install molcrafts-ci
+      id: install
       shell: bash
       run: |
         set -euo pipefail
-        python -m pip install -q "${{ github.action_path }}/../.."
-        molcrafts-ci validate-snapshot "${{ inputs.snapshot-path }}"
+        # A venv, not a bare `pip install`: the CLI must not depend on whether
+        # the producer's runner has a writable system Python (PEP 668 images
+        # refuse it) or a matching toolchain — molrs is a Rust repository.
+        venv="$RUNNER_TEMP/molcrafts-ci/venv"
+        python3 -m venv "$venv"
+        # Installed from the action's own checkout, so the CLI is exactly the
+        # version the caller pinned this action to.
+        "$venv/bin/pip" install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/../.."
+        echo "molci=$venv/bin/molci" >> "$GITHUB_OUTPUT"
+        echo "python=$venv/bin/python" >> "$GITHUB_OUTPUT"
+
+    - name: Validate snapshots
+      id: validate
+      shell: bash
+      env:
+        MOLCI: ${{ steps.install.outputs.molci }}
+        PY: ${{ steps.install.outputs.python }}
+        LIST: ${{ steps.resolve.outputs.list }}
+      run: |
+        set -euo pipefail
+        report="$RUNNER_TEMP/molcrafts-ci/validated.jsonl"
+        tr '\n' '\0' < "$LIST" | xargs -0 "$MOLCI" validate-snapshot | tee "$report"
+        tracked=$("$PY" - "$report" <<'PY'
+        import json, sys
+        with open(sys.argv[1], encoding="utf-8") as fh:
+            print(sum(1 for line in fh if line.strip() and json.loads(line)["tracking"]))
+        PY
+        )
+        echo "tracked=$tracked" >> "$GITHUB_OUTPUT"
+        echo "report=$report" >> "$GITHUB_OUTPUT"
 
     - name: Upload snapshot artifact
+      if: inputs.upload-artifact == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact-name }}
         path: ${{ inputs.snapshot-path }}
         if-no-files-found: error
 
-    - name: Notify ingest (tracking)
-      if: inputs.tracking-enabled == 'true'
+    - name: Mint GitHub App token
+      id: app-token
+      if: steps.validate.outputs.tracked != '0' && inputs.app-id != ''
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ steps.resolve.outputs.index-owner }}
+        repositories: ${{ steps.resolve.outputs.index-name }}
+
+    - name: Ingest into the index repository
+      id: ingest
+      if: steps.validate.outputs.tracked != '0'
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
+        MOLCI: ${{ steps.install.outputs.molci }}
+        PY: ${{ steps.install.outputs.python }}
+        LIST: ${{ steps.resolve.outputs.list }}
+        TOKEN: ${{ steps.app-token.outputs.token || inputs.token }}
+        INDEX_REPOSITORY: ${{ inputs.index-repository }}
+        INDEX_BRANCH: ${{ inputs.index-branch }}
+        DATA_ROOT: ${{ inputs.data-root }}
+        PROJECT: ${{ inputs.project }}
+        DRY_RUN: ${{ inputs.dry-run }}
       run: |
         set -euo pipefail
-        if [[ -z "${{ inputs.project }}" ]]; then
-          echo "project is required when tracking-enabled=true" >&2
+
+        if [ -z "$TOKEN" ]; then
+          echo "::error::${{ steps.validate.outputs.tracked }} snapshot(s) have tracking enabled, which writes to $INDEX_REPOSITORY, but no credential was given. Pass app-id + private-key, or token (a fine-grained PAT with contents:write). The workflow GITHUB_TOKEN cannot reach another repository."
           exit 1
         fi
-        # Placeholder: producers with a GitHub App should repository_dispatch
-        # MolCrafts/molcrafts-ci with metadata only (not the payload).
-        echo "tracking enabled for project=${{ inputs.project }}; ingest dispatch is configured centrally"
+        echo "::add-mask::$TOKEN"
+        auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TOKEN" | base64 | tr -d '\n')"
+        echo "::add-mask::${auth#AUTHORIZATION: basic }"
+
+        work="$RUNNER_TEMP/molcrafts-ci/index"
+        rm -rf "$work"
+        # Credentials are passed per invocation, never written into .git/config.
+        git -c http.extraheader="$auth" clone --quiet --depth 1 \
+          ${INDEX_BRANCH:+--branch "$INDEX_BRANCH"} \
+          "$GITHUB_SERVER_URL/$INDEX_REPOSITORY.git" "$work"
+        cd "$work"
+        branch="${INDEX_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
+        git config user.name "molcrafts-ci[bot]"
+        git config user.email "molcrafts-ci[bot]@users.noreply.github.com"
+
+        report="$RUNNER_TEMP/molcrafts-ci/ingested.jsonl"
+        pushed=false
+        commit=""
+
+        # Two producers can finish at the same moment, and nothing serializes
+        # them. Rather than rebase an append onto a moved index — which
+        # conflicts inside the .jsonl — each attempt re-runs the ingest against
+        # the branch as it now stands. The ingest is idempotent, so this
+        # converges instead of duplicating or clobbering history.
+        for attempt in 1 2 3 4 5; do
+          git -c http.extraheader="$auth" fetch --quiet --depth 1 origin "$branch"
+          git reset --quiet --hard FETCH_HEAD
+          # Drops the previous attempt's writes; a no-op on the first pass.
+          git clean -qfd -- "$DATA_ROOT"
+
+          tr '\n' '\0' < "$LIST" | xargs -0 "$MOLCI" ingest \
+            --project "$PROJECT" \
+            --data-root "$work/$DATA_ROOT" \
+            --if-exists skip \
+            --skip-untracked > "$report"
+
+          git add -A -- "$DATA_ROOT"
+          if git diff --staged --quiet; then
+            echo "index already contains every tracked snapshot; nothing to push"
+            break
+          fi
+
+          records=$("$PY" - "$report" <<'PY'
+        import json, sys
+        with open(sys.argv[1], encoding="utf-8") as fh:
+            rows = [json.loads(line) for line in fh if line.strip()]
+        new = sorted({r["record"] for r in rows if r["status"] == "ingested"})
+        print(", ".join(new) or "none")
+        PY
+        )
+          git commit --quiet -m "ingest: $PROJECT — $records @ ${GITHUB_SHA:0:7}" \
+            -m "Source: $GITHUB_REPOSITORY@$GITHUB_SHA" \
+            -m "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "dry-run: would push $(git rev-parse HEAD) to $INDEX_REPOSITORY@$branch"
+            break
+          fi
+
+          if git -c http.extraheader="$auth" push --quiet origin "HEAD:$branch"; then
+            pushed=true
+            commit=$(git rev-parse HEAD)
+            break
+          fi
+
+          if [ "$attempt" -eq 5 ]; then
+            echo "::error::could not push to $INDEX_REPOSITORY@$branch after 5 attempts"
+            exit 1
+          fi
+          echo "push rejected (branch moved); retrying in $((attempt * 3))s"
+          sleep $((attempt * 3))
+        done
+
+        "$PY" - "$report" >> "$GITHUB_OUTPUT" <<'PY'
+        import collections, json, sys
+        with open(sys.argv[1], encoding="utf-8") as fh:
+            rows = [json.loads(line) for line in fh if line.strip()]
+        counts = collections.Counter(r["status"] for r in rows)
+        print(f"ingested={counts['ingested']}")
+        print(f"skipped={counts['skipped']}")
+        PY
+        echo "pushed=$pushed" >> "$GITHUB_OUTPUT"
+        echo "commit=$commit" >> "$GITHUB_OUTPUT"
+
+        {
+          echo "### MolCrafts CI — \`$PROJECT\`"
+          echo
+          if [ "$pushed" = "true" ]; then
+            echo "Ingested into [\`$INDEX_REPOSITORY@$branch\`]($GITHUB_SERVER_URL/$INDEX_REPOSITORY/commit/$commit) — the site rebuild follows that push."
+          elif [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run: the ingest applied cleanly to \`$INDEX_REPOSITORY@$branch\`, and was not pushed."
+          else
+            echo "Nothing pushed: every tracked snapshot was already in the index."
+          fi
+          echo
+          echo '| snapshot | record | status |'
+          echo '| --- | --- | --- |'
+          "$PY" - "$report" <<'PY'
+        import json, sys
+        with open(sys.argv[1], encoding="utf-8") as fh:
+            for line in fh:
+                if line.strip():
+                    r = json.loads(line)
+                    print(f"| `{r['snapshot_id']}` | {r['record']} | {r['status']} |")
+        PY
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Remove index clone
+      if: always()
+      shell: bash
+      run: rm -rf "$RUNNER_TEMP/molcrafts-ci/index"
