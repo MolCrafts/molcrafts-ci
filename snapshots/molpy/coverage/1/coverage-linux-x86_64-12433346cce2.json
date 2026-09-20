@@ -1,0 +1,2439 @@
+{
+  "manifest": {
+    "producer": "coverage.py",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "coverage",
+    "schema_version": "1",
+    "source": {
+      "commit": "12433346cce2ed2e5296ea6eb1d678aff877fb6a",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molpy",
+      "run_attempt": 1,
+      "timestamp": "2026-09-20T19:30:32Z",
+      "workflow_run": 35532487028
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "files": [
+      {
+        "lines": 93.8,
+        "path": "src/molpy/__init__.py",
+        "uncovered": [
+          55,
+          60
+        ]
+      },
+      {
+        "lines": 0.0,
+        "path": "src/molpy/__main__.py",
+        "uncovered": [
+          3,
+          5
+        ]
+      },
+      {
+        "lines": 80.0,
+        "path": "src/molpy/adapter/__init__.py",
+        "uncovered": [
+          36
+        ]
+      },
+      {
+        "lines": 94.4,
+        "path": "src/molpy/adapter/base.py",
+        "uncovered": [
+          90,
+          112
+        ]
+      },
+      {
+        "lines": 1.3,
+        "path": "src/molpy/adapter/rdkit.py",
+        "uncovered": [
+          22,
+          24,
+          25,
+          27,
+          30,
+          32,
+          35,
+          36,
+          37,
+          38,
+          39,
+          44,
+          51,
+          57,
+          66,
+          67,
+          68,
+          69,
+          73,
+          76,
+          77,
+          78,
+          82,
+          85,
+          88,
+          93,
+          94,
+          95,
+          97,
+          98,
+          99,
+          101,
+          102,
+          103,
+          105,
+          117,
+          118,
+          119,
+          120,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127,
+          131,
+          132,
+          133,
+          134,
+          135
+        ],
+        "uncovered_total": 266
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/_finalize.py",
+        "uncovered": []
+      },
+      {
+        "lines": 19.2,
+        "path": "src/molpy/builder/ambertools.py",
+        "uncovered": [
+          47,
+          48,
+          69,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          101,
+          102,
+          103,
+          105,
+          106,
+          107,
+          108,
+          109,
+          111,
+          112,
+          115,
+          124,
+          125,
+          129,
+          136,
+          143,
+          146,
+          147,
+          148,
+          149,
+          150,
+          157,
+          158,
+          159,
+          160,
+          161,
+          162,
+          163,
+          164,
+          165,
+          166,
+          178,
+          179,
+          181,
+          182,
+          186,
+          187,
+          188,
+          191
+        ],
+        "uncovered_total": 92
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/assembly/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 95.3,
+        "path": "src/molpy/builder/assembly/_assembler.py",
+        "uncovered": [
+          103,
+          263,
+          266
+        ]
+      },
+      {
+        "lines": 90.3,
+        "path": "src/molpy/builder/assembly/_cgsmiles_ir.py",
+        "uncovered": [
+          31,
+          48
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/assembly/_context.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/assembly/_finalize.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/assembly/_library.py",
+        "uncovered": []
+      },
+      {
+        "lines": 89.8,
+        "path": "src/molpy/builder/assembly/_placer.py",
+        "uncovered": [
+          78,
+          81,
+          90,
+          106,
+          112,
+          113,
+          114,
+          134,
+          199
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/assembly/_polymer.py",
+        "uncovered": []
+      },
+      {
+        "lines": 96.2,
+        "path": "src/molpy/builder/assembly/_proximity.py",
+        "uncovered": [
+          115,
+          132,
+          166,
+          190
+        ]
+      },
+      {
+        "lines": 63.3,
+        "path": "src/molpy/builder/assembly/_random.py",
+        "uncovered": [
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78
+        ]
+      },
+      {
+        "lines": 87.5,
+        "path": "src/molpy/builder/assembly/_replicas.py",
+        "uncovered": [
+          72,
+          73,
+          74,
+          75,
+          81
+        ]
+      },
+      {
+        "lines": 76.0,
+        "path": "src/molpy/builder/assembly/_residue_graph.py",
+        "uncovered": [
+          25,
+          38,
+          58,
+          60,
+          74,
+          75,
+          76
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/assembly/_selector.py",
+        "uncovered": []
+      },
+      {
+        "lines": 59.6,
+        "path": "src/molpy/builder/assembly/_sites.py",
+        "uncovered": [
+          48,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          94,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          131,
+          137,
+          138,
+          139,
+          141,
+          142,
+          143
+        ]
+      },
+      {
+        "lines": 89.4,
+        "path": "src/molpy/builder/assembly/_topology.py",
+        "uncovered": [
+          63,
+          89,
+          91
+        ]
+      },
+      {
+        "lines": 88.5,
+        "path": "src/molpy/builder/crystal.py",
+        "uncovered": [
+          116,
+          180,
+          181,
+          182,
+          183,
+          184,
+          193,
+          260,
+          272
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/nanostructure/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 87.5,
+        "path": "src/molpy/builder/nanostructure/carbon_tube.py",
+        "uncovered": [
+          35,
+          37,
+          45,
+          78
+        ]
+      },
+      {
+        "lines": 18.3,
+        "path": "src/molpy/builder/nanostructure/graphene.py",
+        "uncovered": [
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          44,
+          51,
+          52,
+          53,
+          54,
+          65,
+          66,
+          67,
+          68,
+          69,
+          71,
+          72,
+          73,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/polymer/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/polymer/ambertools/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 45.3,
+        "path": "src/molpy/builder/polymer/ambertools/amber_builder.py",
+        "uncovered": [
+          133,
+          138,
+          139,
+          140,
+          144,
+          147,
+          199,
+          200,
+          201,
+          202,
+          203,
+          204,
+          213,
+          228,
+          263,
+          279,
+          283,
+          303,
+          319,
+          328,
+          330,
+          347,
+          348,
+          355,
+          357,
+          358,
+          360,
+          361,
+          362,
+          363,
+          367,
+          368,
+          369,
+          370,
+          376,
+          377,
+          378,
+          381,
+          382,
+          385,
+          386,
+          396,
+          398,
+          399,
+          400,
+          401,
+          404,
+          408,
+          409,
+          415
+        ],
+        "uncovered_total": 171
+      },
+      {
+        "lines": 88.9,
+        "path": "src/molpy/builder/polymer/ambertools/amber_leap.py",
+        "uncovered": [
+          32,
+          33
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/polymer/ambertools/amber_utils.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/builder/polymer/ambertools/types.py",
+        "uncovered": []
+      },
+      {
+        "lines": 92.7,
+        "path": "src/molpy/builder/polymer/distributions.py",
+        "uncovered": [
+          42,
+          60,
+          67,
+          205,
+          277
+        ]
+      },
+      {
+        "lines": 83.6,
+        "path": "src/molpy/builder/polymer/sequences.py",
+        "uncovered": [
+          63,
+          66,
+          97,
+          98,
+          99,
+          100,
+          101,
+          104,
+          143,
+          153,
+          187,
+          205
+        ]
+      },
+      {
+        "lines": 83.3,
+        "path": "src/molpy/builder/polymer/system.py",
+        "uncovered": [
+          92,
+          106,
+          118,
+          134,
+          138,
+          203,
+          210,
+          330,
+          334,
+          345,
+          350,
+          364,
+          380
+        ]
+      },
+      {
+        "lines": 72.9,
+        "path": "src/molpy/builder/symmetry.py",
+        "uncovered": [
+          44,
+          107,
+          121,
+          131,
+          132,
+          133,
+          134,
+          153,
+          154,
+          155,
+          156,
+          157,
+          158,
+          159,
+          169,
+          170,
+          171
+        ]
+      },
+      {
+        "lines": 94.0,
+        "path": "src/molpy/builder/virtualsite.py",
+        "uncovered": [
+          194,
+          195
+        ]
+      },
+      {
+        "lines": 0.0,
+        "path": "src/molpy/cli/__init__.py",
+        "uncovered": [
+          3,
+          5
+        ]
+      },
+      {
+        "lines": 0.0,
+        "path": "src/molpy/cli/_main.py",
+        "uncovered": [
+          7,
+          9,
+          11,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          22,
+          23,
+          24,
+          26,
+          27,
+          29,
+          30,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38
+        ]
+      },
+      {
+        "lines": 0.0,
+        "path": "src/molpy/cli/moltemplate.py",
+        "uncovered": [
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          19,
+          20,
+          24,
+          27,
+          31,
+          32,
+          42,
+          49,
+          54,
+          57,
+          58,
+          59,
+          62,
+          65,
+          66,
+          67,
+          70,
+          79,
+          80,
+          81,
+          85,
+          94,
+          95,
+          96,
+          105,
+          110,
+          118,
+          119,
+          120,
+          122,
+          123,
+          124,
+          126,
+          127,
+          128,
+          130,
+          131,
+          132,
+          133,
+          136,
+          138,
+          139,
+          140,
+          145
+        ],
+        "uncovered_total": 145
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 56.5,
+        "path": "src/molpy/compute/cluster.py",
+        "uncovered": [
+          32,
+          41,
+          42,
+          43,
+          50,
+          53,
+          64,
+          67
+        ]
+      },
+      {
+        "lines": 69.2,
+        "path": "src/molpy/compute/decomposition.py",
+        "uncovered": [
+          24,
+          27,
+          44,
+          47
+        ]
+      },
+      {
+        "lines": 66.7,
+        "path": "src/molpy/compute/density.py",
+        "uncovered": [
+          30,
+          33,
+          48,
+          51
+        ]
+      },
+      {
+        "lines": 10.5,
+        "path": "src/molpy/compute/dielectric.py",
+        "uncovered": [
+          57,
+          65,
+          66,
+          67,
+          68,
+          69,
+          72,
+          73,
+          74,
+          130,
+          131,
+          132,
+          133,
+          134,
+          135,
+          138,
+          141,
+          157,
+          158,
+          159,
+          160,
+          161,
+          162,
+          163,
+          164,
+          167,
+          184,
+          185,
+          186,
+          187,
+          189,
+          193,
+          194,
+          201,
+          209,
+          210,
+          211,
+          212,
+          213,
+          220,
+          230,
+          231,
+          232,
+          234,
+          237,
+          238,
+          241,
+          248,
+          258,
+          271
+        ],
+        "uncovered_total": 187
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/diffraction.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/distribution.py",
+        "uncovered": []
+      },
+      {
+        "lines": 71.4,
+        "path": "src/molpy/compute/environment.py",
+        "uncovered": [
+          30,
+          33
+        ]
+      },
+      {
+        "lines": 75.0,
+        "path": "src/molpy/compute/hbond.py",
+        "uncovered": [
+          46,
+          49
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/jacf.py",
+        "uncovered": []
+      },
+      {
+        "lines": 66.7,
+        "path": "src/molpy/compute/msd.py",
+        "uncovered": [
+          26,
+          27,
+          30
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/neighborlist.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/onsager.py",
+        "uncovered": []
+      },
+      {
+        "lines": 73.9,
+        "path": "src/molpy/compute/order.py",
+        "uncovered": [
+          48,
+          51,
+          64,
+          67,
+          101,
+          104
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/persist.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/pmft.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/pmsd.py",
+        "uncovered": []
+      },
+      {
+        "lines": 82.6,
+        "path": "src/molpy/compute/rdf.py",
+        "uncovered": [
+          46,
+          55
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/reorientation.py",
+        "uncovered": []
+      },
+      {
+        "lines": 85.4,
+        "path": "src/molpy/compute/result.py",
+        "uncovered": [
+          26,
+          175,
+          214,
+          215,
+          216,
+          217,
+          218,
+          219,
+          257,
+          258,
+          259
+        ]
+      },
+      {
+        "lines": 55.2,
+        "path": "src/molpy/compute/shape.py",
+        "uncovered": [
+          36,
+          37,
+          38,
+          51,
+          54,
+          61,
+          64,
+          77,
+          80,
+          93,
+          96
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/signal.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/spatial.py",
+        "uncovered": []
+      },
+      {
+        "lines": 75.0,
+        "path": "src/molpy/compute/van_hove.py",
+        "uncovered": [
+          47,
+          50
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/compute/voronoi.py",
+        "uncovered": []
+      },
+      {
+        "lines": 84.6,
+        "path": "src/molpy/conformer/__init__.py",
+        "uncovered": [
+          64
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/core/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 67.3,
+        "path": "src/molpy/core/atomistic.py",
+        "uncovered": [
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          112,
+          115,
+          123,
+          130,
+          133,
+          136,
+          137,
+          138,
+          139,
+          140,
+          142,
+          143,
+          144,
+          147,
+          178,
+          199,
+          200,
+          207,
+          208,
+          209,
+          210,
+          211,
+          213,
+          214,
+          215,
+          223,
+          224,
+          239,
+          240,
+          243,
+          244,
+          299,
+          300,
+          301,
+          302,
+          303,
+          363,
+          374,
+          424,
+          520,
+          521,
+          522,
+          531,
+          532
+        ],
+        "uncovered_total": 71
+      },
+      {
+        "lines": 65.3,
+        "path": "src/molpy/core/box.py",
+        "uncovered": [
+          109,
+          111,
+          136,
+          152,
+          159,
+          171,
+          173,
+          176,
+          186,
+          189,
+          190,
+          191,
+          198,
+          202,
+          203,
+          204,
+          205,
+          206,
+          207,
+          227,
+          240,
+          254,
+          266,
+          298,
+          302,
+          310,
+          314,
+          318,
+          322,
+          326,
+          330,
+          369,
+          373,
+          377,
+          381,
+          385,
+          390,
+          416,
+          429,
+          436,
+          437,
+          438,
+          446,
+          447,
+          448,
+          449,
+          450,
+          451,
+          452,
+          457
+        ],
+        "uncovered_total": 90
+      },
+      {
+        "lines": 85.2,
+        "path": "src/molpy/core/cg.py",
+        "uncovered": [
+          55,
+          91,
+          92,
+          107,
+          115,
+          116,
+          117,
+          118,
+          128,
+          129,
+          136,
+          137,
+          211,
+          212,
+          213,
+          243,
+          244,
+          245,
+          306,
+          333
+        ]
+      },
+      {
+        "lines": 98.3,
+        "path": "src/molpy/core/config.py",
+        "uncovered": [
+          137
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/core/entity.py",
+        "uncovered": []
+      },
+      {
+        "lines": 92.8,
+        "path": "src/molpy/core/fields.py",
+        "uncovered": [
+          141,
+          142,
+          193,
+          206,
+          230,
+          231
+        ]
+      },
+      {
+        "lines": 71.6,
+        "path": "src/molpy/core/forcefield.py",
+        "uncovered": [
+          56,
+          63,
+          70,
+          77,
+          84,
+          91,
+          98,
+          105,
+          112,
+          119,
+          126,
+          133,
+          140,
+          147,
+          154,
+          161,
+          168,
+          175,
+          182
+        ]
+      },
+      {
+        "lines": 91.7,
+        "path": "src/molpy/core/logger.py",
+        "uncovered": [
+          33
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/core/ops/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 88.2,
+        "path": "src/molpy/core/ops/scale_lj.py",
+        "uncovered": [
+          28
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/core/perceive.py",
+        "uncovered": []
+      },
+      {
+        "lines": 91.4,
+        "path": "src/molpy/core/region.py",
+        "uncovered": [
+          28,
+          47,
+          107,
+          116,
+          121,
+          148,
+          159
+        ]
+      },
+      {
+        "lines": 36.4,
+        "path": "src/molpy/core/script.py",
+        "uncovered": [
+          114,
+          119,
+          120,
+          161,
+          162,
+          163,
+          164,
+          165,
+          170,
+          172,
+          174,
+          175,
+          176,
+          178,
+          180,
+          182,
+          204,
+          206,
+          208,
+          210,
+          222,
+          236,
+          245,
+          254,
+          266,
+          267,
+          268,
+          269,
+          282,
+          295,
+          296,
+          297,
+          309,
+          310,
+          311,
+          325,
+          327,
+          349,
+          351,
+          377,
+          378,
+          380,
+          381,
+          383,
+          385,
+          386,
+          388,
+          392,
+          394,
+          396
+        ],
+        "uncovered_total": 95
+      },
+      {
+        "lines": 65.0,
+        "path": "src/molpy/core/selector.py",
+        "uncovered": [
+          79,
+          80,
+          82,
+          107,
+          117,
+          137,
+          138,
+          140,
+          141,
+          143,
+          144,
+          145,
+          148,
+          149,
+          154,
+          155,
+          157,
+          158,
+          160,
+          161,
+          163,
+          186,
+          187,
+          189,
+          192,
+          195,
+          199,
+          201,
+          230,
+          245,
+          256,
+          266
+        ]
+      },
+      {
+        "lines": 91.6,
+        "path": "src/molpy/core/trajectory.py",
+        "uncovered": [
+          92,
+          107,
+          133,
+          174,
+          214
+        ]
+      },
+      {
+        "lines": 95.7,
+        "path": "src/molpy/core/unit.py",
+        "uncovered": [
+          163
+        ]
+      },
+      {
+        "lines": 65.3,
+        "path": "src/molpy/data/__init__.py",
+        "uncovered": [
+          29,
+          31,
+          75,
+          127,
+          129,
+          130,
+          131,
+          133,
+          134,
+          135,
+          136,
+          137,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/data/forcefield/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/engine/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 91.3,
+        "path": "src/molpy/engine/base.py",
+        "uncovered": [
+          352,
+          353,
+          354,
+          355,
+          362
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/engine/cp2k.py",
+        "uncovered": []
+      },
+      {
+        "lines": 77.6,
+        "path": "src/molpy/engine/lammps.py",
+        "uncovered": [
+          148,
+          294,
+          303,
+          347,
+          352,
+          353,
+          359,
+          364,
+          368,
+          379,
+          387,
+          388,
+          389,
+          393,
+          394,
+          468
+        ]
+      },
+      {
+        "lines": 51.2,
+        "path": "src/molpy/engine/openmm.py",
+        "uncovered": [
+          283,
+          284,
+          288,
+          289,
+          332,
+          333,
+          335,
+          336,
+          337,
+          339,
+          340,
+          342,
+          343,
+          345,
+          348,
+          350,
+          390,
+          391,
+          392,
+          393,
+          394,
+          395,
+          400,
+          401,
+          411,
+          412,
+          413,
+          414,
+          418,
+          424,
+          430,
+          431,
+          432,
+          433,
+          437,
+          468,
+          469,
+          470,
+          471,
+          472,
+          477,
+          480,
+          505,
+          506,
+          520,
+          534,
+          550,
+          561,
+          570,
+          578
+        ],
+        "uncovered_total": 53
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/integrations/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 73.6,
+        "path": "src/molpy/integrations/metric_readers.py",
+        "uncovered": [
+          58,
+          100,
+          103,
+          133,
+          182,
+          191,
+          193,
+          194,
+          195,
+          196,
+          198,
+          199,
+          200,
+          201,
+          202,
+          204,
+          205,
+          206,
+          207,
+          208,
+          209,
+          216,
+          217,
+          218,
+          219,
+          220,
+          221,
+          222,
+          262,
+          268,
+          271,
+          280,
+          286
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/base.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/data/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 70.8,
+        "path": "src/molpy/io/data/ac.py",
+        "uncovered": [
+          33,
+          34,
+          35,
+          36,
+          38,
+          39
+        ]
+      },
+      {
+        "lines": 94.3,
+        "path": "src/molpy/io/data/amber.py",
+        "uncovered": [
+          68
+        ]
+      },
+      {
+        "lines": 41.9,
+        "path": "src/molpy/io/data/base.py",
+        "uncovered": [
+          30,
+          31,
+          34,
+          37,
+          38,
+          39,
+          44,
+          45,
+          46,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          74,
+          75,
+          76,
+          77,
+          78,
+          82,
+          86,
+          87,
+          88,
+          89,
+          90
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/data/gro.py",
+        "uncovered": []
+      },
+      {
+        "lines": 84.7,
+        "path": "src/molpy/io/data/lammps.py",
+        "uncovered": [
+          18,
+          21,
+          23,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          131,
+          183,
+          187,
+          188,
+          197,
+          200,
+          204,
+          205,
+          213,
+          217,
+          338,
+          353,
+          373,
+          405,
+          429,
+          477,
+          485
+        ]
+      },
+      {
+        "lines": 61.9,
+        "path": "src/molpy/io/data/lammps_bond_react.py",
+        "uncovered": [
+          114,
+          115,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127,
+          131,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153,
+          156,
+          157,
+          158,
+          159,
+          160,
+          166,
+          167,
+          168,
+          169,
+          249,
+          256
+        ]
+      },
+      {
+        "lines": 96.0,
+        "path": "src/molpy/io/data/lammps_molecule.py",
+        "uncovered": [
+          44
+        ]
+      },
+      {
+        "lines": 93.5,
+        "path": "src/molpy/io/data/mol2.py",
+        "uncovered": [
+          44
+        ]
+      },
+      {
+        "lines": 51.1,
+        "path": "src/molpy/io/data/pdb.py",
+        "uncovered": [
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          53,
+          57,
+          65,
+          68,
+          76,
+          79,
+          80
+        ]
+      },
+      {
+        "lines": 76.9,
+        "path": "src/molpy/io/data/smiles.py",
+        "uncovered": [
+          92,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          129,
+          144
+        ]
+      },
+      {
+        "lines": 71.0,
+        "path": "src/molpy/io/data/top.py",
+        "uncovered": [
+          52,
+          55,
+          56,
+          57,
+          58,
+          59
+        ]
+      },
+      {
+        "lines": 88.6,
+        "path": "src/molpy/io/data/xsf.py",
+        "uncovered": [
+          45,
+          62,
+          63
+        ]
+      },
+      {
+        "lines": 93.3,
+        "path": "src/molpy/io/data/xyz.py",
+        "uncovered": [
+          44
+        ]
+      },
+      {
+        "lines": 72.4,
+        "path": "src/molpy/io/emit/__init__.py",
+        "uncovered": [
+          41,
+          60,
+          61,
+          62,
+          63,
+          64
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/emit/gromacs.py",
+        "uncovered": []
+      },
+      {
+        "lines": 94.9,
+        "path": "src/molpy/io/emit/lammps.py",
+        "uncovered": [
+          128
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/emit/openmm.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/emit/xml.py",
+        "uncovered": []
+      },
+      {
+        "lines": 73.7,
+        "path": "src/molpy/io/forcefield/__init__.py",
+        "uncovered": [
+          40,
+          41,
+          71,
+          73
+        ]
+      },
+      {
+        "lines": 93.8,
+        "path": "src/molpy/io/forcefield/_rb_opls.py",
+        "uncovered": [
+          68
+        ]
+      },
+      {
+        "lines": 90.2,
+        "path": "src/molpy/io/forcefield/amber.py",
+        "uncovered": [
+          61,
+          65,
+          66
+        ]
+      },
+      {
+        "lines": 85.7,
+        "path": "src/molpy/io/forcefield/base.py",
+        "uncovered": [
+          15,
+          34
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/forcefield/frcmod.py",
+        "uncovered": []
+      },
+      {
+        "lines": 92.6,
+        "path": "src/molpy/io/forcefield/lammps.py",
+        "uncovered": [
+          113
+        ]
+      },
+      {
+        "lines": 39.5,
+        "path": "src/molpy/io/forcefield/moltemplate.py",
+        "uncovered": [
+          13,
+          21,
+          22,
+          23,
+          26,
+          27,
+          31,
+          32,
+          40,
+          41,
+          45,
+          46,
+          47,
+          50,
+          51,
+          56,
+          61,
+          66,
+          73
+        ]
+      },
+      {
+        "lines": 40.0,
+        "path": "src/molpy/io/forcefield/top.py",
+        "uncovered": [
+          24,
+          25,
+          35,
+          36,
+          38,
+          39,
+          41,
+          42,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          67,
+          68
+        ]
+      },
+      {
+        "lines": 86.4,
+        "path": "src/molpy/io/forcefield/xml.py",
+        "uncovered": [
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          133,
+          134,
+          139
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/log/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/mrec.py",
+        "uncovered": []
+      },
+      {
+        "lines": 55.0,
+        "path": "src/molpy/io/readers.py",
+        "uncovered": [
+          17,
+          18,
+          20,
+          21,
+          80,
+          82,
+          83,
+          97,
+          99,
+          100,
+          101,
+          115,
+          117,
+          118,
+          119,
+          135,
+          137,
+          199,
+          201,
+          202,
+          257,
+          259,
+          260,
+          261,
+          262,
+          264,
+          265,
+          267,
+          268,
+          270,
+          284,
+          286,
+          288,
+          289,
+          291,
+          292,
+          339,
+          342,
+          356,
+          358,
+          373,
+          375,
+          390,
+          392,
+          397,
+          399,
+          404,
+          406
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/io/trajectory/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 87.8,
+        "path": "src/molpy/io/trajectory/base.py",
+        "uncovered": [
+          82,
+          85,
+          86,
+          87
+        ]
+      },
+      {
+        "lines": 75.9,
+        "path": "src/molpy/io/trajectory/lammps.py",
+        "uncovered": [
+          32,
+          38,
+          46,
+          47,
+          65,
+          69,
+          79,
+          80
+        ]
+      },
+      {
+        "lines": 75.5,
+        "path": "src/molpy/io/trajectory/xyz.py",
+        "uncovered": [
+          20,
+          32,
+          34,
+          38,
+          51,
+          52
+        ]
+      },
+      {
+        "lines": 56.2,
+        "path": "src/molpy/io/utils.py",
+        "uncovered": [
+          23,
+          27,
+          31,
+          32,
+          36
+        ]
+      },
+      {
+        "lines": 48.1,
+        "path": "src/molpy/io/writers.py",
+        "uncovered": [
+          42,
+          44,
+          45,
+          68,
+          70,
+          75,
+          77,
+          82,
+          84,
+          89,
+          91,
+          142,
+          144,
+          259,
+          261,
+          262,
+          263,
+          304,
+          306,
+          320,
+          322,
+          332,
+          334,
+          339,
+          341,
+          358,
+          359,
+          360,
+          364,
+          365,
+          366,
+          369,
+          371,
+          372,
+          373,
+          375,
+          410,
+          412,
+          413,
+          416,
+          423,
+          424,
+          426,
+          427,
+          430,
+          431,
+          432,
+          434,
+          437,
+          438
+        ],
+        "uncovered_total": 58
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/md/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 0.0,
+        "path": "src/molpy/optimize/__init__.py",
+        "uncovered": [
+          10,
+          12
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/parser/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/parser/moltemplate/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 55.6,
+        "path": "src/molpy/parser/moltemplate/builder.py",
+        "uncovered": [
+          95,
+          98,
+          107,
+          141,
+          142,
+          143,
+          144,
+          150,
+          182,
+          183,
+          184,
+          189,
+          190,
+          191,
+          192,
+          193,
+          194,
+          200,
+          210,
+          211,
+          212,
+          213,
+          214,
+          215,
+          216,
+          218,
+          219,
+          220,
+          221,
+          260,
+          268,
+          272,
+          273,
+          279,
+          280,
+          281,
+          282,
+          283,
+          284,
+          288,
+          289,
+          290,
+          291,
+          292,
+          293,
+          294,
+          295,
+          296,
+          298,
+          300
+        ],
+        "uncovered_total": 247
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/parser/moltemplate/ir.py",
+        "uncovered": []
+      },
+      {
+        "lines": 59.0,
+        "path": "src/molpy/parser/moltemplate/lt_writer.py",
+        "uncovered": [
+          107,
+          124,
+          142,
+          143,
+          144,
+          145,
+          146,
+          150,
+          155,
+          159,
+          160,
+          161,
+          162,
+          163,
+          164,
+          166,
+          167,
+          168,
+          169,
+          170,
+          173,
+          175,
+          176,
+          177,
+          178,
+          179,
+          182,
+          184,
+          191,
+          192,
+          193,
+          194,
+          195,
+          196,
+          223,
+          233,
+          253,
+          254,
+          255,
+          256,
+          257,
+          258,
+          259,
+          260,
+          261,
+          262,
+          263,
+          264,
+          265,
+          266
+        ],
+        "uncovered_total": 79
+      },
+      {
+        "lines": 70.7,
+        "path": "src/molpy/parser/moltemplate/parser.py",
+        "uncovered": [
+          64,
+          65,
+          66,
+          69,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          111,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          126,
+          127,
+          128,
+          129,
+          130,
+          133,
+          183,
+          184,
+          185,
+          201,
+          202,
+          203,
+          204,
+          205,
+          207,
+          208,
+          209,
+          210,
+          211,
+          213,
+          246,
+          247,
+          252,
+          253
+        ],
+        "uncovered_total": 94
+      },
+      {
+        "lines": 7.7,
+        "path": "src/molpy/parser/moltemplate/py_emitter.py",
+        "uncovered": [
+          59,
+          60,
+          61,
+          62,
+          64,
+          65,
+          66,
+          67,
+          68,
+          155,
+          157,
+          158,
+          159,
+          160,
+          161,
+          163,
+          165,
+          166,
+          167,
+          169,
+          170,
+          171,
+          172,
+          179,
+          180,
+          181,
+          219,
+          220,
+          224,
+          225,
+          229,
+          230,
+          231,
+          235,
+          236,
+          237,
+          238,
+          239,
+          240,
+          241,
+          245,
+          246,
+          247,
+          248,
+          249,
+          253,
+          260,
+          261,
+          262,
+          263
+        ],
+        "uncovered_total": 334
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/potential/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/potential/angle/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/potential/bond/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/potential/dihedral/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/potential/improper/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/potential/pair/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/typifier/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/typifier/_matching.py",
+        "uncovered": []
+      },
+      {
+        "lines": 94.5,
+        "path": "src/molpy/typifier/affected_region.py",
+        "uncovered": [
+          227,
+          231
+        ]
+      },
+      {
+        "lines": 88.9,
+        "path": "src/molpy/typifier/ambertools.py",
+        "uncovered": [
+          56,
+          69
+        ]
+      },
+      {
+        "lines": 94.9,
+        "path": "src/molpy/typifier/base.py",
+        "uncovered": [
+          93
+        ]
+      },
+      {
+        "lines": 95.7,
+        "path": "src/molpy/typifier/cache.py",
+        "uncovered": []
+      },
+      {
+        "lines": 82.8,
+        "path": "src/molpy/typifier/clp.py",
+        "uncovered": [
+          82,
+          83,
+          98,
+          99,
+          100,
+          101
+        ]
+      },
+      {
+        "lines": 93.0,
+        "path": "src/molpy/typifier/forcefield.py",
+        "uncovered": [
+          204,
+          205,
+          206,
+          223,
+          260
+        ]
+      },
+      {
+        "lines": 95.2,
+        "path": "src/molpy/typifier/region.py",
+        "uncovered": [
+          61,
+          203
+        ]
+      },
+      {
+        "lines": 92.4,
+        "path": "src/molpy/typifier/scope.py",
+        "uncovered": [
+          51,
+          54,
+          81
+        ]
+      },
+      {
+        "lines": 87.5,
+        "path": "src/molpy/typifier/smarts.py",
+        "uncovered": [
+          30,
+          69,
+          77,
+          78
+        ]
+      },
+      {
+        "lines": 78.4,
+        "path": "src/molpy/version.py",
+        "uncovered": [
+          23,
+          26,
+          27,
+          62,
+          63,
+          84,
+          89
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/wrapper/__init__.py",
+        "uncovered": []
+      },
+      {
+        "lines": 88.9,
+        "path": "src/molpy/wrapper/antechamber.py",
+        "uncovered": [
+          93
+        ]
+      },
+      {
+        "lines": 75.5,
+        "path": "src/molpy/wrapper/base.py",
+        "uncovered": [
+          38,
+          50,
+          54,
+          65,
+          66,
+          67,
+          72,
+          116
+        ]
+      },
+      {
+        "lines": 82.9,
+        "path": "src/molpy/wrapper/env.py",
+        "uncovered": [
+          68,
+          159,
+          238,
+          242,
+          245,
+          246,
+          247,
+          254,
+          255,
+          256,
+          257,
+          258,
+          259,
+          262,
+          263,
+          264
+        ]
+      },
+      {
+        "lines": 84.1,
+        "path": "src/molpy/wrapper/prepgen.py",
+        "uncovered": [
+          117,
+          151,
+          164,
+          229,
+          242,
+          244
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/wrapper/sander.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molpy/wrapper/tleap.py",
+        "uncovered": []
+      }
+    ],
+    "totals": {
+      "branches": 52.3,
+      "lines": 66.4
+    }
+  }
+}

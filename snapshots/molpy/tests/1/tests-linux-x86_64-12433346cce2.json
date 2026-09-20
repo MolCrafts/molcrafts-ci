@@ -1,0 +1,27 @@
+{
+  "manifest": {
+    "producer": "pytest",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "tests",
+    "schema_version": "1",
+    "source": {
+      "commit": "12433346cce2ed2e5296ea6eb1d678aff877fb6a",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molpy",
+      "run_attempt": 1,
+      "timestamp": "2026-09-20T19:30:32Z",
+      "workflow_run": 35532487028
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "failed": 0,
+    "passed": 1144,
+    "skipped": 1
+  }
+}
