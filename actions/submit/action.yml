@@ -165,7 +165,9 @@ runs:
 
     - name: Upload snapshot artifact
       if: inputs.upload-artifact == 'true'
-      uses: actions/upload-artifact@v4
+      # Runs on Node 24, so a self-hosted runner must be at least Actions
+      # Runner 2.327.1. GitHub-hosted runners already are.
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ inputs.artifact-name }}
         path: ${{ inputs.snapshot-path }}
@@ -174,7 +176,7 @@ runs:
     - name: Mint GitHub App token
       id: app-token
       if: steps.validate.outputs.tracked != '0' && inputs.app-id != ''
-      uses: actions/create-github-app-token@v2
+      uses: actions/create-github-app-token@v3
       with:
         app-id: ${{ inputs.app-id }}
         private-key: ${{ inputs.private-key }}
