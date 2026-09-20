@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 
+import { CommitLink } from "@/components/commit-link";
+import { HistorySelect } from "@/components/history-select";
 import { WorkSurface } from "@/components/layout/WorkSurface";
 import { PayloadView } from "@/components/payload-view";
-import { SnapshotTable } from "@/components/snapshot-table";
+import { RunLink } from "@/components/run-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useSelect } from "@/lib/selection";
 import { useUrlState } from "@/lib/use-url-state";
@@ -20,14 +22,17 @@ import type { RecordTabPanelProps, RecordTabPlugin, ProjectContext } from "./typ
 /**
  * One record's detail tab.
  *
- * Every record gets the same two answers in the same order: what the current
- * generation says, and what else has been published. The reading of the payload
- * is `PayloadView`'s, keyed on shape — so a record needs no tab of its own unless
- * it earns one.
+ * This tab answers exactly one question: what does *this* generation say. The
+ * reading of the payload is `PayloadView`'s, keyed on shape — so a record needs
+ * no tab of its own unless it earns one.
  *
- * There is no separate generation picker: the table below *is* the picker, and
- * two controls for one action is the duplication a tab strip already taught us
- * to delete. Provenance is absent too — the inspector owns it.
+ * The full history is not here. It lives on the overview, where it is a series
+ * with a direction rather than a list of identifiers, and the picker here only
+ * has to reach the recent past. That split is what lets this fold be one
+ * reading instead of a table competing with it.
+ *
+ * The header carries where this generation came from — commit and CI run — so
+ * the detail this site deliberately does not render is one click away.
  */
 export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
   function RecordTab({ project }: RecordTabPanelProps) {
@@ -105,31 +110,48 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
     }
 
     const hasEntries = entries === null || entries.length > 0;
+    const active = entries?.find((e) => e.snapshot_id === activeId) ?? null;
 
     return (
       <WorkSurface>
-        {hasEntries && (
-          <PayloadView
-            payload={snapshot?.payload ?? null}
-            loading={entries === null}
-            settled={snapshotSettled}
-          />
-        )}
+        {!hasEntries ? (
+          <EmptyState title={`No ${opts.label} snapshots`} density="compact" />
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border pb-3">
+              <HistorySelect
+                entries={entries}
+                selectedId={activeId}
+                onSelect={(snapshotId) => {
+                  setActiveId(snapshotId);
+                  // An explicit pick is what points the inspector, and what the
+                  // address records so the view can be shared. The body is
+                  // fetched there, so the pick does not wait on it.
+                  const entry = entries?.find((e) => e.snapshot_id === snapshotId);
+                  if (entry) {
+                    select({ record: record ?? entry.record ?? "", entry, snapshot: null });
+                  }
+                  setUrl({ snapshot: snapshotId });
+                }}
+              />
+              {active && (
+                <span className="flex items-center gap-x-3 text-label text-muted-foreground">
+                  <CommitLink repository={active.repository} commit={active.commit} />
+                  <RunLink repository={active.repository} run={active.workflow_run}>
+                    run
+                  </RunLink>
+                </span>
+              )}
+            </div>
 
-        <SnapshotTable
-          entries={entries}
-          selectedId={activeId}
-          onSelect={(snapshotId) => {
-            setActiveId(snapshotId);
-            // An explicit pick is what opens the inspector, and what the
-            // address records so the view can be shared. The body is fetched
-            // there, so the click does not wait on it.
-            const entry = entries?.find((e) => e.snapshot_id === snapshotId);
-            if (entry) select({ record: record ?? entry.record ?? "", entry, snapshot: null });
-            setUrl({ snapshot: snapshotId });
-          }}
-          emptyTitle={`No ${opts.label} snapshots`}
-        />
+            <PayloadView
+              payload={snapshot?.payload ?? null}
+              loading={entries === null}
+              settled={snapshotSettled}
+              entry={active}
+            />
+          </>
+        )}
       </WorkSurface>
     );
   }

@@ -33,6 +33,8 @@ export interface CoverageFile {
   path: string;
   lines?: number;
   uncovered?: number[];
+  /** Set by the producer when `uncovered` was capped, so a count can be true. */
+  uncoveredTotal?: number;
 }
 
 export interface CoverageReading {
@@ -58,6 +60,7 @@ export function readCoverage(payload: unknown): CoverageReading | null {
             uncovered: Array.isArray(f?.uncovered)
               ? f.uncovered.filter((n): n is number => typeof n === "number")
               : undefined,
+            uncoveredTotal: num(f?.uncovered_total) ?? undefined,
           },
         ];
       })
@@ -77,6 +80,8 @@ export function readCoverage(payload: unknown): CoverageReading | null {
 export interface TestsReading {
   passed: number;
   failed: number;
+  /** Counted separately: a skipped test is neither a pass nor a failure. */
+  skipped: number;
 }
 
 /** A test payload: the one record whose result is a verdict the schema records. */
@@ -86,7 +91,9 @@ export function readTests(payload: unknown): TestsReading | null {
   const passed = num(p.passed);
   const failed = num(p.failed) ?? num(p.failures) ?? num(p.errors);
   if (passed == null && failed == null) return null;
-  return { passed: passed ?? 0, failed: failed ?? 0 };
+  // Dropping `skipped` made the total a lie on any suite that skips: the one
+  // fact the line omitted was the one only the duplicate metric list carried.
+  return { passed: passed ?? 0, failed: failed ?? 0, skipped: num(p.skipped) ?? 0 };
 }
 
 export interface ScalarField {

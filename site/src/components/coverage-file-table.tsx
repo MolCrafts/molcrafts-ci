@@ -29,14 +29,40 @@ export function formatPercent(n: number | undefined): string {
   return n == null || Number.isNaN(n) ? "—" : `${n.toFixed(1)}%`;
 }
 
+/** How many files the table shows before deferring to the CI run. */
+export const COVERAGE_FILE_LIMIT = 10;
+
+/** Uncovered lines in a file, preferring the producer's count over a capped list. */
+export function uncoveredCount(file: CoverageFile): number {
+  return file.uncoveredTotal ?? file.uncovered?.length ?? 0;
+}
+
 /**
- * Per-file coverage, worst first.
+ * The files most worth a test, and only those.
  *
- * Sorted by what the reader acts on: the file most likely to need a test comes
- * first, rather than whatever order the producer emitted.
+ * Sorted by uncovered lines, not by percentage. Percentage put a three-line
+ * `__init__.py` at 0% above an eight-hundred-line module at 60%, which is the
+ * opposite of where the next test belongs — and the docstring here used to
+ * claim the sort it did not compute.
+ *
+ * Line numbers are gone. Four hundred comma-separated integers is the payload
+ * printed, not information: nobody reads it, and rendering it unwrapped is
+ * what grew the work surface past sixteen thousand pixels. The count is the
+ * scannable form, and the full report is in the CI run this snapshot names.
  */
 export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Element {
-  const sorted = [...files].sort((a, b) => (a.lines ?? 0) - (b.lines ?? 0));
+  const worst = [...files]
+    .filter((f) => uncoveredCount(f) > 0)
+    .sort((a, b) => uncoveredCount(b) - uncoveredCount(a))
+    .slice(0, COVERAGE_FILE_LIMIT);
+
+  if (worst.length === 0) {
+    return (
+      <p className="py-2 text-label text-muted-foreground">
+        Every measured file is fully covered.
+      </p>
+    );
+  }
 
   return (
     <Table>
@@ -44,13 +70,15 @@ export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Ele
         <TableRow>
           <TableHead>File</TableHead>
           <TableHead className="w-48">Lines</TableHead>
-          <TableHead className="w-64">Uncovered</TableHead>
+          <TableHead className="w-32 text-right">Uncovered</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sorted.map((file) => (
+        {worst.map((file) => (
           <TableRow key={file.path}>
-            <TableCell className="truncate font-mono">{file.path}</TableCell>
+            <TableCell className="max-w-0 truncate font-mono" title={file.path}>
+              {file.path}
+            </TableCell>
             <TableCell>
               <span className="flex items-center gap-2">
                 <span className="h-1 w-24 overflow-hidden rounded-hairline bg-sunken">
@@ -62,8 +90,8 @@ export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Ele
                 <span className="font-mono tabular-nums">{formatPercent(file.lines)}</span>
               </span>
             </TableCell>
-            <TableCell className="truncate font-mono text-muted-foreground">
-              {file.uncovered?.length ? file.uncovered.join(", ") : "—"}
+            <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+              {uncoveredCount(file)}
             </TableCell>
           </TableRow>
         ))}

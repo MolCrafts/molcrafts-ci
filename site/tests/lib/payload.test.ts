@@ -9,7 +9,7 @@ import {
 } from "@/lib/payload";
 
 /* Payload shapes taken verbatim from the published fixtures in data/. */
-const TESTS = { passed: 418, failed: 0 };
+const TESTS = { passed: 418, failed: 0, skipped: 0 };
 const TESTS_FAILING = { passed: 184, failed: 3 };
 const COVERAGE = {
   totals: { branches: 68.9, functions: 88.0, lines: 82.3, statements: 81.5 },
@@ -25,7 +25,7 @@ const MOLREC = { schema_version: "0.1.0" };
 
 describe("readTests", () => {
   it("reads a pass/fail count", () => {
-    expect(readTests(TESTS)).toEqual({ passed: 418, failed: 0 });
+    expect(readTests(TESTS)).toEqual({ passed: 418, failed: 0, skipped: 0 });
   });
 
   it("treats failures/errors as the failed count", () => {

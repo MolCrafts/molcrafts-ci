@@ -18,7 +18,7 @@ will never be rewritten.
 | Archetype | `workbench` |
 | Default theme | light (`.dark` palette defined, no toggle wired yet) |
 | Token layer | `site/src/styles/tokens.css` + the `@theme inline` block in `site/src/styles/tailwind.css` |
-| Last ladder stage applied | `skeleton` re-opened and re-applied on 2026-09-20 — stages 3–7 still hold; stage 2 `info` is the next position |
+| Last ladder stage applied | `info` on 2026-09-20, after re-applying `skeleton` the same day. Stages 3–7 still hold |
 
 ## Accent
 
@@ -141,6 +141,35 @@ targets and benchmark thresholds are not in the snapshot schema, so those
 streams report `ready` ("no verdict") rather than borrowing an invented
 threshold. Adding real thresholds is a schema change first, a UI change
 second.
+
+## Information contract — where each fact lives
+
+Decided by the product owner on 2026-09-20, and it is what makes the picker
+below legal rather than the duplicate control an earlier note called it.
+
+| Surface | Question it answers | Carries |
+|---|---|---|
+| Project overview, top | What is the state, what do I open next | `MetaStrip` (records, snapshots, last published, profile), `StatusInline` over record verdicts, `RecordTable` with each record's reading, commit and run |
+| Project overview, bottom | How did it get here | `RecordTrends` — one chart per record, since passes, percentages and nanoseconds share no axis |
+| Record tab | What does *this* generation say | `HistorySelect` (newest 10) + commit + run, then `PayloadView` |
+| Inspector | Properties of the selection | Scalar detail, provenance |
+
+Two consequences worth stating, because both reverse an earlier decision:
+
+- **The generation table is gone.** History is the overview's job now, read as
+  a series; the record tab reaches the recent past through a select. The
+  earlier rule ("the table *is* the picker") assumed history and detail shared
+  a surface. They no longer do.
+- **Commit and run are per record, never project-level.** A project-level
+  strip carrying them was deleted in `4fc5fbb` for being a lie — records are
+  published by separate CI runs at different commits — and the strip
+  reintroduced here carries only what genuinely aggregates.
+
+Detail this site does not render — per-line coverage, logs, the job graph —
+is reached through `RunLink`, which resolves `repository` + `workflow_run` to
+the GitHub Actions run. Before this run that pair was rendered as an
+unclickable eleven-digit number and the destination was unreachable from
+anywhere in the app.
 
 ## Product components
 
@@ -333,7 +362,6 @@ a toolchain decision rather than a fix.
 | No screenshot baselines on the shell or the product components. They are the only thing that would catch those two defects automatically, and they need the same missing browser automation | — | 🟡 |
 | `ScrollArea` renders no horizontal `ScrollBar`, and Radix hides the native one on its viewport. Harmless now that the viewport no longer grows — overflow scrolls inside each table's own container, which keeps its scrollbar — but the fix belongs in molcrafts-ui, which this skill may not edit in the same run | `skeleton` | 🟡 |
 | Below ~520px the navigator would have to leave the layout too. The inspector now yields at 1024px; the navigator cannot, because there is no other way to reach a project. That needs a product decision, not a layout one | `skeleton` | 🟡 |
-| The information-design section below still describes the overview skeleton that commit `4fc5fbb` deleted (MetaStrip → StatusInline → primary table). Code and this record disagree until stage `info` runs | `info` | 🟡 |
 
 Cleared on 2026-09-20: bundled fonts, the four unused tokens, the dark-theme
 toggle, `ruff format` drift, the stale `site/public/data` (fixed at the
