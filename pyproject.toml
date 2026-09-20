@@ -39,7 +39,7 @@ molci = "molcrafts_ci.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/MolCrafts/molcrafts-ci"
-Specification = "https://github.com/MolCrafts/molcrafts-ci/blob/main/docs/specification.md"
+Specification = "https://github.com/MolCrafts/molcrafts-ci/blob/master/docs/specification.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/molcrafts_ci", "src/molci"]
