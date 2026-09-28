@@ -16,7 +16,7 @@ will never be rewritten.
 |---|---|
 | Frontend root | `site/` |
 | Archetype | `workbench` |
-| Default theme | light (`.dark` palette defined, no toggle wired yet) |
+| Default theme | light (`.dark` palette wired; header `ThemeToggle`) |
 | Token layer | `site/src/styles/tokens.css` + the `@theme inline` block in `site/src/styles/tailwind.css` |
 | Last ladder stage applied | `info` on 2026-09-20, after re-applying `skeleton` the same day. Stages 3–7 still hold |
 
@@ -76,21 +76,17 @@ renders into it and no route lays itself out.
 
 ```
 header band (h-header)
-navigator 256px │ work surface │ inspector          ← resizable columns
+navigator 256px │ work surface                          ← resizable columns
 ──────────────────────────────────────────────────
-dock                                                ← resizable row
+dock                                                    ← resizable row
 ```
 
-Constraints: navigator 180–420px, work surface min 320px, inspector
-280–480px, dock 140px–70%. The dock opens closed, collapsed to its 32px tab strip — logs and problems
+Constraints: navigator 180–420px, work surface min 320px, dock 140px–70%.
+The dock opens closed, collapsed to its 32px tab strip — logs and problems
 are what you go looking for, not what greets you.
 
-**The inspector column is mounted, not collapsed.** No selection, no
-column. `expand()` restores a panel's *most recent size*, and a panel that
-starts below its `minSize` has never had one, so calling it did nothing and
-the panel could never be opened. Conditional mounting is what the vendored
-wrapper's `autoSavePanelIds` is for: the id set keys the persisted layout,
-so hiding the column does not overwrite the three-column one.
+**There is no inspector column.** Provenance that changes a reader's next
+move lives on the record tab header. The shell is navigator + work + dock.
 
 Every tab renders into `WorkSurface` — one padding, one gap, one
 scroller. Switching tabs must not shift the content, and a tab that lays
@@ -104,55 +100,49 @@ to `localStorage` under `molci.shell` and `molci.columns`, so widths and
 dock height survive a reload. Regions are separated by a 1px border and a
 surface step; none of them floats or casts a shadow.
 
-Two cross-region channels, both in `lib/`:
+One cross-region channel in `lib/`:
 
-- `ProjectStreamsProvider` — one read of the selected project's indexes.
-  The overview table, the problems tab and the status bar all consume it,
-  so they cannot disagree and do not re-fetch.
-- `SelectionProvider` — which snapshot the inspector is showing. Work
-  surfaces call `useSelect()`; the inspector calls `useSelection()`.
+- `ProjectRecordsProvider` — one read of the selected project's indexes and
+  recent bodies. Overview, dock and record tabs all consume it, so they
+  cannot disagree and do not re-fetch.
+
+Selection of project / tab / generation is **URL state**
+(`useUrlState`), not a parallel React context. A dock or overview click
+writes `{ tab, snapshot }` and the record tab opens that generation.
 
 ## Information design (workbench)
 
-Applied 2026-09-20. Hierarchy is **Project → stream (kind) → snapshot**,
-standing in for Project → Experiment → Run.
-
-Overview skeleton, in order: `MetaStrip` (repository, ref, commit,
-profile, workflow run, published) → `StatusInline` over the project's
-streams → primary table of streams → a quiet `Untracked streams` section
-carrying the `molci ingest` command.
+Applied 2026-09-20; inspector retired 2026-09-28. Hierarchy is
+**Project → record → snapshot**, standing in for Project → Experiment → Run.
 
 Field homes:
 
 | Fact | Home |
 |---|---|
 | Project name | Navigator + breadcrumb |
-| Stream names | The tab strip (the navigator does not repeat them) |
-| Repository, ref, commit, profile, workflow run | Overview `MetaStrip`, once |
-| Per-stream verdict, current value and trend | Overview history tiles |
-| Every generation of one stream | That stream's own tab |
-| Coverage totals | One `MeasureBand`, never four tiles |
-| Provenance scalars (producer_version, schema_version, tracking, path) | Inspector only |
-| Publish events, failing streams | Dock (`Publish log` / `Problems`) |
-| Global counts, latest publish | Nowhere — they changed no decision |
+| Record names | The tab strip (the navigator does not repeat them) |
+| Per-record verdict, reading, commit, run | Overview `RecordTable` |
+| How a reading moved | Overview `RecordTrends` (value + delta + sparkline) |
+| This generation's payload | That record's own tab (`PayloadView`) |
+| Commit, run, profile, producer of this generation | Record tab header |
+| Coverage / tests totals | One `MeasureBand` |
+| producer_version, schema_version, path, ref | Nowhere on this site — open the Actions run |
+| Publish events, failing records | Dock (`Publish log` / `Problems`) |
+| Global counts | Nowhere — they changed no decision |
 
 Verdict rule: only a pass/fail count in the payload is a verdict. Coverage
 targets and benchmark thresholds are not in the snapshot schema, so those
-streams report `ready` ("no verdict") rather than borrowing an invented
+records report `ready` ("no verdict") rather than borrowing an invented
 threshold. Adding real thresholds is a schema change first, a UI change
 second.
 
 ## Information contract — where each fact lives
 
-Decided by the product owner on 2026-09-20, and it is what makes the picker
-below legal rather than the duplicate control an earlier note called it.
-
 | Surface | Question it answers | Carries |
 |---|---|---|
 | Project overview, top | What is the state, what do I open next | `MetaStrip` (records, snapshots, last published, profile), `StatusInline` over record verdicts, `RecordTable` with each record's reading, commit and run |
-| Project overview, bottom | How did it get here | `RecordTrends` — one chart per record, since passes, percentages and nanoseconds share no axis |
-| Record tab | What does *this* generation say | `HistorySelect` (newest 10) + commit + run, then `PayloadView` |
-| Inspector | Properties of the selection | Scalar detail, provenance |
+| Project overview, bottom | How did it get here | `RecordTrends` — value, delta, sparkline per record; no status/freshness/headline (those are the table's) |
+| Record tab | What does *this* generation say | `HistorySelect` (newest 10) + commit + run + profile + producer, then `PayloadView` |
 
 Two consequences worth stating, because both reverse an earlier decision:
 
@@ -167,9 +157,7 @@ Two consequences worth stating, because both reverse an earlier decision:
 
 Detail this site does not render — per-line coverage, logs, the job graph —
 is reached through `RunLink`, which resolves `repository` + `workflow_run` to
-the GitHub Actions run. Before this run that pair was rendered as an
-unclickable eleven-digit number and the destination was unreachable from
-anywhere in the app.
+the GitHub Actions run.
 
 ## Product components
 
@@ -179,37 +167,36 @@ at the call site, which is composition.
 
 | Component | Wraps | Owns |
 |---|---|---|
-| `WorkbenchShell` | `resizable` | The frame: regions, sizes, resize, persistence, dock and inspector collapse |
+| `WorkbenchShell` | `resizable` | The frame: regions, sizes, resize, persistence, dock collapse |
 | `WorkSurface` | `scroll-area` | The one layout every tab renders into |
-| `SnapshotInspector` | `scroll-area` | Provenance and scalar detail of the selection |
 | `OperationsDock` | `scroll-area`, `button` | Publish log and problems, in one collapsible region |
-| `StatusBar` | — | Global counts; never expands |
-| `StreamTrends` | inline SVG | The project's history: one stat tile + trend per stream |
-| `SnapshotTable` | `table` | Every published generation of one stream |
+| `RecordTrends` | `TrendChart` (`<molplot-chart>`) | History: value + delta + sparkline per record |
 | `PayloadView` | the below | What one snapshot says, dispatched on payload shape |
-| `CoverageFileTable` | `table` | Per-file coverage, worst first |
+| `CoverageFileTable` | `table` | Per-file coverage, worst first (files with gaps only) |
 | `MetricTable` | `<dl>` | The fields of one object: label left, quantity right |
 | `MetaStrip` | `<dl>` + border tokens | Operational posture of one object as one band |
-| `MeasureBand` | `<dl>` + bar | Several measures of one reading (coverage totals) |
+| `MeasureBand` | `<dl>` + bar | Several measures of one reading (coverage or tests) |
 | `StatusInline` | bar + legend | Child status distribution |
-| `SnapshotStatusBadge` | `StatusMark` + wash | Status as dot plus word, never colour alone |
 | `StatusMark` | `<span>` | The status dot |
+| `TrendChart` | `<molplot-chart>` (molplot) | One series sparkline; tooltip is a VL tip field |
 | `BandSkeleton` / `RowsSkeleton` | — | The single loading pattern, built from the real structure rather than a measured height |
 | `ProjectList` | buttons | Flat project list, selection only |
 | `OverviewPanel` | the above | Project situation and next step |
+| `RecordTable` | `table` | Inventory of records with reading, status, commit, run |
 
-### One tab for every stream
+### One tab for every record
 
-There is no panel per kind. `makeStreamTab` builds all six (Tests,
+There is no panel per kind. `makeRecordTab` builds all six (Tests,
 Coverage, Benchmark, Regression, MolRec, Conformance) and they answer the
-same three questions in the same order: which generation am I on
-(`SnapshotPicker`), what does it say (`PayloadView`), what else exists
-(`SnapshotTable`). Provenance is absent by design — the inspector owns it.
+same questions in the same order: which generation am I on
+(`HistorySelect`), where did it come from (header), what does it say
+(`PayloadView`). Provenance that changes the next move is on that header;
+detail beyond it is in the Actions run.
 
 `PayloadView` keys on **payload shape, not kind name**, because the kind
 name is only a hint: `molrs` publishes `benchmark` from criterion and
 `molpy` publishes it from pytest-benchmark. Readers live in `lib/payload.ts`
-and are the single owner of "what shape is this" — `stream-summary.ts`
+and are the single owner of "what shape is this" — `record-summary.ts`
 reads through them too, so a row's headline and its tab's view can never
 disagree. A kind earns its own `Component` only when its reading genuinely
 differs; today none does.
@@ -218,7 +205,7 @@ differs; today none does.
 
 `button`, `tabs`, `table`, `scroll-area`, `empty-state`, `separator`,
 `tooltip`, `resizable`, `context-menu`, plus the `content-section` block.
-`table` was added for the stream, snapshot and file inventories;
+`table` was added for the record, snapshot and file inventories;
 `content-section` for section grouping without card chrome. `code` was
 vendored for the ingest hint and removed again with it — a primitive stays
 only while something needs it. All are
@@ -229,7 +216,7 @@ current case).
 
 ## Charts
 
-The overview's primary content is history: one stat tile per stream —
+The overview's primary content is history: one panel per record —
 label, current value, signed change, and a line over its published
 generations. Small multiples, not one plot: passes, percentages,
 nanoseconds and absolute error share no axis, and a dual-axis chart would
@@ -238,38 +225,38 @@ invent a relationship the data does not have.
 Rules this product follows, from the `dataviz` skill:
 
 - **The chart hue is computed, not borrowed.** The brand accent `#0d7377`
-  has chroma 0.083 and *reads gray* as a data mark — the palette validator
-  fails it. `--molci-chart` is the nearest step in the same hue (191) that
-  passes all six checks: `#008f8c` light, `#00a9a4` dark. Dark wants a
-  narrower lightness band (0.48–0.67) than light (0.43–0.77), which is why
-  the dark brand accent `#2dd4bf` (L 0.785) fails too. Re-run
-  `scripts/validate_palette.js` before changing either.
-- **One series, so no legend** — the tile's label names it. Status colour
+  has chroma 0.083 and *reads gray* as a data mark. `--molci-chart` is the
+  nearest step in the same hue (191) that clears the palette checks:
+  `#008f8c` light, `#00a9a4` dark. Dark wants a narrower lightness band
+  (0.48–0.67) than light (0.43–0.77), which is why the dark brand accent
+  `#2dd4bf` (L 0.785) fails too.
+- **One series, so no legend** — the panel's label names it. Status colour
   appears only on generations that actually failed; the line never carries
   state.
-- **A single data point is a stat tile, not a chart.** The number is the
-  chart, and the tile says "no trend yet" instead of drawing one.
-- **A series is one profile.** A stream can publish the same commit under
+- **A single data point is a reading, not a chart.** The number is the
+  chart, and the panel says "no trend yet" instead of drawing one.
+- **A series is one profile.** A record can publish the same commit under
   several profiles (`molrs/benchmark` ships linux-x86_64 and
   macos-aarch64), and laying those along a time axis draws a trend out of
   two machines rather than two moments. `toHistory` filters to the newest
-  entry's profile and the tile names it.
-- Thin marks, hairline baseline, no gridlines, no dashed rules. Markers on
-  the current point and on failures only. Native `<title>` tooltips per
-  point — not a styled crosshair.
+  entry's profile and the panel names it.
+- Thin marks, hairline baseline, no gridlines, no dashed rules. Every
+  generation is a point; failures and the current point are emphasised.
+  Tooltip is a Vega-Lite tip field on `<molplot-chart>`, not a native
+  `<title>`. Percentages always keep one decimal place (`formatPercent`).
 
-`HISTORY_DEPTH` is 12: one request per generation per stream, so a project
+`HISTORY_DEPTH` is 12: one request per generation per record, so a project
 with a long history pays for it.
 
 ## Containers, states, motion
 
 **Subtraction after the first look.** Reviewing it running removed more
-than the static scans ever did. The navigator's expand-to-streams (the tab
+than the static scans ever did. The navigator's expand-to-records (the tab
 strip is already that control), the status bar's counts and then the bar,
-an "Untracked streams" section listing kinds a project does not publish,
-the generation picker (the generations table *is* the picker — two
-controls, one action), and the inspector's `Payload` group, which restated
-the payload the centre was already showing.
+an "Untracked records" section listing kinds a project does not publish,
+the generation table (history is the overview's job; the record tab uses
+a select), and eventually the inspector itself — which restated provenance
+the record tab header already needed to carry for a shareable view.
 
 The pattern under all of them: **two controls for one action, or two
 homes for one fact.** Neither scan catches it; only using the thing does.
@@ -280,31 +267,23 @@ homes for one fact.** Neither scan catches it; only using the thing does.
 wide is not what the reader is aiming at. Shipping it the other way round
 made every table look dead on first use.
 
-**Selection is a click, not a side effect.** Opening a stream tab does not
-select a snapshot — a stream is not a snapshot. Picking a row in the
-generations table or the publish log does, and that is what opens the
-inspector. Auto-selecting the newest generation would have made the panel
-open on every tab change, which is the opposite of what it is for.
+**Selection is URL state.** Opening a record tab or clicking a dock row
+writes `{ tab, snapshot }` into the address. There is no parallel
+selection context and no side panel that opens as a side effect of a click.
 
 **Containers.** Nothing in the product layer is a bordered box except
 controls. `MetaStrip`, `MeasureBand` and their skeleton are bands: a rule
 underneath, hairlines between cells, no surface of their own. The de-
 templating test is the one applied — a box is kept only when it maps to
 something the reader could open, drag or delete on its own, and a band of
-facts is not that. The overview's stream section carries no count either:
-the `StatusInline` above it already states how many streams there are.
+facts is not that. Overview history tiles are the same: hover wash, no
+border, no surface. The overview's record section carries no count either:
+the `StatusInline` above it already states how many records there are.
 
 **States.** One pattern, checked per component rather than per page.
 `BandSkeleton` / `RowsSkeleton` are the only loading affordance and are
-built from the real structure. Two rules that cost real bugs here:
-
-- A selector may hand the inspector an index entry *without* a body; the
-  inspector fetches it and says "Reading snapshot…", then "Body not
-  published — showing what the index knows". Before this, a click in the
-  publish log left the manifest fields at "—" forever, which reads as
-  "empty" rather than "not fetched".
-- A disabled control states its reason. `SnapshotPicker` is disabled at
-  one generation and says so.
+built from the real structure. A disabled control states its reason —
+`HistorySelect` is disabled at one generation and says so.
 
 **Motion.** `constitution-base.css` sets `--default-transition-*` as plain
 custom properties, but Tailwind reads its own theme keys — so until stage
@@ -324,7 +303,7 @@ Only rows from `visual-language.md` § 8 may appear here.
 |---|---|---|
 | Accent hue | teal 191 | Engineering palette shared with the CI brand; clears the 40° band around `--status-running` |
 | Default theme | light | Tables, indexes and logs are read for long stretches |
-| Layout topology | navigator + tabbed work surface + inspector + dock | Snapshot streams are tabs of one project, not routes |
+| Layout topology | navigator + tabbed work surface + dock | Snapshot records are tabs of one project, not routes; no inspector column |
 | Panel behavior | fixed and resizable, persisted | Workbench default |
 
 ## Ownership boundary — what `sync-ui` overwrites
@@ -358,10 +337,10 @@ a toolchain decision rather than a fix.
 
 | Item | Stage | Severity |
 |---|---|---|
-| Hover, focus, transitions and the trend charts' geometry have never been looked at. No browser automation is reachable here, so they are covered by types, build and static scan only. The layout and flows *were* reviewed by the author running it — that is what caught the inspector never opening and the table rows not being clickable | — | 🟡 |
-| No screenshot baselines on the shell or the product components. They are the only thing that would catch those two defects automatically, and they need the same missing browser automation | — | 🟡 |
-| `ScrollArea` renders no horizontal `ScrollBar`, and Radix hides the native one on its viewport. Harmless now that the viewport no longer grows — overflow scrolls inside each table's own container, which keeps its scrollbar — but the fix belongs in molcrafts-ui, which this skill may not edit in the same run | `skeleton` | 🟡 |
-| Below ~520px the navigator would have to leave the layout too. The inspector now yields at 1024px; the navigator cannot, because there is no other way to reach a project. That needs a product decision, not a layout one | `skeleton` | 🟡 |
+| Hover, focus, transitions and the trend charts' geometry have never been looked at. No browser automation is reachable here, so they are covered by types, build and static scan only | — | 🟡 |
+| No screenshot baselines on the shell or the product components | — | 🟡 |
+| `ScrollArea` renders no horizontal `ScrollBar`, and Radix hides the native one on its viewport. Harmless now that overflow scrolls inside each table's own container — fix belongs in molcrafts-ui | `skeleton` | 🟡 |
+| Below ~520px the navigator would have to leave the layout too. There is no other way to reach a project | `skeleton` | 🟡 |
 
 Cleared on 2026-09-20: bundled fonts, the four unused tokens, the dark-theme
 toggle, `ruff format` drift, the stale `site/public/data` (fixed at the
@@ -375,11 +354,12 @@ a product defect; see the token layer above.
 is Rspack-family only, so not vitest. It reuses the same `resolve.alias`
 shape as `rsbuild.config.ts`, so `@/` needed no second declaration.
 
-43 tests over the pure layers: the payload readers, the stream summaries and
-the kind → tab resolution. Components are not rendered here; the shell and
-the product components are screenshot-baseline territory, which is still
-open. The cases worth keeping are the ones real data caught — a series must
-stay inside one profile, a producer that publishes no number must not be
-charted, and coverage must not be scored as pass or fail.
+68 tests over the pure layers: the payload readers, the record summaries,
+URL state, `openRecord`, and the record → tab resolution. Components are
+not rendered here; the shell and the product components are
+screenshot-baseline territory, which is still open. The cases worth
+keeping are the ones real data caught — a series must stay inside one
+profile, a producer that publishes no number must not be charted, and
+coverage must not be scored as pass or fail.
 
 <!-- mol:ui:end -->

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "@rstest/core";
 
 import {
+  formatMeasure,
   formatNumber,
+  formatPercent,
   readCoverage,
   readMeasure,
   readScalars,
@@ -101,5 +103,21 @@ describe("formatNumber", () => {
     expect(formatNumber(1601)).toBe("1601");
     expect(formatNumber(1.2e-8)).toBe("1.2e-8");
     expect(formatNumber(0)).toBe("0");
+  });
+});
+
+describe("formatPercent", () => {
+  it("always keeps one decimal place", () => {
+    expect(formatPercent(88)).toBe("88.0%");
+    expect(formatPercent(82.3)).toBe("82.3%");
+    expect(formatPercent(undefined)).toBe("—");
+  });
+});
+
+describe("formatMeasure", () => {
+  it("routes percentages through formatPercent", () => {
+    expect(formatMeasure(88, "%")).toBe("88.0%");
+    expect(formatMeasure(12.5, "ns")).toBe("12.5ns");
+    expect(formatMeasure(418)).toBe("418");
   });
 });

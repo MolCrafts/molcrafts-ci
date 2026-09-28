@@ -11,7 +11,6 @@ import {
 import { MeasureBand, type Measure } from "@/components/meta-strip";
 import { MetricTable, type Metric } from "@/components/metric-table";
 import { BandSkeleton } from "@/components/skeletons";
-import { StatusInline } from "@/components/status-inline";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RunLink } from "@/components/run-link";
 import { readCoverage, readScalars, readTests } from "@/lib/payload";
@@ -72,24 +71,26 @@ export function PayloadView({
         tone: coverageTone(value),
       }));
 
+    // Files with something left to test — the only ones the table lists.
+    const withGaps = coverage.files.filter((f) => uncoveredCount(f) > 0).length;
+
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <MeasureBand measures={measures} />
         {coverage.files.length > 0 && (
           <ContentSection
-            title="Least covered"
+            title="Files"
             action={
               <span className="text-label text-muted-foreground">
-                {coverage.files.filter((f) => uncoveredCount(f) > 0).length >
-                COVERAGE_FILE_LIMIT ? (
+                {withGaps > COVERAGE_FILE_LIMIT ? (
                   <>
-                    {COVERAGE_FILE_LIMIT} of {coverage.files.length} files ·{" "}
+                    {COVERAGE_FILE_LIMIT} of {withGaps} ·{" "}
                     <RunLink repository={entry?.repository} run={entry?.workflow_run}>
-                      full report
+                      all
                     </RunLink>
                   </>
                 ) : (
-                  `${coverage.files.length} files`
+                  withGaps
                 )}
               </span>
             }
@@ -107,22 +108,49 @@ export function PayloadView({
 
   if (tests) {
     const total = tests.passed + tests.failed + tests.skipped;
-    // `readScalars` returns the same counts StatusInline just stated, so the
-    // metric table repeated passed/failed/skipped forty pixels below it. Only
-    // scalars the line does not already carry survive.
-    const consumed = new Set(["passed", "failed", "skipped", "errors", "failures"]);
-    const extra = metrics.filter((m) => !consumed.has(m.label.toLowerCase()));
+    const share = (n: number) => (total > 0 ? (100 * n) / total : 0);
+
+    /*
+     * The same band coverage gets, for the same reason.
+     *
+     * A suite result is one reading in three parts, exactly as coverage is one
+     * reading in two — so it is read at the same size. A single thin line here
+     * beside a full measure band there made the two record tabs look like
+     * different products, and the counts are the whole of what this record
+     * publishes.
+     *
+     * Zero is not absence. Coverage omits a total the producer did not
+     * measure; `Failed 0` is measured, and it is the number a reader came for.
+     */
+    const measures: Measure[] = [
+      { label: "Tests", value: String(total) },
+      {
+        label: "Passed",
+        value: String(tests.passed),
+        percent: share(tests.passed),
+        tone: "bg-status-completed",
+      },
+      {
+        label: "Failed",
+        value: String(tests.failed),
+        percent: share(tests.failed),
+        tone: "bg-status-failed",
+      },
+      {
+        label: "Skipped",
+        value: String(tests.skipped),
+        percent: share(tests.skipped),
+        tone: "bg-status-cancelled",
+      },
+    ];
+
+    // Whatever the producer published beyond the counts the band now states.
+    const counted = new Set(["passed", "failed", "skipped", "errors", "failures", "tests"]);
+    const extra = metrics.filter((m) => !counted.has(m.label.toLowerCase()));
 
     return (
-      <div className="flex flex-col gap-4">
-        <StatusInline
-          total={`${total} test${total === 1 ? "" : "s"}`}
-          segments={[
-            { status: "completed", count: tests.passed, label: "passed" },
-            { status: "failed", count: tests.failed, label: "failed" },
-            { status: "cancelled", count: tests.skipped, label: "skipped" },
-          ]}
-        />
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <MeasureBand measures={measures} />
         {extra.length > 0 && <MetricTable metrics={extra} />}
       </div>
     );

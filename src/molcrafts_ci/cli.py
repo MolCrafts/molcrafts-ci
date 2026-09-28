@@ -20,6 +20,7 @@ from molcrafts_ci.persist import (
 from molcrafts_ci.producers import (
     detect_profile,
     github_source,
+    read_cargo_test,
     read_coverage_py,
     read_junit,
     read_lcov,
@@ -112,9 +113,25 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
 
 
 def _cmd_snapshot(args: argparse.Namespace) -> int:
-    if not args.junit and not args.coverage:
+    if args.junit and args.cargo_test:
         print(
-            json.dumps({"ok": False, "error": "nothing to build: pass --junit and/or --coverage"}),
+            json.dumps(
+                {
+                    "ok": False,
+                    "error": "pass one tests report, not both --junit and --cargo-test",
+                }
+            ),
+            file=sys.stderr,
+        )
+        return 2
+    if not args.junit and not args.cargo_test and not args.coverage:
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "error": "nothing to build: pass --junit, --cargo-test, and/or --coverage",
+                }
+            ),
             file=sys.stderr,
         )
         return 2
@@ -146,7 +163,15 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
         }
 
     if args.junit:
-        _emit(build("tests", args.tests_producer, read_junit(Path(args.junit))))
+        _emit(build("tests", args.tests_producer or "pytest", read_junit(Path(args.junit))))
+    if args.cargo_test:
+        _emit(
+            build(
+                "tests",
+                args.tests_producer or "cargo-test",
+                read_cargo_test(Path(args.cargo_test)),
+            )
+        )
     if args.coverage:
         read = read_lcov if args.coverage_format == "lcov" else read_coverage_py
         root = Path(args.source_root).resolve()
@@ -189,15 +214,22 @@ def main(argv: list[str] | None = None) -> int:
         help="Build tests/coverage Snapshots from a test run's native output",
     )
     p_sn.add_argument("--out", required=True, help="Directory to write the snapshots into")
-    p_sn.add_argument("--junit", help="JUnit XML (pytest --junitxml, cargo-nextest)")
+    p_sn.add_argument("--junit", help="JUnit XML from pytest --junitxml")
+    p_sn.add_argument(
+        "--cargo-test",
+        help="Log from cargo test, the run whose 'test result:' lines are the totals",
+    )
     p_sn.add_argument("--coverage", help="Coverage report; see --coverage-format")
     p_sn.add_argument(
         "--coverage-format",
         choices=["coverage.py", "lcov"],
         default="coverage.py",
-        help="coverage.py JSON (default) or an LCOV tracefile (cargo-llvm-cov, grcov)",
+        help="coverage.py JSON (default) or an LCOV tracefile (llvm-cov export -format=lcov)",
     )
-    p_sn.add_argument("--tests-producer", default="pytest")
+    p_sn.add_argument(
+        "--tests-producer",
+        help="Producer name stored on the tests snapshot (default: pytest or cargo-test)",
+    )
     p_sn.add_argument("--coverage-producer", default="coverage.py")
     p_sn.add_argument("--profile", help="Override the detected <os>-<arch> profile")
     p_sn.add_argument(

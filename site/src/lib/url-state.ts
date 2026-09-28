@@ -62,7 +62,13 @@ export function formatHash(state: UrlState): string {
 
 /** True when the patch changes where the reader is, not just what is refined. */
 export function isNavigation(current: UrlState, patch: Partial<UrlState>): boolean {
-  return NAVIGATION.some((key) => key in patch && patch[key] !== current[key]);
+  return NAVIGATION.some((key) => {
+    if (!(key in patch) || patch[key] === current[key]) return false;
+    // Bootstrapping a bare visit onto the first project is not navigation —
+    // Back should leave the site, not land on "Select a project".
+    if (key === "project" && current.project === null) return false;
+    return true;
+  });
 }
 
 export function mergeUrlState(current: UrlState, patch: Partial<UrlState>): UrlState {

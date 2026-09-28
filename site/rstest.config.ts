@@ -4,7 +4,7 @@ import { defineConfig } from "@rstest/core";
 const root = import.meta.dirname;
 
 /**
- * Tests for the pure layers: payload readers, stream summaries, kind
+ * Tests for the pure layers: payload readers, record summaries, record → tab
  * resolution. Components are not rendered here — the shell and the product
  * components are screenshot-baseline territory, not unit-test territory.
  */

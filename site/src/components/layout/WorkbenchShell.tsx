@@ -6,7 +6,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
 
 interface DockControls {
@@ -19,8 +18,6 @@ const DockContext = createContext<DockControls>({ collapsed: false, toggle: () =
 /** Collapse state for whatever the shell put in the dock. */
 export const useDock = (): DockControls => useContext(DockContext);
 
-
-
 /**
  * The one frame every surface renders into.
  *
@@ -28,8 +25,8 @@ export const useDock = (): DockControls => useContext(DockContext);
  * cannot invent its own page layout. Regions are panels separated by a 1px
  * border and a background step — never floating cards, never shadows.
  *
- * Sizes persist per user: the navigator and inspector widths and the dock
- * height are remembered across sessions by the resizable group's own storage.
+ * Sizes persist per user: the navigator width and the dock height are
+ * remembered across sessions by the resizable group's own storage.
  */
 export interface WorkbenchShellProps {
   /** Band across the top: identity once, then breadcrumb and primary verbs. */
@@ -38,14 +35,6 @@ export interface WorkbenchShellProps {
   navigator: ReactNode;
   /** The work surface. */
   children: ReactNode;
-  /**
-   * Context for the current selection, or null when nothing is selected.
-   *
-   * Null means the column is not rendered at all. `expand()` on a panel that
-   * has never had a size does nothing — it restores "its most recent size" and
-   * there is none — so mounting is what opens it, not the collapse API.
-   */
-  inspector: ReactNode | null;
   /** Live operations — logs and problems, as tabs in one region. */
   dock: ReactNode;
 }
@@ -74,23 +63,10 @@ export function WorkbenchShell({
   header,
   navigator,
   children,
-  inspector,
   dock,
 }: WorkbenchShellProps): JSX.Element {
   const dockRef = useRef<PanelImperativeHandle | null>(null);
   const [dockCollapsed, setDockCollapsed] = useState(true);
-
-  /*
-   * The inspector leaves the layout before the layout breaks.
-   *
-   * navigator 180 + work 320 + inspector 280 floors the group at ~780px while
-   * the document allows 320px, so between those widths the panels cannot be
-   * satisfied and the page scrolls sideways. The inspector is context for a
-   * selection, not the work itself, so it is the region that yields. Below
-   * ~520px the navigator would have to yield too — that needs a way to reach
-   * projects without it, which is a product decision, not a layout one.
-   */
-  const roomForInspector = useMediaQuery("(min-width: 1024px)");
 
   const toggle = () => {
     const panel = dockRef.current;
@@ -113,17 +89,9 @@ export function WorkbenchShell({
           <ResizablePanelGroup
             direction="horizontal"
             autoSaveId="molci.columns"
-            /* The id set keys the persisted layout, so hiding the inspector
-               does not overwrite the three-column one. */
-            autoSavePanelIds={
-              inspector && roomForInspector
-                ? ["navigator", "work", "inspector"]
-                : ["navigator", "work"]
-            }
+            autoSavePanelIds={["navigator", "work"]}
             className="min-h-0"
           >
-            {/* Each panel's own flex column lives in a plain div: the panel
-                primitive owns its box, so layout classes go on the content. */}
             <ResizablePanel id="navigator" defaultSize="256px" minSize="180px" maxSize="420px">
               <Region className="border-r border-border bg-surface">{navigator}</Region>
             </ResizablePanel>
@@ -131,19 +99,6 @@ export function WorkbenchShell({
             <ResizablePanel id="work" minSize="320px">
               <Region>{children}</Region>
             </ResizablePanel>
-            {inspector && roomForInspector && (
-              <>
-                <ResizableHandle />
-                <ResizablePanel
-                  id="inspector"
-                  defaultSize="300px"
-                  minSize="280px"
-                  maxSize="480px"
-                >
-                  <Region className="border-l border-border bg-surface">{inspector}</Region>
-                </ResizablePanel>
-              </>
-            )}
           </ResizablePanelGroup>
         </ResizablePanel>
 

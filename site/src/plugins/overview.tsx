@@ -7,10 +7,10 @@ import { RecordTable } from "@/components/record-table";
 import { RecordTrends } from "@/components/record-trends";
 import { StatusInline, type StatusSegment } from "@/components/status-inline";
 import { EmptyState } from "@/components/ui/empty-state";
+import { openRecord } from "@/lib/open-record";
 import { useProjectRecords } from "@/lib/project-records";
 import { relativeTime } from "@/lib/snapshot-data";
 import type { RecordSummary } from "@/lib/record-summary";
-import { pluginForRecord } from "@/plugins/registry";
 import type { RecordTabPanelProps, RecordTabPlugin } from "@/plugins/types";
 
 /**
@@ -28,8 +28,7 @@ function projectFacts(records: RecordSummary[]): MetaFact[] {
   const latest = records
     .map((r) => r.entry?.timestamp)
     .filter((t): t is string => Boolean(t))
-    .sort()
-    .at(-1);
+    .reduce<string | undefined>((best, t) => (best == null || t > best ? t : best), undefined);
   const profiles = [...new Set(records.flatMap((r) => r.profiles))];
 
   const facts: MetaFact[] = [
@@ -81,8 +80,8 @@ export function OverviewPanel({ project, openTab }: RecordTabPanelProps): JSX.El
   }
 
   const open = (record: RecordSummary) => {
-    const tabId = pluginForRecord(project.id, record.record)?.id;
-    if (tabId && openTab) openTab(tabId);
+    const patch = openRecord(project.id, record.record);
+    if (patch && openTab) openTab(patch.tab);
   };
 
   return (

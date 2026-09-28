@@ -36,18 +36,6 @@ const MARK: Record<SnapshotStatus, string> = {
   warning: "bg-status-warning",
 };
 
-const WASH: Record<SnapshotStatus, string> = {
-  draft: "bg-status-draft-soft",
-  ready: "bg-status-ready-soft",
-  queued: "bg-status-queued-soft",
-  running: "bg-status-running-soft",
-  completed: "bg-status-completed-soft",
-  failed: "bg-status-failed-soft",
-  cancelled: "bg-status-cancelled-soft",
-  cached: "bg-status-cached-soft",
-  warning: "bg-status-warning-soft",
-};
-
 /**
  * The status dot.
  *
@@ -65,35 +53,4 @@ export const StatusMark = ({
     aria-hidden="true"
     className={cn("size-status-dot shrink-0 rounded-full", MARK[status], className)}
   />
-);
-
-export interface SnapshotStatusBadgeProps {
-  status: SnapshotStatus;
-  /** What the status means here — "passed", "no verdict", "3 failed". */
-  label: string;
-  className?: string;
-}
-
-/**
- * Status as a dot plus a word on a wash of its own role.
- *
- * The word carries the meaning and takes the normal foreground colour, so the
- * badge stays legible in both themes without a per-status text colour.
- */
-export const SnapshotStatusBadge = ({
-  status,
-  label,
-  className,
-}: SnapshotStatusBadgeProps): JSX.Element => (
-  <span
-    className={cn(
-      "inline-flex items-center gap-1 rounded-control px-2 py-1",
-      "text-label font-medium text-foreground whitespace-nowrap",
-      WASH[status],
-      className,
-    )}
-  >
-    <StatusMark status={status} />
-    {label}
-  </span>
 );

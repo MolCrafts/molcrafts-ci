@@ -3,11 +3,19 @@ import type { ProjectContext } from "@/plugins/types";
 
 export interface IndexListing {
   indexes: string[];
+  /**
+   * Newest index timestamp per project, written by `molci ingest`.
+   * Older listings omit it; those projects sort alphabetically.
+   */
+  published?: Record<string, string>;
 }
 
 /**
  * Parse published index paths into per-project record sets.
  * Paths look like: data/index/<project>/<record>.jsonl
+ *
+ * Order is whatever published last, first — the bare visit opens the first
+ * entry, and alphabetical said nothing about which project just ran.
  */
 export function projectsFromListing(listing: IndexListing): ProjectContext[] {
   const byId = new Map<string, Set<string>>();
@@ -30,12 +38,20 @@ export function projectsFromListing(listing: IndexListing): ProjectContext[] {
     set.add(record);
   }
 
+  const published = listing.published ?? {};
   return [...byId.entries()]
     .map(([id, records]) => ({
       id,
       records: [...records].sort(),
     }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => {
+      const at = published[a.id];
+      const bt = published[b.id];
+      if (!at && !bt) return a.id.localeCompare(b.id);
+      if (!at) return 1;
+      if (!bt) return -1;
+      return bt.localeCompare(at) || a.id.localeCompare(b.id);
+    });
 }
 
 export async function loadIndexListing(): Promise<IndexListing> {
@@ -48,5 +64,5 @@ export async function loadIndexListing(): Promise<IndexListing> {
     throw new Error(`Cannot read the index listing: ${res.status} ${res.statusText}`);
   }
   const data = (await res.json()) as IndexListing;
-  return { indexes: data.indexes ?? [] };
+  return { indexes: data.indexes ?? [], published: data.published };
 }

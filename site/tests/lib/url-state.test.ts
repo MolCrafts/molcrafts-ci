@@ -62,6 +62,10 @@ describe("isNavigation", () => {
     expect(isNavigation(at, { project: "molrs" })).toBe(true);
   });
 
+  it("does not count bootstrapping the first project, so Back leaves the site", () => {
+    expect(isNavigation(EMPTY_URL_STATE, { project: "molpy" })).toBe(false);
+  });
+
   it("does not count refinements, so Back skips them", () => {
     expect(isNavigation(at, { profile: "linux-x86_64" })).toBe(false);
     expect(isNavigation(at, { snapshot: "s1" })).toBe(false);

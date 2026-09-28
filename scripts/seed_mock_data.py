@@ -1,16 +1,17 @@
 """Seed Git-friendly mock index data using ``import molci as mci``.
 
-Writes tracked snapshots under ``data/`` so prepare-data / publish see the same
-shapes production ingest produces. Also refreshes ``site/mock/fixtures.ts``
-consumed by ``rspack-plugin-mock`` during ``npm run dev``.
+Writes tracked snapshots under ``.mock-data/`` (gitignored) and refreshes
+``site/mock/fixtures.ts`` consumed by ``rspack-plugin-mock`` during
+``npm run dev``.
 
-Safe to re-run: clears mock projects first.
+Safe to re-run: clears the scratch root first.
 """
 
 from __future__ import annotations
 
 import json
 import shutil
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import molci as mci
@@ -23,13 +24,31 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / ".mock-data"
 FIXTURES_TS = ROOT / "site" / "mock" / "fixtures.ts"
 
-MOCK_PROJECTS = ("molpy", "molrs", "molcrafts-molrec")
+# Enough points to fill HISTORY_DEPTH (12) sparklines with room to spare.
+GENERATIONS = 12
+# Day 0 of the mock timeline — newest generation lands "today".
+ANCHOR = datetime(2026, 9, 28, 12, 0, tzinfo=UTC)
 
 
 def _clear_mock_trees() -> None:
     """The scratch root is rebuilt from scratch; ingest refuses to overwrite."""
     if DATA.exists():
         shutil.rmtree(DATA)
+
+
+def _commit(seed: str, generation: int) -> str:
+    """32 hex chars; first 12 unique per (seed, generation) so snapshot ids differ."""
+    base = f"{seed}{generation:04d}".encode()
+    # Expand deterministically without importing hashlib just for display length.
+    hexed = "".join(f"{(b + generation * 17) % 256:02x}" for b in (base * 4)[:16])
+    return hexed
+
+
+def _stamp(generation: int, hour: int = 9) -> str:
+    """Older generations further in the past; generation 1 is oldest."""
+    days_ago = GENERATIONS - generation
+    when = ANCHOR - timedelta(days=days_ago, hours=max(0, 12 - hour))
+    return when.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _entry(
@@ -41,6 +60,7 @@ def _entry(
     producer: str,
     timestamp: str,
     workflow_run: int,
+    generation: int,
     payload: dict,
 ) -> mci.Snapshot:
     return mci.Snapshot(
@@ -55,10 +75,305 @@ def _entry(
             ),
             producer=producer,
             profile=profile,
-            tracking=mci.Tracking(enabled=True, generation=1),
+            tracking=mci.Tracking(enabled=True, generation=generation),
         ),
         payload=payload,
     )
+
+
+def _series(
+    project: str,
+    repo: str,
+    record: str,
+    *,
+    profile: str,
+    producer: str,
+    workflow_base: int,
+    hour: int,
+    payload_at,
+    generations: int = GENERATIONS,
+) -> list[tuple[str, mci.Snapshot]]:
+    out: list[tuple[str, mci.Snapshot]] = []
+    for gen in range(1, generations + 1):
+        out.append(
+            (
+                project,
+                _entry(
+                    record=record,
+                    project_repo=repo,
+                    commit=_commit(f"{project}-{record}-{profile}", gen),
+                    profile=profile,
+                    producer=producer,
+                    timestamp=_stamp(gen, hour=hour),
+                    workflow_run=workflow_base + gen,
+                    generation=gen,
+                    payload=payload_at(gen),
+                ),
+            )
+        )
+    return out
+
+
+def _tests_payload(gen: int, *, base: int, fail_at: set[int] | None = None) -> dict:
+    failed = 2 + (gen % 3) if fail_at and gen in fail_at else 0
+    passed = base + gen * 3 - failed
+    return {"passed": passed, "failed": failed, "skipped": gen % 4}
+
+
+def _coverage_payload(gen: int, *, start: float, step: float, files: list[dict]) -> dict:
+    lines = round(min(99.5, start + step * (gen - 1)), 1)
+    return {
+        "totals": {
+            "lines": lines,
+            "branches": round(lines - 12.5, 1),
+            "functions": round(min(99.9, lines + 4.0), 1),
+            "statements": round(lines - 0.8, 1),
+        },
+        "files": files,
+    }
+
+
+def _bench_payload(gen: int, *, start_ns: float, improve: float) -> dict:
+    # Lower is better — improve gently, with a small regression mid-series.
+    mean = start_ns - improve * (gen - 1)
+    if gen == 7:
+        mean += improve * 3
+    return {"metrics": {"mean_ns": round(mean, 3)}}
+
+
+def _regression_payload(gen: int) -> dict:
+    err = 5.0e-7 / gen
+    if gen == 5:
+        err = 2.4e-6
+    return {"max_abs_error": err}
+
+
+def _build_seeds() -> list[tuple[str, mci.Snapshot]]:
+    seeds: list[tuple[str, mci.Snapshot]] = []
+
+    # molpy — richest: tests/coverage/benchmark/regression, one failed run.
+    seeds += _series(
+        "molpy",
+        "MolCrafts/molpy",
+        "tests",
+        profile="linux-x86_64",
+        producer="pytest",
+        workflow_base=1200,
+        hour=8,
+        payload_at=lambda g: _tests_payload(g, base=400, fail_at={4, 9}),
+    )
+    seeds += _series(
+        "molpy",
+        "MolCrafts/molpy",
+        "coverage",
+        profile="linux-x86_64",
+        producer="coverage.py",
+        workflow_base=1200,
+        hour=8,
+        payload_at=lambda g: _coverage_payload(
+            g,
+            start=74.0,
+            step=0.9,
+            files=[
+                {"path": "molpy/core/frame.py", "lines": 90.1, "uncovered": [55, 56]},
+                {"path": "molpy/io/xyz.py", "lines": 74.0, "uncovered": [12, 13, 40]},
+                {"path": "molpy/ff/amber.py", "lines": 61.2, "uncovered": [8, 9, 10, 88]},
+            ],
+        ),
+    )
+    seeds += _series(
+        "molpy",
+        "MolCrafts/molpy",
+        "benchmark",
+        profile="linux-x86_64",
+        producer="pytest-benchmark",
+        workflow_base=1200,
+        hour=9,
+        payload_at=lambda g: _bench_payload(g, start_ns=18.4, improve=0.45),
+    )
+    seeds += _series(
+        "molpy",
+        "MolCrafts/molpy",
+        "regression",
+        profile="linux-x86_64",
+        producer="molpy-numerical",
+        workflow_base=1200,
+        hour=9,
+        payload_at=_regression_payload,
+        generations=10,
+    )
+
+    # molrs — dual-profile benchmarks.
+    seeds += _series(
+        "molrs",
+        "MolCrafts/molrs",
+        "tests",
+        profile="linux-x86_64",
+        producer="cargo-test",
+        workflow_base=440,
+        hour=10,
+        payload_at=lambda g: _tests_payload(g, base=1580, fail_at={6}),
+    )
+    seeds += _series(
+        "molrs",
+        "MolCrafts/molrs",
+        "coverage",
+        profile="linux-x86_64",
+        producer="llvm-cov",
+        workflow_base=440,
+        hour=10,
+        payload_at=lambda g: _coverage_payload(
+            g,
+            start=81.0,
+            step=0.6,
+            files=[
+                {
+                    "path": "molrs/src/spatial/neighbors.rs",
+                    "lines": 94.2,
+                    "uncovered": [412, 418],
+                },
+                {
+                    "path": "molrs/src/md/lj.rs",
+                    "lines": 81.0,
+                    "uncovered": [88, 91, 120],
+                },
+            ],
+        ),
+    )
+    seeds += _series(
+        "molrs",
+        "MolCrafts/molrs",
+        "benchmark",
+        profile="linux-x86_64",
+        producer="criterion",
+        workflow_base=440,
+        hour=11,
+        payload_at=lambda g: {
+            "suite": "neighbor_list",
+            "metrics": {"mean_ns": round(42.0 - 0.8 * (g - 1), 2)},
+        },
+    )
+    seeds += _series(
+        "molrs",
+        "MolCrafts/molrs",
+        "benchmark",
+        profile="macos-aarch64",
+        producer="criterion",
+        workflow_base=460,
+        hour=11,
+        payload_at=lambda g: {
+            "suite": "neighbor_list",
+            "metrics": {"mean_ns": round(38.5 - 0.7 * (g - 1), 2)},
+        },
+        generations=10,
+    )
+
+    # molcrafts-molrec
+    seeds += _series(
+        "molcrafts-molrec",
+        "MolCrafts/molcrafts-molrec",
+        "tests",
+        profile="default",
+        producer="pytest",
+        workflow_base=90,
+        hour=11,
+        payload_at=lambda g: _tests_payload(g, base=70),
+        generations=10,
+    )
+    seeds += _series(
+        "molcrafts-molrec",
+        "MolCrafts/molcrafts-molrec",
+        "coverage",
+        profile="default",
+        producer="coverage.py",
+        workflow_base=90,
+        hour=11,
+        payload_at=lambda g: _coverage_payload(
+            g,
+            start=86.0,
+            step=0.5,
+            files=[
+                {"path": "src/molrec/schema.py", "lines": 97.0, "uncovered": [210]},
+                {
+                    "path": "src/molrec/bench.py",
+                    "lines": 78.5,
+                    "uncovered": [44, 45, 67, 68],
+                },
+            ],
+        ),
+        generations=10,
+    )
+    seeds += _series(
+        "molcrafts-molrec",
+        "MolCrafts/molcrafts-molrec",
+        "molrec",
+        profile="default",
+        producer="molrec",
+        workflow_base=90,
+        hour=12,
+        payload_at=lambda g: {
+            "schema_version": "0.1.0",
+            "cases": 40 + g * 2,
+            "passed": 40 + g * 2 - (1 if g == 3 else 0),
+        },
+        generations=8,
+    )
+
+    # molcrafts-ci self-hosting
+    seeds += _series(
+        "molcrafts-ci",
+        "MolCrafts/molcrafts-ci",
+        "tests",
+        profile="linux-x86_64",
+        producer="pytest",
+        workflow_base=10,
+        hour=13,
+        payload_at=lambda g: _tests_payload(g, base=30),
+        generations=10,
+    )
+    seeds += _series(
+        "molcrafts-ci",
+        "MolCrafts/molcrafts-ci",
+        "coverage",
+        profile="linux-x86_64",
+        producer="coverage.py",
+        workflow_base=10,
+        hour=13,
+        payload_at=lambda g: _coverage_payload(
+            g,
+            start=88.0,
+            step=0.4,
+            files=[
+                {
+                    "path": "src/molcrafts_ci/persist.py",
+                    "lines": 96.0,
+                    "uncovered": [140],
+                },
+                {
+                    "path": "src/molcrafts_ci/cli.py",
+                    "lines": 82.0,
+                    "uncovered": [12, 44, 45],
+                },
+            ],
+        ),
+        generations=10,
+    )
+
+    return seeds
+
+
+def _published_from_entries(entries: dict[str, list[dict]]) -> dict[str, str]:
+    published: dict[str, str] = {}
+    for key, rows in entries.items():
+        project = key.split("/", 1)[0]
+        for row in rows:
+            stamp = row.get("timestamp")
+            if not isinstance(stamp, str):
+                continue
+            latest = published.get(project)
+            if latest is None or stamp > latest:
+                published[project] = stamp
+    return published
 
 
 def _export_fixtures() -> None:
@@ -80,6 +395,18 @@ def _export_fixtures() -> None:
                     rows.append(json.loads(line))
             entries[key] = rows
 
+    # Prefer the listing molci wrote (includes published); fall back to deriving.
+    listing_path = DATA / "index-listing.json"
+    published: dict[str, str] = {}
+    if listing_path.exists():
+        listing = json.loads(listing_path.read_text(encoding="utf-8"))
+        published = dict(listing.get("published") or {})
+        if listing.get("indexes"):
+            # Keep fixture paths prefixed the way the mock already serves them.
+            indexes = [p if p.startswith("data/") else f"data/{p}" for p in listing["indexes"]]
+    if not published:
+        published = _published_from_entries(entries)
+
     snapshots: dict[str, dict] = {}
     snap_root = DATA / "snapshots"
     if snap_root.exists():
@@ -87,7 +414,12 @@ def _export_fixtures() -> None:
             rel = path.relative_to(DATA).as_posix()
             snapshots[rel] = json.loads(path.read_text(encoding="utf-8"))
 
-    payload = {"indexes": indexes, "entries": entries, "snapshots": snapshots}
+    payload = {
+        "indexes": indexes,
+        "published": published,
+        "entries": entries,
+        "snapshots": snapshots,
+    }
     body = json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True)
     FIXTURES_TS.write_text(
         "/**\n"
@@ -110,6 +442,7 @@ def _export_fixtures() -> None:
         "};\n\n"
         "export type MockFixtures = {\n"
         "  indexes: string[];\n"
+        "  published: Record<string, string>;\n"
         "  entries: Record<string, IndexEntry[]>;\n"
         "  snapshots: Record<string, unknown>;\n"
         "};\n\n"
@@ -122,222 +455,7 @@ def main() -> None:
     DATA.mkdir(parents=True, exist_ok=True)
     _clear_mock_trees()
 
-    seeds: list[tuple[str, mci.Snapshot]] = [
-        (
-            "molpy",
-            _entry(
-                record="tests",
-                project_repo="MolCrafts/molpy",
-                commit="a1b2c3d4e5f6789012345678abcdef01",
-                profile="linux-x86_64",
-                producer="pytest",
-                timestamp="2026-09-18T09:12:00Z",
-                workflow_run=1201,
-                payload={"passed": 412, "failed": 0},
-            ),
-        ),
-        (
-            "molpy",
-            _entry(
-                record="tests",
-                project_repo="MolCrafts/molpy",
-                commit="c3d4e5f60718293a4b5c6d7e8f901234",
-                profile="linux-x86_64",
-                producer="pytest",
-                timestamp="2026-09-20T08:05:00Z",
-                workflow_run=1215,
-                payload={"passed": 418, "failed": 0},
-            ),
-        ),
-        (
-            "molpy",
-            _entry(
-                record="benchmark",
-                project_repo="MolCrafts/molpy",
-                commit="c3d4e5f60718293a4b5c6d7e8f901234",
-                profile="linux-x86_64",
-                producer="pytest-benchmark",
-                timestamp="2026-09-20T08:12:00Z",
-                workflow_run=1215,
-                payload={"metrics": {"mean_ns": 12.5}},
-            ),
-        ),
-        (
-            "molpy",
-            _entry(
-                record="regression",
-                project_repo="MolCrafts/molpy",
-                commit="c3d4e5f60718293a4b5c6d7e8f901234",
-                profile="linux-x86_64",
-                producer="molpy-numerical",
-                timestamp="2026-09-20T08:18:00Z",
-                workflow_run=1215,
-                payload={"max_abs_error": 1.2e-8},
-            ),
-        ),
-        (
-            "molrs",
-            _entry(
-                record="tests",
-                project_repo="MolCrafts/molrs",
-                commit="e5f60718293a4b5c6d7e8f9012345678",
-                profile="linux-x86_64",
-                producer="cargo-nextest",
-                timestamp="2026-09-20T10:22:00Z",
-                workflow_run=448,
-                payload={"passed": 1601, "failed": 0},
-            ),
-        ),
-        (
-            "molrs",
-            _entry(
-                record="benchmark",
-                project_repo="MolCrafts/molrs",
-                commit="e5f60718293a4b5c6d7e8f9012345678",
-                profile="linux-x86_64",
-                producer="criterion",
-                timestamp="2026-09-20T10:30:00Z",
-                workflow_run=448,
-                payload={"suite": "neighbor_list"},
-            ),
-        ),
-        (
-            "molrs",
-            _entry(
-                record="benchmark",
-                project_repo="MolCrafts/molrs",
-                commit="e5f60718293a4b5c6d7e8f9012345678",
-                profile="macos-aarch64",
-                producer="criterion",
-                timestamp="2026-09-20T10:35:00Z",
-                workflow_run=449,
-                payload={"suite": "neighbor_list"},
-            ),
-        ),
-        (
-            "molrs",
-            _entry(
-                record="coverage",
-                project_repo="MolCrafts/molrs",
-                commit="e5f60718293a4b5c6d7e8f9012345678",
-                profile="linux-x86_64",
-                producer="llvm-cov",
-                timestamp="2026-09-20T10:40:00Z",
-                workflow_run=448,
-                payload={
-                    "totals": {
-                        "lines": 88.4,
-                        "branches": 71.2,
-                        "functions": 93.0,
-                        "statements": 87.1,
-                    },
-                    "files": [
-                        {
-                            "path": "molrs/src/spatial/neighbors.rs",
-                            "lines": 94.2,
-                            "uncovered": [412, 418],
-                        },
-                        {
-                            "path": "molrs/src/md/lj.rs",
-                            "lines": 81.0,
-                            "uncovered": [88, 91, 120],
-                        },
-                    ],
-                },
-            ),
-        ),
-        (
-            "molcrafts-molrec",
-            _entry(
-                record="tests",
-                project_repo="MolCrafts/molcrafts-molrec",
-                commit="0718293a4b5c6d7e8f90123456789012",
-                profile="default",
-                producer="pytest",
-                timestamp="2026-09-20T11:05:00Z",
-                workflow_run=92,
-                payload={"passed": 86, "failed": 0},
-            ),
-        ),
-        (
-            "molcrafts-molrec",
-            _entry(
-                record="coverage",
-                project_repo="MolCrafts/molcrafts-molrec",
-                commit="0718293a4b5c6d7e8f90123456789012",
-                profile="default",
-                producer="coverage.py",
-                timestamp="2026-09-20T11:08:00Z",
-                workflow_run=92,
-                payload={
-                    "totals": {
-                        "lines": 91.5,
-                        "branches": 84.0,
-                        "functions": 96.2,
-                        "statements": 90.8,
-                    },
-                    "files": [
-                        {
-                            "path": "src/molrec/schema.py",
-                            "lines": 97.0,
-                            "uncovered": [210],
-                        },
-                        {
-                            "path": "src/molrec/bench.py",
-                            "lines": 78.5,
-                            "uncovered": [44, 45, 67, 68],
-                        },
-                    ],
-                },
-            ),
-        ),
-        (
-            "molpy",
-            _entry(
-                record="coverage",
-                project_repo="MolCrafts/molpy",
-                commit="c3d4e5f60718293a4b5c6d7e8f901234",
-                profile="linux-x86_64",
-                producer="coverage.py",
-                timestamp="2026-09-20T08:22:00Z",
-                workflow_run=1215,
-                payload={
-                    "totals": {
-                        "lines": 82.3,
-                        "branches": 68.9,
-                        "functions": 88.0,
-                        "statements": 81.5,
-                    },
-                    "files": [
-                        {
-                            "path": "molpy/core/frame.py",
-                            "lines": 90.1,
-                            "uncovered": [55, 56],
-                        },
-                        {
-                            "path": "molpy/io/xyz.py",
-                            "lines": 74.0,
-                            "uncovered": [12, 13, 40],
-                        },
-                    ],
-                },
-            ),
-        ),
-        (
-            "molcrafts-molrec",
-            _entry(
-                record="molrec",
-                project_repo="MolCrafts/molcrafts-molrec",
-                commit="0718293a4b5c6d7e8f90123456789012",
-                profile="default",
-                producer="molrec",
-                timestamp="2026-09-20T11:10:00Z",
-                workflow_run=92,
-                payload={"schema_version": "0.1.0"},
-            ),
-        ),
-    ]
-
+    seeds = _build_seeds()
     for project, snap in seeds:
         mci.ingest_snapshot(DATA, project, snap)
 
