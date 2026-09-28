@@ -9,7 +9,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { CoverageFile } from "@/lib/payload";
+import { formatPercent } from "@/lib/payload";
 import { cn } from "@/lib/utils";
+
+export { formatPercent };
 
 /**
  * Where a percentage sits, as a reading aid on the bar only.
@@ -23,10 +26,6 @@ export function coverageTone(value: number | undefined): string {
   if (value >= 85) return "bg-status-completed";
   if (value >= 70) return "bg-status-warning";
   return "bg-status-failed";
-}
-
-export function formatPercent(n: number | undefined): string {
-  return n == null || Number.isNaN(n) ? "—" : `${n.toFixed(1)}%`;
 }
 
 /** How many files the table shows before deferring to the CI run. */
@@ -59,7 +58,7 @@ export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Ele
   if (worst.length === 0) {
     return (
       <p className="py-2 text-label text-muted-foreground">
-        Every measured file is fully covered.
+        Every file is fully covered.
       </p>
     );
   }
@@ -69,8 +68,8 @@ export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Ele
       <TableHeader>
         <TableRow>
           <TableHead>File</TableHead>
-          <TableHead className="w-48">Lines</TableHead>
-          <TableHead className="w-32 text-right">Uncovered</TableHead>
+          <TableHead className="w-48">Covered</TableHead>
+          <TableHead className="w-36 text-right">Untested lines</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

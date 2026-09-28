@@ -1,20 +1,119 @@
-import { LineChart } from "echarts/charts";
-import { GridComponent, TooltipComponent } from "echarts/components";
-import * as echarts from "echarts/core";
-import { SVGRenderer } from "echarts/renderers";
-import { useEffect, useRef, type JSX } from "react";
+import { defineMolplotChart } from "@molcrafts/molplot";
+import { createElement, useMemo, type JSX } from "react";
 
-import { formatNumber } from "@/lib/payload";
-import { useIsDark } from "@/lib/use-is-dark";
-import { relativeTime, shortCommit } from "@/lib/snapshot-data";
+import { formatMeasure } from "@/lib/payload";
 import type { HistoryPoint } from "@/lib/record-summary";
+import { relativeTime, shortCommit } from "@/lib/snapshot-data";
+import { useIsDark } from "@/lib/use-is-dark";
 
-/* Only what a single-series line needs; the rest of ECharts is not bundled. */
-echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer]);
+defineMolplotChart();
 
 /** Theme values live in CSS, so read them rather than duplicating hexes here. */
-function token(el: HTMLElement, name: string): string {
-  return getComputedStyle(el).getPropertyValue(name).trim();
+function token(el: HTMLElement | null, name: string, fallback: string): string {
+  if (!el) return fallback;
+  const value = getComputedStyle(el).getPropertyValue(name).trim();
+  return value || fallback;
+}
+
+function sparklineSpec(
+  points: HistoryPoint[],
+  colors: { line: string; failed: string; surface: string },
+): string {
+  const plotted = points.filter((p) => p.measure != null);
+  const values = plotted.map((p, i) => {
+    const value = p.measure ? formatMeasure(p.measure.value, p.measure.unit) : "—";
+    const tip = [
+      value,
+      shortCommit(p.entry.commit),
+      relativeTime(p.entry.timestamp),
+      p.failed ? "failed" : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return {
+      i,
+      y: p.measure?.value ?? null,
+      tip,
+      // Emphasise failures and the current point; every point still draws.
+      emphasis: p.failed || i === plotted.length - 1,
+      failed: p.failed,
+    };
+  });
+
+  // Size comes from the host box (RawChart measures it) — do not set
+  // width/height here or they override the fitted numeric size.
+  return JSON.stringify({
+    padding: 2,
+    background: null,
+    data: { values },
+    layer: [
+      {
+        mark: {
+          type: "line",
+          strokeWidth: 2,
+          stroke: colors.line,
+          interpolate: "linear",
+          tooltip: true,
+        },
+        encoding: {
+          x: {
+            field: "i",
+            type: "quantitative",
+            axis: null,
+            scale: { nice: false, zero: false, padding: 0 },
+          },
+          y: {
+            field: "y",
+            type: "quantitative",
+            axis: null,
+            scale: { zero: false, nice: false },
+          },
+          tooltip: { field: "tip", type: "nominal" },
+        },
+      },
+      {
+        mark: {
+          type: "point",
+          filled: true,
+          stroke: colors.surface,
+          strokeWidth: 1,
+          tooltip: true,
+        },
+        encoding: {
+          x: {
+            field: "i",
+            type: "quantitative",
+            axis: null,
+            scale: { nice: false, zero: false, padding: 0 },
+          },
+          y: {
+            field: "y",
+            type: "quantitative",
+            axis: null,
+            scale: { zero: false, nice: false },
+          },
+          size: {
+            condition: { test: "datum.emphasis", value: 56 },
+            value: 28,
+          },
+          color: {
+            condition: { test: "datum.failed", value: colors.failed },
+            value: colors.line,
+          },
+          opacity: {
+            condition: { test: "datum.emphasis", value: 1 },
+            value: 0.55,
+          },
+          tooltip: { field: "tip", type: "nominal" },
+        },
+      },
+    ],
+    config: {
+      view: { stroke: null },
+      style: { cell: { stroke: null } },
+      axis: { grid: false, ticks: false, domain: false, labels: false, title: null },
+    },
+  });
 }
 
 export interface TrendChartProps {
@@ -30,95 +129,37 @@ export interface TrendChartProps {
  * and no axis labels: at this size they are noise, and the tooltip carries the
  * exact values.
  */
-export function TrendChart({ points, height = 64 }: TrendChartProps): JSX.Element {
-  const box = useRef<HTMLDivElement>(null);
-  // Colours come from CSS tokens, so a theme flip has to repaint the canvas.
+export function TrendChart({ points, height = 72 }: TrendChartProps): JSX.Element {
+  // Colours come from CSS tokens, so a theme flip has to rebuild the spec.
   const dark = useIsDark();
-
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-
-    const chart = echarts.init(el, undefined, { renderer: "svg" });
-    const plotted = points.filter((p) => p.measure != null);
-    const line = token(el, "--mc-chart");
-    const failed = token(el, "--status-failed");
-    const muted = token(el, "--mc-text-muted");
-    const surface = token(el, "--mc-surface");
-    const border = token(el, "--mc-border");
-    const ink = token(el, "--mc-text");
-
-    chart.setOption({
-      animation: false,
-      grid: { top: 6, right: 6, bottom: 6, left: 6, containLabel: false },
-      xAxis: { type: "category", show: false, data: plotted.map((p) => p.entry.snapshot_id ?? "") },
-      yAxis: { type: "value", show: false, scale: true },
-      tooltip: {
-        trigger: "axis",
-        borderColor: border,
-        backgroundColor: surface,
-        textStyle: { color: ink, fontSize: 12 },
-        extraCssText: "border-radius:10px;box-shadow:0 12px 32px rgb(20 32 46 / 18%);",
-        formatter: (params: unknown) => {
-          const first = (params as { dataIndex: number }[])[0];
-          const p = first ? plotted[first.dataIndex] : undefined;
-          if (!p) return "";
-          const value = p.measure ? formatNumber(p.measure.value) + (p.measure.unit ?? "") : "—";
-          return [
-            `<b>${value}</b>`,
-            shortCommit(p.entry.commit),
-            relativeTime(p.entry.timestamp),
-            p.failed ? "failed" : "",
-          ]
-            .filter(Boolean)
-            .join(" &middot; ");
-        },
-      },
-      series: [
-        {
-          type: "line",
-          data: plotted.map((p) => p.measure?.value ?? null),
-          smooth: false,
-          showSymbol: plotted.length === 1,
-          symbolSize: 7,
-          lineStyle: { width: 2, color: line },
-          itemStyle: {
-            color: (p: { dataIndex: number }) => (plotted[p.dataIndex]?.failed ? failed : line),
-          },
-          // Only failures and the current point are marked; a dot on every
-          // generation is noise the line already carries.
-          markPoint: {
-            symbol: "circle",
-            symbolSize: 8,
-            label: { show: false },
-            data: plotted.flatMap((p, i) =>
-              p.failed || i === plotted.length - 1
-                ? [
-                    {
-                      xAxis: i,
-                      yAxis: p.measure?.value ?? 0,
-                      itemStyle: {
-                        color: p.failed ? failed : line,
-                        borderColor: surface,
-                        borderWidth: 2,
-                      },
-                    },
-                  ]
-                : [],
-            ),
-          },
-          emphasis: { itemStyle: { color: muted } },
-        },
-      ],
+  const spec = useMemo(() => {
+    const root = typeof document !== "undefined" ? document.documentElement : null;
+    return sparklineSpec(points, {
+      line: token(root, "--mc-chart", dark ? "#00a9a4" : "#008f8c"),
+      failed: token(root, "--status-failed", "#c44"),
+      surface: token(root, "--mc-surface", dark ? "#0f1419" : "#fff"),
     });
-
-    const observer = new ResizeObserver(() => chart.resize());
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      chart.dispose();
-    };
   }, [points, dark]);
 
-  return <div ref={box} style={{ height }} className="w-full" aria-hidden="true" />;
+  return createElement("molplot-chart", {
+    key: `${dark ? "dark" : "light"}:${spec.length}:${points.length}`,
+    className: "trend-sparkline",
+    preset: "molplot",
+    theme: dark ? "dark" : "light",
+    interactive: "false",
+    width: "100%",
+    spec,
+    style: {
+      display: "block",
+      width: "100%",
+      height,
+      maxWidth: "none",
+      aspectRatio: "unset",
+      // Compact sparkline: no inner air (molplot surface inset tracks this).
+      ["--molplot-pad" as string]: "0px",
+      padding: 0,
+      overflow: "hidden",
+    },
+    "aria-hidden": "true",
+  });
 }

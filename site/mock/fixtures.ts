@@ -20,190 +20,1861 @@ export type IndexEntry = {
 
 export type MockFixtures = {
   indexes: string[];
+  published: Record<string, string>;
   entries: Record<string, IndexEntry[]>;
   snapshots: Record<string, unknown>;
 };
 
 export const fixtures: MockFixtures = {
   "entries": {
+    "molcrafts-ci/coverage": [
+      {
+        "commit": "7e807d7483727785843e747a3e748087",
+        "generation": 1,
+        "path": "snapshots/molcrafts-ci/coverage/1/coverage-linux-x86_64-7e807d748372.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-7e807d748372",
+        "timestamp": "2026-09-17T12:00:00Z",
+        "workflow_run": 11
+      },
+      {
+        "commit": "8f918e8594838896954f858b4f859198",
+        "generation": 2,
+        "path": "snapshots/molcrafts-ci/coverage/2/coverage-linux-x86_64-8f918e859483.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-8f918e859483",
+        "timestamp": "2026-09-18T12:00:00Z",
+        "workflow_run": 12
+      },
+      {
+        "commit": "a0a29f96a59499a7a660969c6096a2a9",
+        "generation": 3,
+        "path": "snapshots/molcrafts-ci/coverage/3/coverage-linux-x86_64-a0a29f96a594.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-a0a29f96a594",
+        "timestamp": "2026-09-19T12:00:00Z",
+        "workflow_run": 13
+      },
+      {
+        "commit": "b1b3b0a7b6a5aab8b771a7ad71a7b3ba",
+        "generation": 4,
+        "path": "snapshots/molcrafts-ci/coverage/4/coverage-linux-x86_64-b1b3b0a7b6a5.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-b1b3b0a7b6a5",
+        "timestamp": "2026-09-20T12:00:00Z",
+        "workflow_run": 14
+      },
+      {
+        "commit": "c2c4c1b8c7b6bbc9c882b8be82b8c4cb",
+        "generation": 5,
+        "path": "snapshots/molcrafts-ci/coverage/5/coverage-linux-x86_64-c2c4c1b8c7b6.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-c2c4c1b8c7b6",
+        "timestamp": "2026-09-21T12:00:00Z",
+        "workflow_run": 15
+      },
+      {
+        "commit": "d3d5d2c9d8c7ccdad993c9cf93c9d5dc",
+        "generation": 6,
+        "path": "snapshots/molcrafts-ci/coverage/6/coverage-linux-x86_64-d3d5d2c9d8c7.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-d3d5d2c9d8c7",
+        "timestamp": "2026-09-22T12:00:00Z",
+        "workflow_run": 16
+      },
+      {
+        "commit": "e4e6e3dae9d8ddebeaa4dae0a4dae6ed",
+        "generation": 7,
+        "path": "snapshots/molcrafts-ci/coverage/7/coverage-linux-x86_64-e4e6e3dae9d8.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-e4e6e3dae9d8",
+        "timestamp": "2026-09-23T12:00:00Z",
+        "workflow_run": 17
+      },
+      {
+        "commit": "f5f7f4ebfae9eefcfbb5ebf1b5ebf7fe",
+        "generation": 8,
+        "path": "snapshots/molcrafts-ci/coverage/8/coverage-linux-x86_64-f5f7f4ebfae9.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-f5f7f4ebfae9",
+        "timestamp": "2026-09-24T12:00:00Z",
+        "workflow_run": 18
+      },
+      {
+        "commit": "060805fc0bfaff0d0cc6fc02c6fc080f",
+        "generation": 9,
+        "path": "snapshots/molcrafts-ci/coverage/9/coverage-linux-x86_64-060805fc0bfa.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-060805fc0bfa",
+        "timestamp": "2026-09-25T12:00:00Z",
+        "workflow_run": 19
+      },
+      {
+        "commit": "1719160d1c0b101e1dd70d13d70d1920",
+        "generation": 10,
+        "path": "snapshots/molcrafts-ci/coverage/10/coverage-linux-x86_64-1719160d1c0b.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "coverage-linux-x86_64-1719160d1c0b",
+        "timestamp": "2026-09-26T12:00:00Z",
+        "workflow_run": 20
+      }
+    ],
+    "molcrafts-ci/tests": [
+      {
+        "commit": "7e807d7483727785843e747a3e857684",
+        "generation": 1,
+        "path": "snapshots/molcrafts-ci/tests/1/tests-linux-x86_64-7e807d748372.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-7e807d748372",
+        "timestamp": "2026-09-17T12:00:00Z",
+        "workflow_run": 11
+      },
+      {
+        "commit": "8f918e8594838896954f858b4f968795",
+        "generation": 2,
+        "path": "snapshots/molcrafts-ci/tests/2/tests-linux-x86_64-8f918e859483.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-8f918e859483",
+        "timestamp": "2026-09-18T12:00:00Z",
+        "workflow_run": 12
+      },
+      {
+        "commit": "a0a29f96a59499a7a660969c60a798a6",
+        "generation": 3,
+        "path": "snapshots/molcrafts-ci/tests/3/tests-linux-x86_64-a0a29f96a594.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-a0a29f96a594",
+        "timestamp": "2026-09-19T12:00:00Z",
+        "workflow_run": 13
+      },
+      {
+        "commit": "b1b3b0a7b6a5aab8b771a7ad71b8a9b7",
+        "generation": 4,
+        "path": "snapshots/molcrafts-ci/tests/4/tests-linux-x86_64-b1b3b0a7b6a5.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-b1b3b0a7b6a5",
+        "timestamp": "2026-09-20T12:00:00Z",
+        "workflow_run": 14
+      },
+      {
+        "commit": "c2c4c1b8c7b6bbc9c882b8be82c9bac8",
+        "generation": 5,
+        "path": "snapshots/molcrafts-ci/tests/5/tests-linux-x86_64-c2c4c1b8c7b6.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-c2c4c1b8c7b6",
+        "timestamp": "2026-09-21T12:00:00Z",
+        "workflow_run": 15
+      },
+      {
+        "commit": "d3d5d2c9d8c7ccdad993c9cf93dacbd9",
+        "generation": 6,
+        "path": "snapshots/molcrafts-ci/tests/6/tests-linux-x86_64-d3d5d2c9d8c7.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-d3d5d2c9d8c7",
+        "timestamp": "2026-09-22T12:00:00Z",
+        "workflow_run": 16
+      },
+      {
+        "commit": "e4e6e3dae9d8ddebeaa4dae0a4ebdcea",
+        "generation": 7,
+        "path": "snapshots/molcrafts-ci/tests/7/tests-linux-x86_64-e4e6e3dae9d8.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-e4e6e3dae9d8",
+        "timestamp": "2026-09-23T12:00:00Z",
+        "workflow_run": 17
+      },
+      {
+        "commit": "f5f7f4ebfae9eefcfbb5ebf1b5fcedfb",
+        "generation": 8,
+        "path": "snapshots/molcrafts-ci/tests/8/tests-linux-x86_64-f5f7f4ebfae9.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-f5f7f4ebfae9",
+        "timestamp": "2026-09-24T12:00:00Z",
+        "workflow_run": 18
+      },
+      {
+        "commit": "060805fc0bfaff0d0cc6fc02c60dfe0c",
+        "generation": 9,
+        "path": "snapshots/molcrafts-ci/tests/9/tests-linux-x86_64-060805fc0bfa.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-060805fc0bfa",
+        "timestamp": "2026-09-25T12:00:00Z",
+        "workflow_run": 19
+      },
+      {
+        "commit": "1719160d1c0b101e1dd70d13d71e0f1d",
+        "generation": 10,
+        "path": "snapshots/molcrafts-ci/tests/10/tests-linux-x86_64-1719160d1c0b.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-ci",
+        "snapshot_id": "tests-linux-x86_64-1719160d1c0b",
+        "timestamp": "2026-09-26T12:00:00Z",
+        "workflow_run": 20
+      }
+    ],
     "molcrafts-molrec/coverage": [
       {
-        "commit": "0718293a4b5c6d7e8f90123456789012",
+        "commit": "7e807d7483727785843e7e807d837674",
         "generation": 1,
-        "path": "snapshots/molcrafts-molrec/coverage/1/coverage-default-0718293a4b5c.json",
+        "path": "snapshots/molcrafts-molrec/coverage/1/coverage-default-7e807d748372.json",
         "producer": "coverage.py",
         "profile": "default",
         "record": "coverage",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molcrafts-molrec",
-        "snapshot_id": "coverage-default-0718293a4b5c",
-        "timestamp": "2026-09-20T11:08:00Z",
+        "snapshot_id": "coverage-default-7e807d748372",
+        "timestamp": "2026-09-17T11:00:00Z",
+        "workflow_run": 91
+      },
+      {
+        "commit": "8f918e8594838896954f8f918e948785",
+        "generation": 2,
+        "path": "snapshots/molcrafts-molrec/coverage/2/coverage-default-8f918e859483.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-8f918e859483",
+        "timestamp": "2026-09-18T11:00:00Z",
         "workflow_run": 92
+      },
+      {
+        "commit": "a0a29f96a59499a7a660a0a29fa59896",
+        "generation": 3,
+        "path": "snapshots/molcrafts-molrec/coverage/3/coverage-default-a0a29f96a594.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-a0a29f96a594",
+        "timestamp": "2026-09-19T11:00:00Z",
+        "workflow_run": 93
+      },
+      {
+        "commit": "b1b3b0a7b6a5aab8b771b1b3b0b6a9a7",
+        "generation": 4,
+        "path": "snapshots/molcrafts-molrec/coverage/4/coverage-default-b1b3b0a7b6a5.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-b1b3b0a7b6a5",
+        "timestamp": "2026-09-20T11:00:00Z",
+        "workflow_run": 94
+      },
+      {
+        "commit": "c2c4c1b8c7b6bbc9c882c2c4c1c7bab8",
+        "generation": 5,
+        "path": "snapshots/molcrafts-molrec/coverage/5/coverage-default-c2c4c1b8c7b6.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-c2c4c1b8c7b6",
+        "timestamp": "2026-09-21T11:00:00Z",
+        "workflow_run": 95
+      },
+      {
+        "commit": "d3d5d2c9d8c7ccdad993d3d5d2d8cbc9",
+        "generation": 6,
+        "path": "snapshots/molcrafts-molrec/coverage/6/coverage-default-d3d5d2c9d8c7.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-d3d5d2c9d8c7",
+        "timestamp": "2026-09-22T11:00:00Z",
+        "workflow_run": 96
+      },
+      {
+        "commit": "e4e6e3dae9d8ddebeaa4e4e6e3e9dcda",
+        "generation": 7,
+        "path": "snapshots/molcrafts-molrec/coverage/7/coverage-default-e4e6e3dae9d8.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-e4e6e3dae9d8",
+        "timestamp": "2026-09-23T11:00:00Z",
+        "workflow_run": 97
+      },
+      {
+        "commit": "f5f7f4ebfae9eefcfbb5f5f7f4faedeb",
+        "generation": 8,
+        "path": "snapshots/molcrafts-molrec/coverage/8/coverage-default-f5f7f4ebfae9.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-f5f7f4ebfae9",
+        "timestamp": "2026-09-24T11:00:00Z",
+        "workflow_run": 98
+      },
+      {
+        "commit": "060805fc0bfaff0d0cc60608050bfefc",
+        "generation": 9,
+        "path": "snapshots/molcrafts-molrec/coverage/9/coverage-default-060805fc0bfa.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-060805fc0bfa",
+        "timestamp": "2026-09-25T11:00:00Z",
+        "workflow_run": 99
+      },
+      {
+        "commit": "1719160d1c0b101e1dd71719161c0f0d",
+        "generation": 10,
+        "path": "snapshots/molcrafts-molrec/coverage/10/coverage-default-1719160d1c0b.json",
+        "producer": "coverage.py",
+        "profile": "default",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "coverage-default-1719160d1c0b",
+        "timestamp": "2026-09-26T11:00:00Z",
+        "workflow_run": 100
       }
     ],
     "molcrafts-molrec/molrec": [
       {
-        "commit": "0718293a4b5c6d7e8f90123456789012",
+        "commit": "7e807d7483727785843e7e807d837674",
         "generation": 1,
-        "path": "snapshots/molcrafts-molrec/molrec/1/molrec-default-0718293a4b5c.json",
+        "path": "snapshots/molcrafts-molrec/molrec/1/molrec-default-7e807d748372.json",
         "producer": "molrec",
         "profile": "default",
         "record": "molrec",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molcrafts-molrec",
-        "snapshot_id": "molrec-default-0718293a4b5c",
-        "timestamp": "2026-09-20T11:10:00Z",
+        "snapshot_id": "molrec-default-7e807d748372",
+        "timestamp": "2026-09-17T12:00:00Z",
+        "workflow_run": 91
+      },
+      {
+        "commit": "8f918e8594838896954f8f918e948785",
+        "generation": 2,
+        "path": "snapshots/molcrafts-molrec/molrec/2/molrec-default-8f918e859483.json",
+        "producer": "molrec",
+        "profile": "default",
+        "record": "molrec",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "molrec-default-8f918e859483",
+        "timestamp": "2026-09-18T12:00:00Z",
         "workflow_run": 92
+      },
+      {
+        "commit": "a0a29f96a59499a7a660a0a29fa59896",
+        "generation": 3,
+        "path": "snapshots/molcrafts-molrec/molrec/3/molrec-default-a0a29f96a594.json",
+        "producer": "molrec",
+        "profile": "default",
+        "record": "molrec",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "molrec-default-a0a29f96a594",
+        "timestamp": "2026-09-19T12:00:00Z",
+        "workflow_run": 93
+      },
+      {
+        "commit": "b1b3b0a7b6a5aab8b771b1b3b0b6a9a7",
+        "generation": 4,
+        "path": "snapshots/molcrafts-molrec/molrec/4/molrec-default-b1b3b0a7b6a5.json",
+        "producer": "molrec",
+        "profile": "default",
+        "record": "molrec",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "molrec-default-b1b3b0a7b6a5",
+        "timestamp": "2026-09-20T12:00:00Z",
+        "workflow_run": 94
+      },
+      {
+        "commit": "c2c4c1b8c7b6bbc9c882c2c4c1c7bab8",
+        "generation": 5,
+        "path": "snapshots/molcrafts-molrec/molrec/5/molrec-default-c2c4c1b8c7b6.json",
+        "producer": "molrec",
+        "profile": "default",
+        "record": "molrec",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "molrec-default-c2c4c1b8c7b6",
+        "timestamp": "2026-09-21T12:00:00Z",
+        "workflow_run": 95
+      },
+      {
+        "commit": "d3d5d2c9d8c7ccdad993d3d5d2d8cbc9",
+        "generation": 6,
+        "path": "snapshots/molcrafts-molrec/molrec/6/molrec-default-d3d5d2c9d8c7.json",
+        "producer": "molrec",
+        "profile": "default",
+        "record": "molrec",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "molrec-default-d3d5d2c9d8c7",
+        "timestamp": "2026-09-22T12:00:00Z",
+        "workflow_run": 96
+      },
+      {
+        "commit": "e4e6e3dae9d8ddebeaa4e4e6e3e9dcda",
+        "generation": 7,
+        "path": "snapshots/molcrafts-molrec/molrec/7/molrec-default-e4e6e3dae9d8.json",
+        "producer": "molrec",
+        "profile": "default",
+        "record": "molrec",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "molrec-default-e4e6e3dae9d8",
+        "timestamp": "2026-09-23T12:00:00Z",
+        "workflow_run": 97
+      },
+      {
+        "commit": "f5f7f4ebfae9eefcfbb5f5f7f4faedeb",
+        "generation": 8,
+        "path": "snapshots/molcrafts-molrec/molrec/8/molrec-default-f5f7f4ebfae9.json",
+        "producer": "molrec",
+        "profile": "default",
+        "record": "molrec",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "molrec-default-f5f7f4ebfae9",
+        "timestamp": "2026-09-24T12:00:00Z",
+        "workflow_run": 98
       }
     ],
     "molcrafts-molrec/tests": [
       {
-        "commit": "0718293a4b5c6d7e8f90123456789012",
+        "commit": "7e807d7483727785843e7e807d837674",
         "generation": 1,
-        "path": "snapshots/molcrafts-molrec/tests/1/tests-default-0718293a4b5c.json",
+        "path": "snapshots/molcrafts-molrec/tests/1/tests-default-7e807d748372.json",
         "producer": "pytest",
         "profile": "default",
         "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molcrafts-molrec",
-        "snapshot_id": "tests-default-0718293a4b5c",
-        "timestamp": "2026-09-20T11:05:00Z",
+        "snapshot_id": "tests-default-7e807d748372",
+        "timestamp": "2026-09-17T11:00:00Z",
+        "workflow_run": 91
+      },
+      {
+        "commit": "8f918e8594838896954f8f918e948785",
+        "generation": 2,
+        "path": "snapshots/molcrafts-molrec/tests/2/tests-default-8f918e859483.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-8f918e859483",
+        "timestamp": "2026-09-18T11:00:00Z",
         "workflow_run": 92
+      },
+      {
+        "commit": "a0a29f96a59499a7a660a0a29fa59896",
+        "generation": 3,
+        "path": "snapshots/molcrafts-molrec/tests/3/tests-default-a0a29f96a594.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-a0a29f96a594",
+        "timestamp": "2026-09-19T11:00:00Z",
+        "workflow_run": 93
+      },
+      {
+        "commit": "b1b3b0a7b6a5aab8b771b1b3b0b6a9a7",
+        "generation": 4,
+        "path": "snapshots/molcrafts-molrec/tests/4/tests-default-b1b3b0a7b6a5.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-b1b3b0a7b6a5",
+        "timestamp": "2026-09-20T11:00:00Z",
+        "workflow_run": 94
+      },
+      {
+        "commit": "c2c4c1b8c7b6bbc9c882c2c4c1c7bab8",
+        "generation": 5,
+        "path": "snapshots/molcrafts-molrec/tests/5/tests-default-c2c4c1b8c7b6.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-c2c4c1b8c7b6",
+        "timestamp": "2026-09-21T11:00:00Z",
+        "workflow_run": 95
+      },
+      {
+        "commit": "d3d5d2c9d8c7ccdad993d3d5d2d8cbc9",
+        "generation": 6,
+        "path": "snapshots/molcrafts-molrec/tests/6/tests-default-d3d5d2c9d8c7.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-d3d5d2c9d8c7",
+        "timestamp": "2026-09-22T11:00:00Z",
+        "workflow_run": 96
+      },
+      {
+        "commit": "e4e6e3dae9d8ddebeaa4e4e6e3e9dcda",
+        "generation": 7,
+        "path": "snapshots/molcrafts-molrec/tests/7/tests-default-e4e6e3dae9d8.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-e4e6e3dae9d8",
+        "timestamp": "2026-09-23T11:00:00Z",
+        "workflow_run": 97
+      },
+      {
+        "commit": "f5f7f4ebfae9eefcfbb5f5f7f4faedeb",
+        "generation": 8,
+        "path": "snapshots/molcrafts-molrec/tests/8/tests-default-f5f7f4ebfae9.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-f5f7f4ebfae9",
+        "timestamp": "2026-09-24T11:00:00Z",
+        "workflow_run": 98
+      },
+      {
+        "commit": "060805fc0bfaff0d0cc60608050bfefc",
+        "generation": 9,
+        "path": "snapshots/molcrafts-molrec/tests/9/tests-default-060805fc0bfa.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-060805fc0bfa",
+        "timestamp": "2026-09-25T11:00:00Z",
+        "workflow_run": 99
+      },
+      {
+        "commit": "1719160d1c0b101e1dd71719161c0f0d",
+        "generation": 10,
+        "path": "snapshots/molcrafts-molrec/tests/10/tests-default-1719160d1c0b.json",
+        "producer": "pytest",
+        "profile": "default",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molcrafts-molrec",
+        "snapshot_id": "tests-default-1719160d1c0b",
+        "timestamp": "2026-09-26T11:00:00Z",
+        "workflow_run": 100
       }
     ],
     "molpy/benchmark": [
       {
-        "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+        "commit": "7e807d818a3e73767f74797e72837c3e",
         "generation": 1,
-        "path": "snapshots/molpy/benchmark/1/benchmark-linux-x86_64-c3d4e5f60718.json",
+        "path": "snapshots/molpy/benchmark/1/benchmark-linux-x86_64-7e807d818a3e.json",
         "producer": "pytest-benchmark",
         "profile": "linux-x86_64",
         "record": "benchmark",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
-        "snapshot_id": "benchmark-linux-x86_64-c3d4e5f60718",
-        "timestamp": "2026-09-20T08:12:00Z",
-        "workflow_run": 1215
+        "snapshot_id": "benchmark-linux-x86_64-7e807d818a3e",
+        "timestamp": "2026-09-17T09:00:00Z",
+        "workflow_run": 1201
+      },
+      {
+        "commit": "8f918e929b4f848790858a8f83948d4f",
+        "generation": 2,
+        "path": "snapshots/molpy/benchmark/2/benchmark-linux-x86_64-8f918e929b4f.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-8f918e929b4f",
+        "timestamp": "2026-09-18T09:00:00Z",
+        "workflow_run": 1202
+      },
+      {
+        "commit": "a0a29fa3ac609598a1969ba094a59e60",
+        "generation": 3,
+        "path": "snapshots/molpy/benchmark/3/benchmark-linux-x86_64-a0a29fa3ac60.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-a0a29fa3ac60",
+        "timestamp": "2026-09-19T09:00:00Z",
+        "workflow_run": 1203
+      },
+      {
+        "commit": "b1b3b0b4bd71a6a9b2a7acb1a5b6af71",
+        "generation": 4,
+        "path": "snapshots/molpy/benchmark/4/benchmark-linux-x86_64-b1b3b0b4bd71.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-b1b3b0b4bd71",
+        "timestamp": "2026-09-20T09:00:00Z",
+        "workflow_run": 1204
+      },
+      {
+        "commit": "c2c4c1c5ce82b7bac3b8bdc2b6c7c082",
+        "generation": 5,
+        "path": "snapshots/molpy/benchmark/5/benchmark-linux-x86_64-c2c4c1c5ce82.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-c2c4c1c5ce82",
+        "timestamp": "2026-09-21T09:00:00Z",
+        "workflow_run": 1205
+      },
+      {
+        "commit": "d3d5d2d6df93c8cbd4c9ced3c7d8d193",
+        "generation": 6,
+        "path": "snapshots/molpy/benchmark/6/benchmark-linux-x86_64-d3d5d2d6df93.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-d3d5d2d6df93",
+        "timestamp": "2026-09-22T09:00:00Z",
+        "workflow_run": 1206
+      },
+      {
+        "commit": "e4e6e3e7f0a4d9dce5dadfe4d8e9e2a4",
+        "generation": 7,
+        "path": "snapshots/molpy/benchmark/7/benchmark-linux-x86_64-e4e6e3e7f0a4.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-e4e6e3e7f0a4",
+        "timestamp": "2026-09-23T09:00:00Z",
+        "workflow_run": 1207
+      },
+      {
+        "commit": "f5f7f4f801b5eaedf6ebf0f5e9faf3b5",
+        "generation": 8,
+        "path": "snapshots/molpy/benchmark/8/benchmark-linux-x86_64-f5f7f4f801b5.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-f5f7f4f801b5",
+        "timestamp": "2026-09-24T09:00:00Z",
+        "workflow_run": 1208
+      },
+      {
+        "commit": "0608050912c6fbfe07fc0106fa0b04c6",
+        "generation": 9,
+        "path": "snapshots/molpy/benchmark/9/benchmark-linux-x86_64-0608050912c6.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-0608050912c6",
+        "timestamp": "2026-09-25T09:00:00Z",
+        "workflow_run": 1209
+      },
+      {
+        "commit": "1719161a23d70c0f180d12170b1c15d7",
+        "generation": 10,
+        "path": "snapshots/molpy/benchmark/10/benchmark-linux-x86_64-1719161a23d7.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-1719161a23d7",
+        "timestamp": "2026-09-26T09:00:00Z",
+        "workflow_run": 1210
+      },
+      {
+        "commit": "282a272b34e81d20291e23281c2d26e8",
+        "generation": 11,
+        "path": "snapshots/molpy/benchmark/11/benchmark-linux-x86_64-282a272b34e8.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-282a272b34e8",
+        "timestamp": "2026-09-27T09:00:00Z",
+        "workflow_run": 1211
+      },
+      {
+        "commit": "393b383c45f92e313a2f34392d3e37f9",
+        "generation": 12,
+        "path": "snapshots/molpy/benchmark/12/benchmark-linux-x86_64-393b383c45f9.json",
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "benchmark-linux-x86_64-393b383c45f9",
+        "timestamp": "2026-09-28T09:00:00Z",
+        "workflow_run": 1212
       }
     ],
     "molpy/coverage": [
       {
-        "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+        "commit": "7e807d818a3e74808776837278763e7d",
         "generation": 1,
-        "path": "snapshots/molpy/coverage/1/coverage-linux-x86_64-c3d4e5f60718.json",
+        "path": "snapshots/molpy/coverage/1/coverage-linux-x86_64-7e807d818a3e.json",
         "producer": "coverage.py",
         "profile": "linux-x86_64",
         "record": "coverage",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
-        "snapshot_id": "coverage-linux-x86_64-c3d4e5f60718",
-        "timestamp": "2026-09-20T08:22:00Z",
-        "workflow_run": 1215
+        "snapshot_id": "coverage-linux-x86_64-7e807d818a3e",
+        "timestamp": "2026-09-17T08:00:00Z",
+        "workflow_run": 1201
+      },
+      {
+        "commit": "8f918e929b4f85919887948389874f8e",
+        "generation": 2,
+        "path": "snapshots/molpy/coverage/2/coverage-linux-x86_64-8f918e929b4f.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-8f918e929b4f",
+        "timestamp": "2026-09-18T08:00:00Z",
+        "workflow_run": 1202
+      },
+      {
+        "commit": "a0a29fa3ac6096a2a998a5949a98609f",
+        "generation": 3,
+        "path": "snapshots/molpy/coverage/3/coverage-linux-x86_64-a0a29fa3ac60.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-a0a29fa3ac60",
+        "timestamp": "2026-09-19T08:00:00Z",
+        "workflow_run": 1203
+      },
+      {
+        "commit": "b1b3b0b4bd71a7b3baa9b6a5aba971b0",
+        "generation": 4,
+        "path": "snapshots/molpy/coverage/4/coverage-linux-x86_64-b1b3b0b4bd71.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-b1b3b0b4bd71",
+        "timestamp": "2026-09-20T08:00:00Z",
+        "workflow_run": 1204
+      },
+      {
+        "commit": "c2c4c1c5ce82b8c4cbbac7b6bcba82c1",
+        "generation": 5,
+        "path": "snapshots/molpy/coverage/5/coverage-linux-x86_64-c2c4c1c5ce82.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-c2c4c1c5ce82",
+        "timestamp": "2026-09-21T08:00:00Z",
+        "workflow_run": 1205
+      },
+      {
+        "commit": "d3d5d2d6df93c9d5dccbd8c7cdcb93d2",
+        "generation": 6,
+        "path": "snapshots/molpy/coverage/6/coverage-linux-x86_64-d3d5d2d6df93.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-d3d5d2d6df93",
+        "timestamp": "2026-09-22T08:00:00Z",
+        "workflow_run": 1206
+      },
+      {
+        "commit": "e4e6e3e7f0a4dae6eddce9d8dedca4e3",
+        "generation": 7,
+        "path": "snapshots/molpy/coverage/7/coverage-linux-x86_64-e4e6e3e7f0a4.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-e4e6e3e7f0a4",
+        "timestamp": "2026-09-23T08:00:00Z",
+        "workflow_run": 1207
+      },
+      {
+        "commit": "f5f7f4f801b5ebf7feedfae9efedb5f4",
+        "generation": 8,
+        "path": "snapshots/molpy/coverage/8/coverage-linux-x86_64-f5f7f4f801b5.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-f5f7f4f801b5",
+        "timestamp": "2026-09-24T08:00:00Z",
+        "workflow_run": 1208
+      },
+      {
+        "commit": "0608050912c6fc080ffe0bfa00fec605",
+        "generation": 9,
+        "path": "snapshots/molpy/coverage/9/coverage-linux-x86_64-0608050912c6.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-0608050912c6",
+        "timestamp": "2026-09-25T08:00:00Z",
+        "workflow_run": 1209
+      },
+      {
+        "commit": "1719161a23d70d19200f1c0b110fd716",
+        "generation": 10,
+        "path": "snapshots/molpy/coverage/10/coverage-linux-x86_64-1719161a23d7.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-1719161a23d7",
+        "timestamp": "2026-09-26T08:00:00Z",
+        "workflow_run": 1210
+      },
+      {
+        "commit": "282a272b34e81e2a31202d1c2220e827",
+        "generation": 11,
+        "path": "snapshots/molpy/coverage/11/coverage-linux-x86_64-282a272b34e8.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-282a272b34e8",
+        "timestamp": "2026-09-27T08:00:00Z",
+        "workflow_run": 1211
+      },
+      {
+        "commit": "393b383c45f92f3b42313e2d3331f938",
+        "generation": 12,
+        "path": "snapshots/molpy/coverage/12/coverage-linux-x86_64-393b383c45f9.json",
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "coverage-linux-x86_64-393b383c45f9",
+        "timestamp": "2026-09-28T08:00:00Z",
+        "workflow_run": 1212
       }
     ],
     "molpy/regression": [
       {
-        "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+        "commit": "7e807d818a3e837678837684847a807f",
         "generation": 1,
-        "path": "snapshots/molpy/regression/1/regression-linux-x86_64-c3d4e5f60718.json",
+        "path": "snapshots/molpy/regression/1/regression-linux-x86_64-7e807d818a3e.json",
         "producer": "molpy-numerical",
         "profile": "linux-x86_64",
         "record": "regression",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
-        "snapshot_id": "regression-linux-x86_64-c3d4e5f60718",
-        "timestamp": "2026-09-20T08:18:00Z",
-        "workflow_run": 1215
+        "snapshot_id": "regression-linux-x86_64-7e807d818a3e",
+        "timestamp": "2026-09-17T09:00:00Z",
+        "workflow_run": 1201
+      },
+      {
+        "commit": "8f918e929b4f948789948795958b9190",
+        "generation": 2,
+        "path": "snapshots/molpy/regression/2/regression-linux-x86_64-8f918e929b4f.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-8f918e929b4f",
+        "timestamp": "2026-09-18T09:00:00Z",
+        "workflow_run": 1202
+      },
+      {
+        "commit": "a0a29fa3ac60a5989aa598a6a69ca2a1",
+        "generation": 3,
+        "path": "snapshots/molpy/regression/3/regression-linux-x86_64-a0a29fa3ac60.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-a0a29fa3ac60",
+        "timestamp": "2026-09-19T09:00:00Z",
+        "workflow_run": 1203
+      },
+      {
+        "commit": "b1b3b0b4bd71b6a9abb6a9b7b7adb3b2",
+        "generation": 4,
+        "path": "snapshots/molpy/regression/4/regression-linux-x86_64-b1b3b0b4bd71.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-b1b3b0b4bd71",
+        "timestamp": "2026-09-20T09:00:00Z",
+        "workflow_run": 1204
+      },
+      {
+        "commit": "c2c4c1c5ce82c7babcc7bac8c8bec4c3",
+        "generation": 5,
+        "path": "snapshots/molpy/regression/5/regression-linux-x86_64-c2c4c1c5ce82.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-c2c4c1c5ce82",
+        "timestamp": "2026-09-21T09:00:00Z",
+        "workflow_run": 1205
+      },
+      {
+        "commit": "d3d5d2d6df93d8cbcdd8cbd9d9cfd5d4",
+        "generation": 6,
+        "path": "snapshots/molpy/regression/6/regression-linux-x86_64-d3d5d2d6df93.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-d3d5d2d6df93",
+        "timestamp": "2026-09-22T09:00:00Z",
+        "workflow_run": 1206
+      },
+      {
+        "commit": "e4e6e3e7f0a4e9dcdee9dceaeae0e6e5",
+        "generation": 7,
+        "path": "snapshots/molpy/regression/7/regression-linux-x86_64-e4e6e3e7f0a4.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-e4e6e3e7f0a4",
+        "timestamp": "2026-09-23T09:00:00Z",
+        "workflow_run": 1207
+      },
+      {
+        "commit": "f5f7f4f801b5faedeffaedfbfbf1f7f6",
+        "generation": 8,
+        "path": "snapshots/molpy/regression/8/regression-linux-x86_64-f5f7f4f801b5.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-f5f7f4f801b5",
+        "timestamp": "2026-09-24T09:00:00Z",
+        "workflow_run": 1208
+      },
+      {
+        "commit": "0608050912c60bfe000bfe0c0c020807",
+        "generation": 9,
+        "path": "snapshots/molpy/regression/9/regression-linux-x86_64-0608050912c6.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-0608050912c6",
+        "timestamp": "2026-09-25T09:00:00Z",
+        "workflow_run": 1209
+      },
+      {
+        "commit": "1719161a23d71c0f111c0f1d1d131918",
+        "generation": 10,
+        "path": "snapshots/molpy/regression/10/regression-linux-x86_64-1719161a23d7.json",
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "record": "regression",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "regression-linux-x86_64-1719161a23d7",
+        "timestamp": "2026-09-26T09:00:00Z",
+        "workflow_run": 1210
       }
     ],
     "molpy/tests": [
       {
-        "commit": "a1b2c3d4e5f6789012345678abcdef01",
+        "commit": "7e807d818a3e85768485843e7d7a7f86",
         "generation": 1,
-        "path": "snapshots/molpy/tests/1/tests-linux-x86_64-a1b2c3d4e5f6.json",
+        "path": "snapshots/molpy/tests/1/tests-linux-x86_64-7e807d818a3e.json",
         "producer": "pytest",
         "profile": "linux-x86_64",
         "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
-        "snapshot_id": "tests-linux-x86_64-a1b2c3d4e5f6",
-        "timestamp": "2026-09-18T09:12:00Z",
+        "snapshot_id": "tests-linux-x86_64-7e807d818a3e",
+        "timestamp": "2026-09-17T08:00:00Z",
         "workflow_run": 1201
       },
       {
-        "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
-        "generation": 1,
-        "path": "snapshots/molpy/tests/1/tests-linux-x86_64-c3d4e5f60718.json",
+        "commit": "8f918e929b4f96879596954f8e8b9097",
+        "generation": 2,
+        "path": "snapshots/molpy/tests/2/tests-linux-x86_64-8f918e929b4f.json",
         "producer": "pytest",
         "profile": "linux-x86_64",
         "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molpy",
-        "snapshot_id": "tests-linux-x86_64-c3d4e5f60718",
-        "timestamp": "2026-09-20T08:05:00Z",
-        "workflow_run": 1215
+        "snapshot_id": "tests-linux-x86_64-8f918e929b4f",
+        "timestamp": "2026-09-18T08:00:00Z",
+        "workflow_run": 1202
+      },
+      {
+        "commit": "a0a29fa3ac60a798a6a7a6609f9ca1a8",
+        "generation": 3,
+        "path": "snapshots/molpy/tests/3/tests-linux-x86_64-a0a29fa3ac60.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-a0a29fa3ac60",
+        "timestamp": "2026-09-19T08:00:00Z",
+        "workflow_run": 1203
+      },
+      {
+        "commit": "b1b3b0b4bd71b8a9b7b8b771b0adb2b9",
+        "generation": 4,
+        "path": "snapshots/molpy/tests/4/tests-linux-x86_64-b1b3b0b4bd71.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-b1b3b0b4bd71",
+        "timestamp": "2026-09-20T08:00:00Z",
+        "workflow_run": 1204
+      },
+      {
+        "commit": "c2c4c1c5ce82c9bac8c9c882c1bec3ca",
+        "generation": 5,
+        "path": "snapshots/molpy/tests/5/tests-linux-x86_64-c2c4c1c5ce82.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-c2c4c1c5ce82",
+        "timestamp": "2026-09-21T08:00:00Z",
+        "workflow_run": 1205
+      },
+      {
+        "commit": "d3d5d2d6df93dacbd9dad993d2cfd4db",
+        "generation": 6,
+        "path": "snapshots/molpy/tests/6/tests-linux-x86_64-d3d5d2d6df93.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-d3d5d2d6df93",
+        "timestamp": "2026-09-22T08:00:00Z",
+        "workflow_run": 1206
+      },
+      {
+        "commit": "e4e6e3e7f0a4ebdceaebeaa4e3e0e5ec",
+        "generation": 7,
+        "path": "snapshots/molpy/tests/7/tests-linux-x86_64-e4e6e3e7f0a4.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-e4e6e3e7f0a4",
+        "timestamp": "2026-09-23T08:00:00Z",
+        "workflow_run": 1207
+      },
+      {
+        "commit": "f5f7f4f801b5fcedfbfcfbb5f4f1f6fd",
+        "generation": 8,
+        "path": "snapshots/molpy/tests/8/tests-linux-x86_64-f5f7f4f801b5.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-f5f7f4f801b5",
+        "timestamp": "2026-09-24T08:00:00Z",
+        "workflow_run": 1208
+      },
+      {
+        "commit": "0608050912c60dfe0c0d0cc60502070e",
+        "generation": 9,
+        "path": "snapshots/molpy/tests/9/tests-linux-x86_64-0608050912c6.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-0608050912c6",
+        "timestamp": "2026-09-25T08:00:00Z",
+        "workflow_run": 1209
+      },
+      {
+        "commit": "1719161a23d71e0f1d1e1dd71613181f",
+        "generation": 10,
+        "path": "snapshots/molpy/tests/10/tests-linux-x86_64-1719161a23d7.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-1719161a23d7",
+        "timestamp": "2026-09-26T08:00:00Z",
+        "workflow_run": 1210
+      },
+      {
+        "commit": "282a272b34e82f202e2f2ee827242930",
+        "generation": 11,
+        "path": "snapshots/molpy/tests/11/tests-linux-x86_64-282a272b34e8.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-282a272b34e8",
+        "timestamp": "2026-09-27T08:00:00Z",
+        "workflow_run": 1211
+      },
+      {
+        "commit": "393b383c45f940313f403ff938353a41",
+        "generation": 12,
+        "path": "snapshots/molpy/tests/12/tests-linux-x86_64-393b383c45f9.json",
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molpy",
+        "snapshot_id": "tests-linux-x86_64-393b383c45f9",
+        "timestamp": "2026-09-28T08:00:00Z",
+        "workflow_run": 1212
       }
     ],
     "molrs/benchmark": [
       {
-        "commit": "e5f60718293a4b5c6d7e8f9012345678",
+        "commit": "7e807d83843e73767f74797e72837c3e",
         "generation": 1,
-        "path": "snapshots/molrs/benchmark/1/benchmark-linux-x86_64-e5f60718293a.json",
+        "path": "snapshots/molrs/benchmark/1/benchmark-linux-x86_64-7e807d83843e.json",
         "producer": "criterion",
         "profile": "linux-x86_64",
         "record": "benchmark",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
-        "snapshot_id": "benchmark-linux-x86_64-e5f60718293a",
-        "timestamp": "2026-09-20T10:30:00Z",
+        "snapshot_id": "benchmark-linux-x86_64-7e807d83843e",
+        "timestamp": "2026-09-17T11:00:00Z",
+        "workflow_run": 441
+      },
+      {
+        "commit": "8f918e94954f848790858a8f83948d4f",
+        "generation": 2,
+        "path": "snapshots/molrs/benchmark/2/benchmark-linux-x86_64-8f918e94954f.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-8f918e94954f",
+        "timestamp": "2026-09-18T11:00:00Z",
+        "workflow_run": 442
+      },
+      {
+        "commit": "a0a29fa5a6609598a1969ba094a59e60",
+        "generation": 3,
+        "path": "snapshots/molrs/benchmark/3/benchmark-linux-x86_64-a0a29fa5a660.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-a0a29fa5a660",
+        "timestamp": "2026-09-19T11:00:00Z",
+        "workflow_run": 443
+      },
+      {
+        "commit": "b1b3b0b6b771a6a9b2a7acb1a5b6af71",
+        "generation": 4,
+        "path": "snapshots/molrs/benchmark/4/benchmark-linux-x86_64-b1b3b0b6b771.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-b1b3b0b6b771",
+        "timestamp": "2026-09-20T11:00:00Z",
+        "workflow_run": 444
+      },
+      {
+        "commit": "c2c4c1c7c882b7bac3b8bdc2b6c7c082",
+        "generation": 5,
+        "path": "snapshots/molrs/benchmark/5/benchmark-linux-x86_64-c2c4c1c7c882.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-c2c4c1c7c882",
+        "timestamp": "2026-09-21T11:00:00Z",
+        "workflow_run": 445
+      },
+      {
+        "commit": "d3d5d2d8d993c8cbd4c9ced3c7d8d193",
+        "generation": 6,
+        "path": "snapshots/molrs/benchmark/6/benchmark-linux-x86_64-d3d5d2d8d993.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-d3d5d2d8d993",
+        "timestamp": "2026-09-22T11:00:00Z",
+        "workflow_run": 446
+      },
+      {
+        "commit": "e4e6e3e9eaa4d9dce5dadfe4d8e9e2a4",
+        "generation": 7,
+        "path": "snapshots/molrs/benchmark/7/benchmark-linux-x86_64-e4e6e3e9eaa4.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-e4e6e3e9eaa4",
+        "timestamp": "2026-09-23T11:00:00Z",
+        "workflow_run": 447
+      },
+      {
+        "commit": "f5f7f4fafbb5eaedf6ebf0f5e9faf3b5",
+        "generation": 8,
+        "path": "snapshots/molrs/benchmark/8/benchmark-linux-x86_64-f5f7f4fafbb5.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-f5f7f4fafbb5",
+        "timestamp": "2026-09-24T11:00:00Z",
         "workflow_run": 448
       },
       {
-        "commit": "e5f60718293a4b5c6d7e8f9012345678",
+        "commit": "0608050b0cc6fbfe07fc0106fa0b04c6",
+        "generation": 9,
+        "path": "snapshots/molrs/benchmark/9/benchmark-linux-x86_64-0608050b0cc6.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-0608050b0cc6",
+        "timestamp": "2026-09-25T11:00:00Z",
+        "workflow_run": 449
+      },
+      {
+        "commit": "1719161c1dd70c0f180d12170b1c15d7",
+        "generation": 10,
+        "path": "snapshots/molrs/benchmark/10/benchmark-linux-x86_64-1719161c1dd7.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-1719161c1dd7",
+        "timestamp": "2026-09-26T11:00:00Z",
+        "workflow_run": 450
+      },
+      {
+        "commit": "282a272d2ee81d20291e23281c2d26e8",
+        "generation": 11,
+        "path": "snapshots/molrs/benchmark/11/benchmark-linux-x86_64-282a272d2ee8.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-282a272d2ee8",
+        "timestamp": "2026-09-27T11:00:00Z",
+        "workflow_run": 451
+      },
+      {
+        "commit": "393b383e3ff92e313a2f34392d3e37f9",
+        "generation": 12,
+        "path": "snapshots/molrs/benchmark/12/benchmark-linux-x86_64-393b383e3ff9.json",
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-linux-x86_64-393b383e3ff9",
+        "timestamp": "2026-09-28T11:00:00Z",
+        "workflow_run": 452
+      },
+      {
+        "commit": "7e807d83843e73767f74797e72837c3e",
         "generation": 1,
-        "path": "snapshots/molrs/benchmark/1/benchmark-macos-aarch64-e5f60718293a.json",
+        "path": "snapshots/molrs/benchmark/1/benchmark-macos-aarch64-7e807d83843e.json",
         "producer": "criterion",
         "profile": "macos-aarch64",
         "record": "benchmark",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
-        "snapshot_id": "benchmark-macos-aarch64-e5f60718293a",
-        "timestamp": "2026-09-20T10:35:00Z",
-        "workflow_run": 449
+        "snapshot_id": "benchmark-macos-aarch64-7e807d83843e",
+        "timestamp": "2026-09-17T11:00:00Z",
+        "workflow_run": 461
+      },
+      {
+        "commit": "8f918e94954f848790858a8f83948d4f",
+        "generation": 2,
+        "path": "snapshots/molrs/benchmark/2/benchmark-macos-aarch64-8f918e94954f.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-8f918e94954f",
+        "timestamp": "2026-09-18T11:00:00Z",
+        "workflow_run": 462
+      },
+      {
+        "commit": "a0a29fa5a6609598a1969ba094a59e60",
+        "generation": 3,
+        "path": "snapshots/molrs/benchmark/3/benchmark-macos-aarch64-a0a29fa5a660.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-a0a29fa5a660",
+        "timestamp": "2026-09-19T11:00:00Z",
+        "workflow_run": 463
+      },
+      {
+        "commit": "b1b3b0b6b771a6a9b2a7acb1a5b6af71",
+        "generation": 4,
+        "path": "snapshots/molrs/benchmark/4/benchmark-macos-aarch64-b1b3b0b6b771.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-b1b3b0b6b771",
+        "timestamp": "2026-09-20T11:00:00Z",
+        "workflow_run": 464
+      },
+      {
+        "commit": "c2c4c1c7c882b7bac3b8bdc2b6c7c082",
+        "generation": 5,
+        "path": "snapshots/molrs/benchmark/5/benchmark-macos-aarch64-c2c4c1c7c882.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-c2c4c1c7c882",
+        "timestamp": "2026-09-21T11:00:00Z",
+        "workflow_run": 465
+      },
+      {
+        "commit": "d3d5d2d8d993c8cbd4c9ced3c7d8d193",
+        "generation": 6,
+        "path": "snapshots/molrs/benchmark/6/benchmark-macos-aarch64-d3d5d2d8d993.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-d3d5d2d8d993",
+        "timestamp": "2026-09-22T11:00:00Z",
+        "workflow_run": 466
+      },
+      {
+        "commit": "e4e6e3e9eaa4d9dce5dadfe4d8e9e2a4",
+        "generation": 7,
+        "path": "snapshots/molrs/benchmark/7/benchmark-macos-aarch64-e4e6e3e9eaa4.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-e4e6e3e9eaa4",
+        "timestamp": "2026-09-23T11:00:00Z",
+        "workflow_run": 467
+      },
+      {
+        "commit": "f5f7f4fafbb5eaedf6ebf0f5e9faf3b5",
+        "generation": 8,
+        "path": "snapshots/molrs/benchmark/8/benchmark-macos-aarch64-f5f7f4fafbb5.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-f5f7f4fafbb5",
+        "timestamp": "2026-09-24T11:00:00Z",
+        "workflow_run": 468
+      },
+      {
+        "commit": "0608050b0cc6fbfe07fc0106fa0b04c6",
+        "generation": 9,
+        "path": "snapshots/molrs/benchmark/9/benchmark-macos-aarch64-0608050b0cc6.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-0608050b0cc6",
+        "timestamp": "2026-09-25T11:00:00Z",
+        "workflow_run": 469
+      },
+      {
+        "commit": "1719161c1dd70c0f180d12170b1c15d7",
+        "generation": 10,
+        "path": "snapshots/molrs/benchmark/10/benchmark-macos-aarch64-1719161c1dd7.json",
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "record": "benchmark",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "benchmark-macos-aarch64-1719161c1dd7",
+        "timestamp": "2026-09-26T11:00:00Z",
+        "workflow_run": 470
       }
     ],
     "molrs/coverage": [
       {
-        "commit": "e5f60718293a4b5c6d7e8f9012345678",
+        "commit": "7e807d83843e74808776837278763e7d",
         "generation": 1,
-        "path": "snapshots/molrs/coverage/1/coverage-linux-x86_64-e5f60718293a.json",
+        "path": "snapshots/molrs/coverage/1/coverage-linux-x86_64-7e807d83843e.json",
         "producer": "llvm-cov",
         "profile": "linux-x86_64",
         "record": "coverage",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
-        "snapshot_id": "coverage-linux-x86_64-e5f60718293a",
-        "timestamp": "2026-09-20T10:40:00Z",
+        "snapshot_id": "coverage-linux-x86_64-7e807d83843e",
+        "timestamp": "2026-09-17T10:00:00Z",
+        "workflow_run": 441
+      },
+      {
+        "commit": "8f918e94954f85919887948389874f8e",
+        "generation": 2,
+        "path": "snapshots/molrs/coverage/2/coverage-linux-x86_64-8f918e94954f.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-8f918e94954f",
+        "timestamp": "2026-09-18T10:00:00Z",
+        "workflow_run": 442
+      },
+      {
+        "commit": "a0a29fa5a66096a2a998a5949a98609f",
+        "generation": 3,
+        "path": "snapshots/molrs/coverage/3/coverage-linux-x86_64-a0a29fa5a660.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-a0a29fa5a660",
+        "timestamp": "2026-09-19T10:00:00Z",
+        "workflow_run": 443
+      },
+      {
+        "commit": "b1b3b0b6b771a7b3baa9b6a5aba971b0",
+        "generation": 4,
+        "path": "snapshots/molrs/coverage/4/coverage-linux-x86_64-b1b3b0b6b771.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-b1b3b0b6b771",
+        "timestamp": "2026-09-20T10:00:00Z",
+        "workflow_run": 444
+      },
+      {
+        "commit": "c2c4c1c7c882b8c4cbbac7b6bcba82c1",
+        "generation": 5,
+        "path": "snapshots/molrs/coverage/5/coverage-linux-x86_64-c2c4c1c7c882.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-c2c4c1c7c882",
+        "timestamp": "2026-09-21T10:00:00Z",
+        "workflow_run": 445
+      },
+      {
+        "commit": "d3d5d2d8d993c9d5dccbd8c7cdcb93d2",
+        "generation": 6,
+        "path": "snapshots/molrs/coverage/6/coverage-linux-x86_64-d3d5d2d8d993.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-d3d5d2d8d993",
+        "timestamp": "2026-09-22T10:00:00Z",
+        "workflow_run": 446
+      },
+      {
+        "commit": "e4e6e3e9eaa4dae6eddce9d8dedca4e3",
+        "generation": 7,
+        "path": "snapshots/molrs/coverage/7/coverage-linux-x86_64-e4e6e3e9eaa4.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-e4e6e3e9eaa4",
+        "timestamp": "2026-09-23T10:00:00Z",
+        "workflow_run": 447
+      },
+      {
+        "commit": "f5f7f4fafbb5ebf7feedfae9efedb5f4",
+        "generation": 8,
+        "path": "snapshots/molrs/coverage/8/coverage-linux-x86_64-f5f7f4fafbb5.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-f5f7f4fafbb5",
+        "timestamp": "2026-09-24T10:00:00Z",
         "workflow_run": 448
+      },
+      {
+        "commit": "0608050b0cc6fc080ffe0bfa00fec605",
+        "generation": 9,
+        "path": "snapshots/molrs/coverage/9/coverage-linux-x86_64-0608050b0cc6.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-0608050b0cc6",
+        "timestamp": "2026-09-25T10:00:00Z",
+        "workflow_run": 449
+      },
+      {
+        "commit": "1719161c1dd70d19200f1c0b110fd716",
+        "generation": 10,
+        "path": "snapshots/molrs/coverage/10/coverage-linux-x86_64-1719161c1dd7.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-1719161c1dd7",
+        "timestamp": "2026-09-26T10:00:00Z",
+        "workflow_run": 450
+      },
+      {
+        "commit": "282a272d2ee81e2a31202d1c2220e827",
+        "generation": 11,
+        "path": "snapshots/molrs/coverage/11/coverage-linux-x86_64-282a272d2ee8.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-282a272d2ee8",
+        "timestamp": "2026-09-27T10:00:00Z",
+        "workflow_run": 451
+      },
+      {
+        "commit": "393b383e3ff92f3b42313e2d3331f938",
+        "generation": 12,
+        "path": "snapshots/molrs/coverage/12/coverage-linux-x86_64-393b383e3ff9.json",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "record": "coverage",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "coverage-linux-x86_64-393b383e3ff9",
+        "timestamp": "2026-09-28T10:00:00Z",
+        "workflow_run": 452
       }
     ],
     "molrs/tests": [
       {
-        "commit": "e5f60718293a4b5c6d7e8f9012345678",
+        "commit": "7e807d83843e85768485843e7d7a7f86",
         "generation": 1,
-        "path": "snapshots/molrs/tests/1/tests-linux-x86_64-e5f60718293a.json",
-        "producer": "cargo-nextest",
+        "path": "snapshots/molrs/tests/1/tests-linux-x86_64-7e807d83843e.json",
+        "producer": "cargo-test",
         "profile": "linux-x86_64",
         "record": "tests",
         "ref": "refs/heads/main",
         "repository": "MolCrafts/molrs",
-        "snapshot_id": "tests-linux-x86_64-e5f60718293a",
-        "timestamp": "2026-09-20T10:22:00Z",
+        "snapshot_id": "tests-linux-x86_64-7e807d83843e",
+        "timestamp": "2026-09-17T10:00:00Z",
+        "workflow_run": 441
+      },
+      {
+        "commit": "8f918e94954f96879596954f8e8b9097",
+        "generation": 2,
+        "path": "snapshots/molrs/tests/2/tests-linux-x86_64-8f918e94954f.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-8f918e94954f",
+        "timestamp": "2026-09-18T10:00:00Z",
+        "workflow_run": 442
+      },
+      {
+        "commit": "a0a29fa5a660a798a6a7a6609f9ca1a8",
+        "generation": 3,
+        "path": "snapshots/molrs/tests/3/tests-linux-x86_64-a0a29fa5a660.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-a0a29fa5a660",
+        "timestamp": "2026-09-19T10:00:00Z",
+        "workflow_run": 443
+      },
+      {
+        "commit": "b1b3b0b6b771b8a9b7b8b771b0adb2b9",
+        "generation": 4,
+        "path": "snapshots/molrs/tests/4/tests-linux-x86_64-b1b3b0b6b771.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-b1b3b0b6b771",
+        "timestamp": "2026-09-20T10:00:00Z",
+        "workflow_run": 444
+      },
+      {
+        "commit": "c2c4c1c7c882c9bac8c9c882c1bec3ca",
+        "generation": 5,
+        "path": "snapshots/molrs/tests/5/tests-linux-x86_64-c2c4c1c7c882.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-c2c4c1c7c882",
+        "timestamp": "2026-09-21T10:00:00Z",
+        "workflow_run": 445
+      },
+      {
+        "commit": "d3d5d2d8d993dacbd9dad993d2cfd4db",
+        "generation": 6,
+        "path": "snapshots/molrs/tests/6/tests-linux-x86_64-d3d5d2d8d993.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-d3d5d2d8d993",
+        "timestamp": "2026-09-22T10:00:00Z",
+        "workflow_run": 446
+      },
+      {
+        "commit": "e4e6e3e9eaa4ebdceaebeaa4e3e0e5ec",
+        "generation": 7,
+        "path": "snapshots/molrs/tests/7/tests-linux-x86_64-e4e6e3e9eaa4.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-e4e6e3e9eaa4",
+        "timestamp": "2026-09-23T10:00:00Z",
+        "workflow_run": 447
+      },
+      {
+        "commit": "f5f7f4fafbb5fcedfbfcfbb5f4f1f6fd",
+        "generation": 8,
+        "path": "snapshots/molrs/tests/8/tests-linux-x86_64-f5f7f4fafbb5.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-f5f7f4fafbb5",
+        "timestamp": "2026-09-24T10:00:00Z",
         "workflow_run": 448
+      },
+      {
+        "commit": "0608050b0cc60dfe0c0d0cc60502070e",
+        "generation": 9,
+        "path": "snapshots/molrs/tests/9/tests-linux-x86_64-0608050b0cc6.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-0608050b0cc6",
+        "timestamp": "2026-09-25T10:00:00Z",
+        "workflow_run": 449
+      },
+      {
+        "commit": "1719161c1dd71e0f1d1e1dd71613181f",
+        "generation": 10,
+        "path": "snapshots/molrs/tests/10/tests-linux-x86_64-1719161c1dd7.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-1719161c1dd7",
+        "timestamp": "2026-09-26T10:00:00Z",
+        "workflow_run": 450
+      },
+      {
+        "commit": "282a272d2ee82f202e2f2ee827242930",
+        "generation": 11,
+        "path": "snapshots/molrs/tests/11/tests-linux-x86_64-282a272d2ee8.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-282a272d2ee8",
+        "timestamp": "2026-09-27T10:00:00Z",
+        "workflow_run": 451
+      },
+      {
+        "commit": "393b383e3ff940313f403ff938353a41",
+        "generation": 12,
+        "path": "snapshots/molrs/tests/12/tests-linux-x86_64-393b383e3ff9.json",
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "record": "tests",
+        "ref": "refs/heads/main",
+        "repository": "MolCrafts/molrs",
+        "snapshot_id": "tests-linux-x86_64-393b383e3ff9",
+        "timestamp": "2026-09-28T10:00:00Z",
+        "workflow_run": 452
       }
     ]
   },
   "indexes": [
+    "data/index/molcrafts-ci/coverage.jsonl",
+    "data/index/molcrafts-ci/tests.jsonl",
     "data/index/molcrafts-molrec/coverage.jsonl",
     "data/index/molcrafts-molrec/molrec.jsonl",
     "data/index/molcrafts-molrec/tests.jsonl",
@@ -215,8 +1886,764 @@ export const fixtures: MockFixtures = {
     "data/index/molrs/coverage.jsonl",
     "data/index/molrs/tests.jsonl"
   ],
+  "published": {
+    "molcrafts-ci": "2026-09-26T12:00:00Z",
+    "molcrafts-molrec": "2026-09-26T11:00:00Z",
+    "molpy": "2026-09-28T09:00:00Z",
+    "molrs": "2026-09-28T11:00:00Z"
+  },
   "snapshots": {
-    "snapshots/molcrafts-molrec/coverage/1/coverage-default-0718293a4b5c.json": {
+    "snapshots/molcrafts-ci/coverage/1/coverage-linux-x86_64-7e807d748372.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "7e807d7483727785843e747a3e748087",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-17T12:00:00Z",
+          "workflow_run": 11
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 1
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 75.5,
+          "functions": 92.0,
+          "lines": 88.0,
+          "statements": 87.2
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/10/coverage-linux-x86_64-1719160d1c0b.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719160d1c0b101e1dd70d13d70d1920",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T12:00:00Z",
+          "workflow_run": 20
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 79.1,
+          "functions": 95.6,
+          "lines": 91.6,
+          "statements": 90.8
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/2/coverage-linux-x86_64-8f918e859483.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e8594838896954f858b4f859198",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T12:00:00Z",
+          "workflow_run": 12
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 75.9,
+          "functions": 92.4,
+          "lines": 88.4,
+          "statements": 87.6
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/3/coverage-linux-x86_64-a0a29f96a594.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29f96a59499a7a660969c6096a2a9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T12:00:00Z",
+          "workflow_run": 13
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 76.3,
+          "functions": 92.8,
+          "lines": 88.8,
+          "statements": 88.0
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/4/coverage-linux-x86_64-b1b3b0a7b6a5.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0a7b6a5aab8b771a7ad71a7b3ba",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T12:00:00Z",
+          "workflow_run": 14
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 76.7,
+          "functions": 93.2,
+          "lines": 89.2,
+          "statements": 88.4
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/5/coverage-linux-x86_64-c2c4c1b8c7b6.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1b8c7b6bbc9c882b8be82b8c4cb",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T12:00:00Z",
+          "workflow_run": 15
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 77.1,
+          "functions": 93.6,
+          "lines": 89.6,
+          "statements": 88.8
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/6/coverage-linux-x86_64-d3d5d2c9d8c7.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2c9d8c7ccdad993c9cf93c9d5dc",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T12:00:00Z",
+          "workflow_run": 16
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 77.5,
+          "functions": 94.0,
+          "lines": 90.0,
+          "statements": 89.2
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/7/coverage-linux-x86_64-e4e6e3dae9d8.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3dae9d8ddebeaa4dae0a4dae6ed",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T12:00:00Z",
+          "workflow_run": 17
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 77.9,
+          "functions": 94.4,
+          "lines": 90.4,
+          "statements": 89.6
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/8/coverage-linux-x86_64-f5f7f4ebfae9.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4ebfae9eefcfbb5ebf1b5ebf7fe",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T12:00:00Z",
+          "workflow_run": 18
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 78.3,
+          "functions": 94.8,
+          "lines": 90.8,
+          "statements": 90.0
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/coverage/9/coverage-linux-x86_64-060805fc0bfa.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "060805fc0bfaff0d0cc6fc02c6fc080f",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T12:00:00Z",
+          "workflow_run": 19
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 96.0,
+            "path": "src/molcrafts_ci/persist.py",
+            "uncovered": [
+              140
+            ]
+          },
+          {
+            "lines": 82.0,
+            "path": "src/molcrafts_ci/cli.py",
+            "uncovered": [
+              12,
+              44,
+              45
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 78.7,
+          "functions": 95.2,
+          "lines": 91.2,
+          "statements": 90.4
+        }
+      }
+    },
+    "snapshots/molcrafts-ci/tests/1/tests-linux-x86_64-7e807d748372.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "7e807d7483727785843e747a3e857684",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-17T12:00:00Z",
+          "workflow_run": 11
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 1
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 33,
+        "skipped": 1
+      }
+    },
+    "snapshots/molcrafts-ci/tests/10/tests-linux-x86_64-1719160d1c0b.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719160d1c0b101e1dd70d13d71e0f1d",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T12:00:00Z",
+          "workflow_run": 20
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 60,
+        "skipped": 2
+      }
+    },
+    "snapshots/molcrafts-ci/tests/2/tests-linux-x86_64-8f918e859483.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e8594838896954f858b4f968795",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T12:00:00Z",
+          "workflow_run": 12
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 36,
+        "skipped": 2
+      }
+    },
+    "snapshots/molcrafts-ci/tests/3/tests-linux-x86_64-a0a29f96a594.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29f96a59499a7a660969c60a798a6",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T12:00:00Z",
+          "workflow_run": 13
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 39,
+        "skipped": 3
+      }
+    },
+    "snapshots/molcrafts-ci/tests/4/tests-linux-x86_64-b1b3b0a7b6a5.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0a7b6a5aab8b771a7ad71b8a9b7",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T12:00:00Z",
+          "workflow_run": 14
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 42,
+        "skipped": 0
+      }
+    },
+    "snapshots/molcrafts-ci/tests/5/tests-linux-x86_64-c2c4c1b8c7b6.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1b8c7b6bbc9c882b8be82c9bac8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T12:00:00Z",
+          "workflow_run": 15
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 45,
+        "skipped": 1
+      }
+    },
+    "snapshots/molcrafts-ci/tests/6/tests-linux-x86_64-d3d5d2c9d8c7.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2c9d8c7ccdad993c9cf93dacbd9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T12:00:00Z",
+          "workflow_run": 16
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 48,
+        "skipped": 2
+      }
+    },
+    "snapshots/molcrafts-ci/tests/7/tests-linux-x86_64-e4e6e3dae9d8.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3dae9d8ddebeaa4dae0a4ebdcea",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T12:00:00Z",
+          "workflow_run": 17
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 51,
+        "skipped": 3
+      }
+    },
+    "snapshots/molcrafts-ci/tests/8/tests-linux-x86_64-f5f7f4ebfae9.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4ebfae9eefcfbb5ebf1b5fcedfb",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T12:00:00Z",
+          "workflow_run": 18
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 54,
+        "skipped": 0
+      }
+    },
+    "snapshots/molcrafts-ci/tests/9/tests-linux-x86_64-060805fc0bfa.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "060805fc0bfaff0d0cc6fc02c60dfe0c",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-ci",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T12:00:00Z",
+          "workflow_run": 19
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 57,
+        "skipped": 1
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/1/coverage-default-7e807d748372.json": {
       "manifest": {
         "producer": "coverage.py",
         "profile": "default",
@@ -224,13 +2651,13 @@ export const fixtures: MockFixtures = {
         "record": "coverage",
         "schema_version": "1",
         "source": {
-          "commit": "0718293a4b5c6d7e8f90123456789012",
+          "commit": "7e807d7483727785843e7e807d837674",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molcrafts-molrec",
           "run_attempt": null,
-          "timestamp": "2026-09-20T11:08:00Z",
-          "workflow_run": 92
+          "timestamp": "2026-09-17T11:00:00Z",
+          "workflow_run": 91
         },
         "tracking": {
           "enabled": true,
@@ -258,14 +2685,455 @@ export const fixtures: MockFixtures = {
           }
         ],
         "totals": {
-          "branches": 84.0,
-          "functions": 96.2,
-          "lines": 91.5,
-          "statements": 90.8
+          "branches": 73.5,
+          "functions": 90.0,
+          "lines": 86.0,
+          "statements": 85.2
         }
       }
     },
-    "snapshots/molcrafts-molrec/molrec/1/molrec-default-0718293a4b5c.json": {
+    "snapshots/molcrafts-molrec/coverage/10/coverage-default-1719160d1c0b.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719160d1c0b101e1dd71719161c0f0d",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T11:00:00Z",
+          "workflow_run": 100
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 78.0,
+          "functions": 94.5,
+          "lines": 90.5,
+          "statements": 89.7
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/2/coverage-default-8f918e859483.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e8594838896954f8f918e948785",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T11:00:00Z",
+          "workflow_run": 92
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 74.0,
+          "functions": 90.5,
+          "lines": 86.5,
+          "statements": 85.7
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/3/coverage-default-a0a29f96a594.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29f96a59499a7a660a0a29fa59896",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T11:00:00Z",
+          "workflow_run": 93
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 74.5,
+          "functions": 91.0,
+          "lines": 87.0,
+          "statements": 86.2
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/4/coverage-default-b1b3b0a7b6a5.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0a7b6a5aab8b771b1b3b0b6a9a7",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T11:00:00Z",
+          "workflow_run": 94
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 75.0,
+          "functions": 91.5,
+          "lines": 87.5,
+          "statements": 86.7
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/5/coverage-default-c2c4c1b8c7b6.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1b8c7b6bbc9c882c2c4c1c7bab8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T11:00:00Z",
+          "workflow_run": 95
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 75.5,
+          "functions": 92.0,
+          "lines": 88.0,
+          "statements": 87.2
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/6/coverage-default-d3d5d2c9d8c7.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2c9d8c7ccdad993d3d5d2d8cbc9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T11:00:00Z",
+          "workflow_run": 96
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 76.0,
+          "functions": 92.5,
+          "lines": 88.5,
+          "statements": 87.7
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/7/coverage-default-e4e6e3dae9d8.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3dae9d8ddebeaa4e4e6e3e9dcda",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T11:00:00Z",
+          "workflow_run": 97
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 76.5,
+          "functions": 93.0,
+          "lines": 89.0,
+          "statements": 88.2
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/8/coverage-default-f5f7f4ebfae9.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4ebfae9eefcfbb5f5f7f4faedeb",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T11:00:00Z",
+          "workflow_run": 98
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 77.0,
+          "functions": 93.5,
+          "lines": 89.5,
+          "statements": 88.7
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/coverage/9/coverage-default-060805fc0bfa.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "default",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "060805fc0bfaff0d0cc60608050bfefc",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T11:00:00Z",
+          "workflow_run": 99
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 97.0,
+            "path": "src/molrec/schema.py",
+            "uncovered": [
+              210
+            ]
+          },
+          {
+            "lines": 78.5,
+            "path": "src/molrec/bench.py",
+            "uncovered": [
+              44,
+              45,
+              67,
+              68
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 77.5,
+          "functions": 94.0,
+          "lines": 90.0,
+          "statements": 89.2
+        }
+      }
+    },
+    "snapshots/molcrafts-molrec/molrec/1/molrec-default-7e807d748372.json": {
       "manifest": {
         "producer": "molrec",
         "profile": "default",
@@ -273,13 +3141,13 @@ export const fixtures: MockFixtures = {
         "record": "molrec",
         "schema_version": "1",
         "source": {
-          "commit": "0718293a4b5c6d7e8f90123456789012",
+          "commit": "7e807d7483727785843e7e807d837674",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molcrafts-molrec",
           "run_attempt": null,
-          "timestamp": "2026-09-20T11:10:00Z",
-          "workflow_run": 92
+          "timestamp": "2026-09-17T12:00:00Z",
+          "workflow_run": 91
         },
         "tracking": {
           "enabled": true,
@@ -287,10 +3155,201 @@ export const fixtures: MockFixtures = {
         }
       },
       "payload": {
+        "cases": 42,
+        "passed": 42,
         "schema_version": "0.1.0"
       }
     },
-    "snapshots/molcrafts-molrec/tests/1/tests-default-0718293a4b5c.json": {
+    "snapshots/molcrafts-molrec/molrec/2/molrec-default-8f918e859483.json": {
+      "manifest": {
+        "producer": "molrec",
+        "profile": "default",
+        "provenance": {},
+        "record": "molrec",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e8594838896954f8f918e948785",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T12:00:00Z",
+          "workflow_run": 92
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "cases": 44,
+        "passed": 44,
+        "schema_version": "0.1.0"
+      }
+    },
+    "snapshots/molcrafts-molrec/molrec/3/molrec-default-a0a29f96a594.json": {
+      "manifest": {
+        "producer": "molrec",
+        "profile": "default",
+        "provenance": {},
+        "record": "molrec",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29f96a59499a7a660a0a29fa59896",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T12:00:00Z",
+          "workflow_run": 93
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "cases": 46,
+        "passed": 45,
+        "schema_version": "0.1.0"
+      }
+    },
+    "snapshots/molcrafts-molrec/molrec/4/molrec-default-b1b3b0a7b6a5.json": {
+      "manifest": {
+        "producer": "molrec",
+        "profile": "default",
+        "provenance": {},
+        "record": "molrec",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0a7b6a5aab8b771b1b3b0b6a9a7",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T12:00:00Z",
+          "workflow_run": 94
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "cases": 48,
+        "passed": 48,
+        "schema_version": "0.1.0"
+      }
+    },
+    "snapshots/molcrafts-molrec/molrec/5/molrec-default-c2c4c1b8c7b6.json": {
+      "manifest": {
+        "producer": "molrec",
+        "profile": "default",
+        "provenance": {},
+        "record": "molrec",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1b8c7b6bbc9c882c2c4c1c7bab8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T12:00:00Z",
+          "workflow_run": 95
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "cases": 50,
+        "passed": 50,
+        "schema_version": "0.1.0"
+      }
+    },
+    "snapshots/molcrafts-molrec/molrec/6/molrec-default-d3d5d2c9d8c7.json": {
+      "manifest": {
+        "producer": "molrec",
+        "profile": "default",
+        "provenance": {},
+        "record": "molrec",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2c9d8c7ccdad993d3d5d2d8cbc9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T12:00:00Z",
+          "workflow_run": 96
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "cases": 52,
+        "passed": 52,
+        "schema_version": "0.1.0"
+      }
+    },
+    "snapshots/molcrafts-molrec/molrec/7/molrec-default-e4e6e3dae9d8.json": {
+      "manifest": {
+        "producer": "molrec",
+        "profile": "default",
+        "provenance": {},
+        "record": "molrec",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3dae9d8ddebeaa4e4e6e3e9dcda",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T12:00:00Z",
+          "workflow_run": 97
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "cases": 54,
+        "passed": 54,
+        "schema_version": "0.1.0"
+      }
+    },
+    "snapshots/molcrafts-molrec/molrec/8/molrec-default-f5f7f4ebfae9.json": {
+      "manifest": {
+        "producer": "molrec",
+        "profile": "default",
+        "provenance": {},
+        "record": "molrec",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4ebfae9eefcfbb5f5f7f4faedeb",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T12:00:00Z",
+          "workflow_run": 98
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "cases": 56,
+        "passed": 56,
+        "schema_version": "0.1.0"
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/1/tests-default-7e807d748372.json": {
       "manifest": {
         "producer": "pytest",
         "profile": "default",
@@ -298,13 +3357,13 @@ export const fixtures: MockFixtures = {
         "record": "tests",
         "schema_version": "1",
         "source": {
-          "commit": "0718293a4b5c6d7e8f90123456789012",
+          "commit": "7e807d7483727785843e7e807d837674",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molcrafts-molrec",
           "run_attempt": null,
-          "timestamp": "2026-09-20T11:05:00Z",
-          "workflow_run": 92
+          "timestamp": "2026-09-17T11:00:00Z",
+          "workflow_run": 91
         },
         "tracking": {
           "enabled": true,
@@ -313,10 +3372,254 @@ export const fixtures: MockFixtures = {
       },
       "payload": {
         "failed": 0,
-        "passed": 86
+        "passed": 73,
+        "skipped": 1
       }
     },
-    "snapshots/molpy/benchmark/1/benchmark-linux-x86_64-c3d4e5f60718.json": {
+    "snapshots/molcrafts-molrec/tests/10/tests-default-1719160d1c0b.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719160d1c0b101e1dd71719161c0f0d",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T11:00:00Z",
+          "workflow_run": 100
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 100,
+        "skipped": 2
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/2/tests-default-8f918e859483.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e8594838896954f8f918e948785",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T11:00:00Z",
+          "workflow_run": 92
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 76,
+        "skipped": 2
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/3/tests-default-a0a29f96a594.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29f96a59499a7a660a0a29fa59896",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T11:00:00Z",
+          "workflow_run": 93
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 79,
+        "skipped": 3
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/4/tests-default-b1b3b0a7b6a5.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0a7b6a5aab8b771b1b3b0b6a9a7",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T11:00:00Z",
+          "workflow_run": 94
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 82,
+        "skipped": 0
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/5/tests-default-c2c4c1b8c7b6.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1b8c7b6bbc9c882c2c4c1c7bab8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T11:00:00Z",
+          "workflow_run": 95
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 85,
+        "skipped": 1
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/6/tests-default-d3d5d2c9d8c7.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2c9d8c7ccdad993d3d5d2d8cbc9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T11:00:00Z",
+          "workflow_run": 96
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 88,
+        "skipped": 2
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/7/tests-default-e4e6e3dae9d8.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3dae9d8ddebeaa4e4e6e3e9dcda",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T11:00:00Z",
+          "workflow_run": 97
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 91,
+        "skipped": 3
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/8/tests-default-f5f7f4ebfae9.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4ebfae9eefcfbb5f5f7f4faedeb",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T11:00:00Z",
+          "workflow_run": 98
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 94,
+        "skipped": 0
+      }
+    },
+    "snapshots/molcrafts-molrec/tests/9/tests-default-060805fc0bfa.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "default",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "060805fc0bfaff0d0cc60608050bfefc",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molcrafts-molrec",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T11:00:00Z",
+          "workflow_run": 99
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 97,
+        "skipped": 1
+      }
+    },
+    "snapshots/molpy/benchmark/1/benchmark-linux-x86_64-7e807d818a3e.json": {
       "manifest": {
         "producer": "pytest-benchmark",
         "profile": "linux-x86_64",
@@ -324,13 +3627,13 @@ export const fixtures: MockFixtures = {
         "record": "benchmark",
         "schema_version": "1",
         "source": {
-          "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+          "commit": "7e807d818a3e73767f74797e72837c3e",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molpy",
           "run_attempt": null,
-          "timestamp": "2026-09-20T08:12:00Z",
-          "workflow_run": 1215
+          "timestamp": "2026-09-17T09:00:00Z",
+          "workflow_run": 1201
         },
         "tracking": {
           "enabled": true,
@@ -339,11 +3642,308 @@ export const fixtures: MockFixtures = {
       },
       "payload": {
         "metrics": {
-          "mean_ns": 12.5
+          "mean_ns": 18.4
         }
       }
     },
-    "snapshots/molpy/coverage/1/coverage-linux-x86_64-c3d4e5f60718.json": {
+    "snapshots/molpy/benchmark/10/benchmark-linux-x86_64-1719161a23d7.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719161a23d70c0f180d12170b1c15d7",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T09:00:00Z",
+          "workflow_run": 1210
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 14.35
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/11/benchmark-linux-x86_64-282a272b34e8.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "282a272b34e81d20291e23281c2d26e8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-27T09:00:00Z",
+          "workflow_run": 1211
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 11
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 13.9
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/12/benchmark-linux-x86_64-393b383c45f9.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "393b383c45f92e313a2f34392d3e37f9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-28T09:00:00Z",
+          "workflow_run": 1212
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 12
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 13.45
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/2/benchmark-linux-x86_64-8f918e929b4f.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e929b4f848790858a8f83948d4f",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T09:00:00Z",
+          "workflow_run": 1202
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 17.95
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/3/benchmark-linux-x86_64-a0a29fa3ac60.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa3ac609598a1969ba094a59e60",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T09:00:00Z",
+          "workflow_run": 1203
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 17.5
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/4/benchmark-linux-x86_64-b1b3b0b4bd71.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b4bd71a6a9b2a7acb1a5b6af71",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T09:00:00Z",
+          "workflow_run": 1204
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 17.05
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/5/benchmark-linux-x86_64-c2c4c1c5ce82.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c5ce82b7bac3b8bdc2b6c7c082",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T09:00:00Z",
+          "workflow_run": 1205
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 16.6
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/6/benchmark-linux-x86_64-d3d5d2d6df93.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d6df93c8cbd4c9ced3c7d8d193",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T09:00:00Z",
+          "workflow_run": 1206
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 16.15
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/7/benchmark-linux-x86_64-e4e6e3e7f0a4.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e7f0a4d9dce5dadfe4d8e9e2a4",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T09:00:00Z",
+          "workflow_run": 1207
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 17.05
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/8/benchmark-linux-x86_64-f5f7f4f801b5.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4f801b5eaedf6ebf0f5e9faf3b5",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T09:00:00Z",
+          "workflow_run": 1208
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 15.25
+        }
+      }
+    },
+    "snapshots/molpy/benchmark/9/benchmark-linux-x86_64-0608050912c6.json": {
+      "manifest": {
+        "producer": "pytest-benchmark",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050912c6fbfe07fc0106fa0b04c6",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T09:00:00Z",
+          "workflow_run": 1209
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 14.8
+        }
+      }
+    },
+    "snapshots/molpy/coverage/1/coverage-linux-x86_64-7e807d818a3e.json": {
       "manifest": {
         "producer": "coverage.py",
         "profile": "linux-x86_64",
@@ -351,13 +3951,13 @@ export const fixtures: MockFixtures = {
         "record": "coverage",
         "schema_version": "1",
         "source": {
-          "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+          "commit": "7e807d818a3e74808776837278763e7d",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molpy",
           "run_attempt": null,
-          "timestamp": "2026-09-20T08:22:00Z",
-          "workflow_run": 1215
+          "timestamp": "2026-09-17T08:00:00Z",
+          "workflow_run": 1201
         },
         "tracking": {
           "enabled": true,
@@ -382,17 +3982,676 @@ export const fixtures: MockFixtures = {
               13,
               40
             ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
           }
         ],
         "totals": {
-          "branches": 68.9,
-          "functions": 88.0,
-          "lines": 82.3,
-          "statements": 81.5
+          "branches": 61.5,
+          "functions": 78.0,
+          "lines": 74.0,
+          "statements": 73.2
         }
       }
     },
-    "snapshots/molpy/regression/1/regression-linux-x86_64-c3d4e5f60718.json": {
+    "snapshots/molpy/coverage/10/coverage-linux-x86_64-1719161a23d7.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719161a23d70d19200f1c0b110fd716",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T08:00:00Z",
+          "workflow_run": 1210
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 69.6,
+          "functions": 86.1,
+          "lines": 82.1,
+          "statements": 81.3
+        }
+      }
+    },
+    "snapshots/molpy/coverage/11/coverage-linux-x86_64-282a272b34e8.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "282a272b34e81e2a31202d1c2220e827",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-27T08:00:00Z",
+          "workflow_run": 1211
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 11
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 70.5,
+          "functions": 87.0,
+          "lines": 83.0,
+          "statements": 82.2
+        }
+      }
+    },
+    "snapshots/molpy/coverage/12/coverage-linux-x86_64-393b383c45f9.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "393b383c45f92f3b42313e2d3331f938",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-28T08:00:00Z",
+          "workflow_run": 1212
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 12
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 71.4,
+          "functions": 87.9,
+          "lines": 83.9,
+          "statements": 83.1
+        }
+      }
+    },
+    "snapshots/molpy/coverage/2/coverage-linux-x86_64-8f918e929b4f.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e929b4f85919887948389874f8e",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T08:00:00Z",
+          "workflow_run": 1202
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 62.4,
+          "functions": 78.9,
+          "lines": 74.9,
+          "statements": 74.1
+        }
+      }
+    },
+    "snapshots/molpy/coverage/3/coverage-linux-x86_64-a0a29fa3ac60.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa3ac6096a2a998a5949a98609f",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T08:00:00Z",
+          "workflow_run": 1203
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 63.3,
+          "functions": 79.8,
+          "lines": 75.8,
+          "statements": 75.0
+        }
+      }
+    },
+    "snapshots/molpy/coverage/4/coverage-linux-x86_64-b1b3b0b4bd71.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b4bd71a7b3baa9b6a5aba971b0",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T08:00:00Z",
+          "workflow_run": 1204
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 64.2,
+          "functions": 80.7,
+          "lines": 76.7,
+          "statements": 75.9
+        }
+      }
+    },
+    "snapshots/molpy/coverage/5/coverage-linux-x86_64-c2c4c1c5ce82.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c5ce82b8c4cbbac7b6bcba82c1",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T08:00:00Z",
+          "workflow_run": 1205
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 65.1,
+          "functions": 81.6,
+          "lines": 77.6,
+          "statements": 76.8
+        }
+      }
+    },
+    "snapshots/molpy/coverage/6/coverage-linux-x86_64-d3d5d2d6df93.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d6df93c9d5dccbd8c7cdcb93d2",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T08:00:00Z",
+          "workflow_run": 1206
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 66.0,
+          "functions": 82.5,
+          "lines": 78.5,
+          "statements": 77.7
+        }
+      }
+    },
+    "snapshots/molpy/coverage/7/coverage-linux-x86_64-e4e6e3e7f0a4.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e7f0a4dae6eddce9d8dedca4e3",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T08:00:00Z",
+          "workflow_run": 1207
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 66.9,
+          "functions": 83.4,
+          "lines": 79.4,
+          "statements": 78.6
+        }
+      }
+    },
+    "snapshots/molpy/coverage/8/coverage-linux-x86_64-f5f7f4f801b5.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4f801b5ebf7feedfae9efedb5f4",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T08:00:00Z",
+          "workflow_run": 1208
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 67.8,
+          "functions": 84.3,
+          "lines": 80.3,
+          "statements": 79.5
+        }
+      }
+    },
+    "snapshots/molpy/coverage/9/coverage-linux-x86_64-0608050912c6.json": {
+      "manifest": {
+        "producer": "coverage.py",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050912c6fc080ffe0bfa00fec605",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T08:00:00Z",
+          "workflow_run": 1209
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 90.1,
+            "path": "molpy/core/frame.py",
+            "uncovered": [
+              55,
+              56
+            ]
+          },
+          {
+            "lines": 74.0,
+            "path": "molpy/io/xyz.py",
+            "uncovered": [
+              12,
+              13,
+              40
+            ]
+          },
+          {
+            "lines": 61.2,
+            "path": "molpy/ff/amber.py",
+            "uncovered": [
+              8,
+              9,
+              10,
+              88
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 68.7,
+          "functions": 85.2,
+          "lines": 81.2,
+          "statements": 80.4
+        }
+      }
+    },
+    "snapshots/molpy/regression/1/regression-linux-x86_64-7e807d818a3e.json": {
       "manifest": {
         "producer": "molpy-numerical",
         "profile": "linux-x86_64",
@@ -400,13 +4659,13 @@ export const fixtures: MockFixtures = {
         "record": "regression",
         "schema_version": "1",
         "source": {
-          "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+          "commit": "7e807d818a3e837678837684847a807f",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molpy",
           "run_attempt": null,
-          "timestamp": "2026-09-20T08:18:00Z",
-          "workflow_run": 1215
+          "timestamp": "2026-09-17T09:00:00Z",
+          "workflow_run": 1201
         },
         "tracking": {
           "enabled": true,
@@ -414,10 +4673,235 @@ export const fixtures: MockFixtures = {
         }
       },
       "payload": {
-        "max_abs_error": 1.2e-08
+        "max_abs_error": 5e-07
       }
     },
-    "snapshots/molpy/tests/1/tests-linux-x86_64-a1b2c3d4e5f6.json": {
+    "snapshots/molpy/regression/10/regression-linux-x86_64-1719161a23d7.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719161a23d71c0f111c0f1d1d131918",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T09:00:00Z",
+          "workflow_run": 1210
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "max_abs_error": 5e-08
+      }
+    },
+    "snapshots/molpy/regression/2/regression-linux-x86_64-8f918e929b4f.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e929b4f948789948795958b9190",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T09:00:00Z",
+          "workflow_run": 1202
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "max_abs_error": 2.5e-07
+      }
+    },
+    "snapshots/molpy/regression/3/regression-linux-x86_64-a0a29fa3ac60.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa3ac60a5989aa598a6a69ca2a1",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T09:00:00Z",
+          "workflow_run": 1203
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "max_abs_error": 1.6666666666666665e-07
+      }
+    },
+    "snapshots/molpy/regression/4/regression-linux-x86_64-b1b3b0b4bd71.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b4bd71b6a9abb6a9b7b7adb3b2",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T09:00:00Z",
+          "workflow_run": 1204
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "max_abs_error": 1.25e-07
+      }
+    },
+    "snapshots/molpy/regression/5/regression-linux-x86_64-c2c4c1c5ce82.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c5ce82c7babcc7bac8c8bec4c3",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T09:00:00Z",
+          "workflow_run": 1205
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "max_abs_error": 2.4e-06
+      }
+    },
+    "snapshots/molpy/regression/6/regression-linux-x86_64-d3d5d2d6df93.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d6df93d8cbcdd8cbd9d9cfd5d4",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T09:00:00Z",
+          "workflow_run": 1206
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "max_abs_error": 8.333333333333333e-08
+      }
+    },
+    "snapshots/molpy/regression/7/regression-linux-x86_64-e4e6e3e7f0a4.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e7f0a4e9dcdee9dceaeae0e6e5",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T09:00:00Z",
+          "workflow_run": 1207
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "max_abs_error": 7.142857142857142e-08
+      }
+    },
+    "snapshots/molpy/regression/8/regression-linux-x86_64-f5f7f4f801b5.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4f801b5faedeffaedfbfbf1f7f6",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T09:00:00Z",
+          "workflow_run": 1208
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "max_abs_error": 6.25e-08
+      }
+    },
+    "snapshots/molpy/regression/9/regression-linux-x86_64-0608050912c6.json": {
+      "manifest": {
+        "producer": "molpy-numerical",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "regression",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050912c60bfe000bfe0c0c020807",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T09:00:00Z",
+          "workflow_run": 1209
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "max_abs_error": 5.5555555555555555e-08
+      }
+    },
+    "snapshots/molpy/tests/1/tests-linux-x86_64-7e807d818a3e.json": {
       "manifest": {
         "producer": "pytest",
         "profile": "linux-x86_64",
@@ -425,12 +4909,12 @@ export const fixtures: MockFixtures = {
         "record": "tests",
         "schema_version": "1",
         "source": {
-          "commit": "a1b2c3d4e5f6789012345678abcdef01",
+          "commit": "7e807d818a3e85768485843e7d7a7f86",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molpy",
           "run_attempt": null,
-          "timestamp": "2026-09-18T09:12:00Z",
+          "timestamp": "2026-09-17T08:00:00Z",
           "workflow_run": 1201
         },
         "tracking": {
@@ -440,10 +4924,11 @@ export const fixtures: MockFixtures = {
       },
       "payload": {
         "failed": 0,
-        "passed": 412
+        "passed": 403,
+        "skipped": 1
       }
     },
-    "snapshots/molpy/tests/1/tests-linux-x86_64-c3d4e5f60718.json": {
+    "snapshots/molpy/tests/10/tests-linux-x86_64-1719161a23d7.json": {
       "manifest": {
         "producer": "pytest",
         "profile": "linux-x86_64",
@@ -451,25 +4936,296 @@ export const fixtures: MockFixtures = {
         "record": "tests",
         "schema_version": "1",
         "source": {
-          "commit": "c3d4e5f60718293a4b5c6d7e8f901234",
+          "commit": "1719161a23d71e0f1d1e1dd71613181f",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molpy",
           "run_attempt": null,
-          "timestamp": "2026-09-20T08:05:00Z",
-          "workflow_run": 1215
+          "timestamp": "2026-09-26T08:00:00Z",
+          "workflow_run": 1210
         },
         "tracking": {
           "enabled": true,
-          "generation": 1
+          "generation": 10
         }
       },
       "payload": {
         "failed": 0,
-        "passed": 418
+        "passed": 430,
+        "skipped": 2
       }
     },
-    "snapshots/molrs/benchmark/1/benchmark-linux-x86_64-e5f60718293a.json": {
+    "snapshots/molpy/tests/11/tests-linux-x86_64-282a272b34e8.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "282a272b34e82f202e2f2ee827242930",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-27T08:00:00Z",
+          "workflow_run": 1211
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 11
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 433,
+        "skipped": 3
+      }
+    },
+    "snapshots/molpy/tests/12/tests-linux-x86_64-393b383c45f9.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "393b383c45f940313f403ff938353a41",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-28T08:00:00Z",
+          "workflow_run": 1212
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 12
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 436,
+        "skipped": 0
+      }
+    },
+    "snapshots/molpy/tests/2/tests-linux-x86_64-8f918e929b4f.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e929b4f96879596954f8e8b9097",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T08:00:00Z",
+          "workflow_run": 1202
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 406,
+        "skipped": 2
+      }
+    },
+    "snapshots/molpy/tests/3/tests-linux-x86_64-a0a29fa3ac60.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa3ac60a798a6a7a6609f9ca1a8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T08:00:00Z",
+          "workflow_run": 1203
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 409,
+        "skipped": 3
+      }
+    },
+    "snapshots/molpy/tests/4/tests-linux-x86_64-b1b3b0b4bd71.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b4bd71b8a9b7b8b771b0adb2b9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T08:00:00Z",
+          "workflow_run": 1204
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "failed": 3,
+        "passed": 409,
+        "skipped": 0
+      }
+    },
+    "snapshots/molpy/tests/5/tests-linux-x86_64-c2c4c1c5ce82.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c5ce82c9bac8c9c882c1bec3ca",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T08:00:00Z",
+          "workflow_run": 1205
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 415,
+        "skipped": 1
+      }
+    },
+    "snapshots/molpy/tests/6/tests-linux-x86_64-d3d5d2d6df93.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d6df93dacbd9dad993d2cfd4db",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T08:00:00Z",
+          "workflow_run": 1206
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 418,
+        "skipped": 2
+      }
+    },
+    "snapshots/molpy/tests/7/tests-linux-x86_64-e4e6e3e7f0a4.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e7f0a4ebdceaebeaa4e3e0e5ec",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T08:00:00Z",
+          "workflow_run": 1207
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 421,
+        "skipped": 3
+      }
+    },
+    "snapshots/molpy/tests/8/tests-linux-x86_64-f5f7f4f801b5.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4f801b5fcedfbfcfbb5f4f1f6fd",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T08:00:00Z",
+          "workflow_run": 1208
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 424,
+        "skipped": 0
+      }
+    },
+    "snapshots/molpy/tests/9/tests-linux-x86_64-0608050912c6.json": {
+      "manifest": {
+        "producer": "pytest",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050912c60dfe0c0d0cc60502070e",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molpy",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T08:00:00Z",
+          "workflow_run": 1209
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "failed": 2,
+        "passed": 425,
+        "skipped": 1
+      }
+    },
+    "snapshots/molrs/benchmark/1/benchmark-linux-x86_64-7e807d83843e.json": {
       "manifest": {
         "producer": "criterion",
         "profile": "linux-x86_64",
@@ -477,13 +5233,13 @@ export const fixtures: MockFixtures = {
         "record": "benchmark",
         "schema_version": "1",
         "source": {
-          "commit": "e5f60718293a4b5c6d7e8f9012345678",
+          "commit": "7e807d83843e73767f74797e72837c3e",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molrs",
           "run_attempt": null,
-          "timestamp": "2026-09-20T10:30:00Z",
-          "workflow_run": 448
+          "timestamp": "2026-09-17T11:00:00Z",
+          "workflow_run": 441
         },
         "tracking": {
           "enabled": true,
@@ -491,10 +5247,13 @@ export const fixtures: MockFixtures = {
         }
       },
       "payload": {
+        "metrics": {
+          "mean_ns": 42.0
+        },
         "suite": "neighbor_list"
       }
     },
-    "snapshots/molrs/benchmark/1/benchmark-macos-aarch64-e5f60718293a.json": {
+    "snapshots/molrs/benchmark/1/benchmark-macos-aarch64-7e807d83843e.json": {
       "manifest": {
         "producer": "criterion",
         "profile": "macos-aarch64",
@@ -502,13 +5261,13 @@ export const fixtures: MockFixtures = {
         "record": "benchmark",
         "schema_version": "1",
         "source": {
-          "commit": "e5f60718293a4b5c6d7e8f9012345678",
+          "commit": "7e807d83843e73767f74797e72837c3e",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molrs",
           "run_attempt": null,
-          "timestamp": "2026-09-20T10:35:00Z",
-          "workflow_run": 449
+          "timestamp": "2026-09-17T11:00:00Z",
+          "workflow_run": 461
         },
         "tracking": {
           "enabled": true,
@@ -516,10 +5275,573 @@ export const fixtures: MockFixtures = {
         }
       },
       "payload": {
+        "metrics": {
+          "mean_ns": 38.5
+        },
         "suite": "neighbor_list"
       }
     },
-    "snapshots/molrs/coverage/1/coverage-linux-x86_64-e5f60718293a.json": {
+    "snapshots/molrs/benchmark/10/benchmark-linux-x86_64-1719161c1dd7.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719161c1dd70c0f180d12170b1c15d7",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T11:00:00Z",
+          "workflow_run": 450
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 34.8
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/10/benchmark-macos-aarch64-1719161c1dd7.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719161c1dd70c0f180d12170b1c15d7",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T11:00:00Z",
+          "workflow_run": 470
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 32.2
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/11/benchmark-linux-x86_64-282a272d2ee8.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "282a272d2ee81d20291e23281c2d26e8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-27T11:00:00Z",
+          "workflow_run": 451
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 11
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 34.0
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/12/benchmark-linux-x86_64-393b383e3ff9.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "393b383e3ff92e313a2f34392d3e37f9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-28T11:00:00Z",
+          "workflow_run": 452
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 12
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 33.2
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/2/benchmark-linux-x86_64-8f918e94954f.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e94954f848790858a8f83948d4f",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T11:00:00Z",
+          "workflow_run": 442
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 41.2
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/2/benchmark-macos-aarch64-8f918e94954f.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e94954f848790858a8f83948d4f",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T11:00:00Z",
+          "workflow_run": 462
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 37.8
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/3/benchmark-linux-x86_64-a0a29fa5a660.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa5a6609598a1969ba094a59e60",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T11:00:00Z",
+          "workflow_run": 443
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 40.4
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/3/benchmark-macos-aarch64-a0a29fa5a660.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa5a6609598a1969ba094a59e60",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T11:00:00Z",
+          "workflow_run": 463
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 37.1
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/4/benchmark-linux-x86_64-b1b3b0b6b771.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b6b771a6a9b2a7acb1a5b6af71",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T11:00:00Z",
+          "workflow_run": 444
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 39.6
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/4/benchmark-macos-aarch64-b1b3b0b6b771.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b6b771a6a9b2a7acb1a5b6af71",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T11:00:00Z",
+          "workflow_run": 464
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 36.4
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/5/benchmark-linux-x86_64-c2c4c1c7c882.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c7c882b7bac3b8bdc2b6c7c082",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T11:00:00Z",
+          "workflow_run": 445
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 38.8
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/5/benchmark-macos-aarch64-c2c4c1c7c882.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c7c882b7bac3b8bdc2b6c7c082",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T11:00:00Z",
+          "workflow_run": 465
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 35.7
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/6/benchmark-linux-x86_64-d3d5d2d8d993.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d8d993c8cbd4c9ced3c7d8d193",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T11:00:00Z",
+          "workflow_run": 446
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 38.0
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/6/benchmark-macos-aarch64-d3d5d2d8d993.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d8d993c8cbd4c9ced3c7d8d193",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T11:00:00Z",
+          "workflow_run": 466
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 35.0
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/7/benchmark-linux-x86_64-e4e6e3e9eaa4.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e9eaa4d9dce5dadfe4d8e9e2a4",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T11:00:00Z",
+          "workflow_run": 447
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 37.2
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/7/benchmark-macos-aarch64-e4e6e3e9eaa4.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e9eaa4d9dce5dadfe4d8e9e2a4",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T11:00:00Z",
+          "workflow_run": 467
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 34.3
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/8/benchmark-linux-x86_64-f5f7f4fafbb5.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4fafbb5eaedf6ebf0f5e9faf3b5",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T11:00:00Z",
+          "workflow_run": 448
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 36.4
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/8/benchmark-macos-aarch64-f5f7f4fafbb5.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4fafbb5eaedf6ebf0f5e9faf3b5",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T11:00:00Z",
+          "workflow_run": 468
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 33.6
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/9/benchmark-linux-x86_64-0608050b0cc6.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050b0cc6fbfe07fc0106fa0b04c6",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T11:00:00Z",
+          "workflow_run": 449
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 35.6
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/benchmark/9/benchmark-macos-aarch64-0608050b0cc6.json": {
+      "manifest": {
+        "producer": "criterion",
+        "profile": "macos-aarch64",
+        "provenance": {},
+        "record": "benchmark",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050b0cc6fbfe07fc0106fa0b04c6",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T11:00:00Z",
+          "workflow_run": 469
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "metrics": {
+          "mean_ns": 32.9
+        },
+        "suite": "neighbor_list"
+      }
+    },
+    "snapshots/molrs/coverage/1/coverage-linux-x86_64-7e807d83843e.json": {
       "manifest": {
         "producer": "llvm-cov",
         "profile": "linux-x86_64",
@@ -527,13 +5849,13 @@ export const fixtures: MockFixtures = {
         "record": "coverage",
         "schema_version": "1",
         "source": {
-          "commit": "e5f60718293a4b5c6d7e8f9012345678",
+          "commit": "7e807d83843e74808776837278763e7d",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molrs",
           "run_attempt": null,
-          "timestamp": "2026-09-20T10:40:00Z",
-          "workflow_run": 448
+          "timestamp": "2026-09-17T10:00:00Z",
+          "workflow_run": 441
         },
         "tracking": {
           "enabled": true,
@@ -561,28 +5883,567 @@ export const fixtures: MockFixtures = {
           }
         ],
         "totals": {
-          "branches": 71.2,
-          "functions": 93.0,
-          "lines": 88.4,
-          "statements": 87.1
+          "branches": 68.5,
+          "functions": 85.0,
+          "lines": 81.0,
+          "statements": 80.2
         }
       }
     },
-    "snapshots/molrs/tests/1/tests-linux-x86_64-e5f60718293a.json": {
+    "snapshots/molrs/coverage/10/coverage-linux-x86_64-1719161c1dd7.json": {
       "manifest": {
-        "producer": "cargo-nextest",
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719161c1dd70d19200f1c0b110fd716",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T10:00:00Z",
+          "workflow_run": 450
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 73.9,
+          "functions": 90.4,
+          "lines": 86.4,
+          "statements": 85.6
+        }
+      }
+    },
+    "snapshots/molrs/coverage/11/coverage-linux-x86_64-282a272d2ee8.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "282a272d2ee81e2a31202d1c2220e827",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-27T10:00:00Z",
+          "workflow_run": 451
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 11
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 74.5,
+          "functions": 91.0,
+          "lines": 87.0,
+          "statements": 86.2
+        }
+      }
+    },
+    "snapshots/molrs/coverage/12/coverage-linux-x86_64-393b383e3ff9.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "393b383e3ff92f3b42313e2d3331f938",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-28T10:00:00Z",
+          "workflow_run": 452
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 12
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 75.1,
+          "functions": 91.6,
+          "lines": 87.6,
+          "statements": 86.8
+        }
+      }
+    },
+    "snapshots/molrs/coverage/2/coverage-linux-x86_64-8f918e94954f.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e94954f85919887948389874f8e",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T10:00:00Z",
+          "workflow_run": 442
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 69.1,
+          "functions": 85.6,
+          "lines": 81.6,
+          "statements": 80.8
+        }
+      }
+    },
+    "snapshots/molrs/coverage/3/coverage-linux-x86_64-a0a29fa5a660.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa5a66096a2a998a5949a98609f",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T10:00:00Z",
+          "workflow_run": 443
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 69.7,
+          "functions": 86.2,
+          "lines": 82.2,
+          "statements": 81.4
+        }
+      }
+    },
+    "snapshots/molrs/coverage/4/coverage-linux-x86_64-b1b3b0b6b771.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b6b771a7b3baa9b6a5aba971b0",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T10:00:00Z",
+          "workflow_run": 444
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 70.3,
+          "functions": 86.8,
+          "lines": 82.8,
+          "statements": 82.0
+        }
+      }
+    },
+    "snapshots/molrs/coverage/5/coverage-linux-x86_64-c2c4c1c7c882.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c7c882b8c4cbbac7b6bcba82c1",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T10:00:00Z",
+          "workflow_run": 445
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 70.9,
+          "functions": 87.4,
+          "lines": 83.4,
+          "statements": 82.6
+        }
+      }
+    },
+    "snapshots/molrs/coverage/6/coverage-linux-x86_64-d3d5d2d8d993.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d8d993c9d5dccbd8c7cdcb93d2",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T10:00:00Z",
+          "workflow_run": 446
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 71.5,
+          "functions": 88.0,
+          "lines": 84.0,
+          "statements": 83.2
+        }
+      }
+    },
+    "snapshots/molrs/coverage/7/coverage-linux-x86_64-e4e6e3e9eaa4.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e9eaa4dae6eddce9d8dedca4e3",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T10:00:00Z",
+          "workflow_run": 447
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 72.1,
+          "functions": 88.6,
+          "lines": 84.6,
+          "statements": 83.8
+        }
+      }
+    },
+    "snapshots/molrs/coverage/8/coverage-linux-x86_64-f5f7f4fafbb5.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4fafbb5ebf7feedfae9efedb5f4",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T10:00:00Z",
+          "workflow_run": 448
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 72.7,
+          "functions": 89.2,
+          "lines": 85.2,
+          "statements": 84.4
+        }
+      }
+    },
+    "snapshots/molrs/coverage/9/coverage-linux-x86_64-0608050b0cc6.json": {
+      "manifest": {
+        "producer": "llvm-cov",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "coverage",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050b0cc6fc080ffe0bfa00fec605",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T10:00:00Z",
+          "workflow_run": 449
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "files": [
+          {
+            "lines": 94.2,
+            "path": "molrs/src/spatial/neighbors.rs",
+            "uncovered": [
+              412,
+              418
+            ]
+          },
+          {
+            "lines": 81.0,
+            "path": "molrs/src/md/lj.rs",
+            "uncovered": [
+              88,
+              91,
+              120
+            ]
+          }
+        ],
+        "totals": {
+          "branches": 73.3,
+          "functions": 89.8,
+          "lines": 85.8,
+          "statements": 85.0
+        }
+      }
+    },
+    "snapshots/molrs/tests/1/tests-linux-x86_64-7e807d83843e.json": {
+      "manifest": {
+        "producer": "cargo-test",
         "profile": "linux-x86_64",
         "provenance": {},
         "record": "tests",
         "schema_version": "1",
         "source": {
-          "commit": "e5f60718293a4b5c6d7e8f9012345678",
+          "commit": "7e807d83843e85768485843e7d7a7f86",
           "producer_version": null,
           "ref": "refs/heads/main",
           "repository": "MolCrafts/molrs",
           "run_attempt": null,
-          "timestamp": "2026-09-20T10:22:00Z",
-          "workflow_run": 448
+          "timestamp": "2026-09-17T10:00:00Z",
+          "workflow_run": 441
         },
         "tracking": {
           "enabled": true,
@@ -591,7 +6452,305 @@ export const fixtures: MockFixtures = {
       },
       "payload": {
         "failed": 0,
-        "passed": 1601
+        "passed": 1583,
+        "skipped": 1
+      }
+    },
+    "snapshots/molrs/tests/10/tests-linux-x86_64-1719161c1dd7.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "1719161c1dd71e0f1d1e1dd71613181f",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-26T10:00:00Z",
+          "workflow_run": 450
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 10
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1610,
+        "skipped": 2
+      }
+    },
+    "snapshots/molrs/tests/11/tests-linux-x86_64-282a272d2ee8.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "282a272d2ee82f202e2f2ee827242930",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-27T10:00:00Z",
+          "workflow_run": 451
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 11
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1613,
+        "skipped": 3
+      }
+    },
+    "snapshots/molrs/tests/12/tests-linux-x86_64-393b383e3ff9.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "393b383e3ff940313f403ff938353a41",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-28T10:00:00Z",
+          "workflow_run": 452
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 12
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1616,
+        "skipped": 0
+      }
+    },
+    "snapshots/molrs/tests/2/tests-linux-x86_64-8f918e94954f.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "8f918e94954f96879596954f8e8b9097",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-18T10:00:00Z",
+          "workflow_run": 442
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 2
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1586,
+        "skipped": 2
+      }
+    },
+    "snapshots/molrs/tests/3/tests-linux-x86_64-a0a29fa5a660.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "a0a29fa5a660a798a6a7a6609f9ca1a8",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-19T10:00:00Z",
+          "workflow_run": 443
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 3
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1589,
+        "skipped": 3
+      }
+    },
+    "snapshots/molrs/tests/4/tests-linux-x86_64-b1b3b0b6b771.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "b1b3b0b6b771b8a9b7b8b771b0adb2b9",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-20T10:00:00Z",
+          "workflow_run": 444
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 4
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1592,
+        "skipped": 0
+      }
+    },
+    "snapshots/molrs/tests/5/tests-linux-x86_64-c2c4c1c7c882.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "c2c4c1c7c882c9bac8c9c882c1bec3ca",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-21T10:00:00Z",
+          "workflow_run": 445
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 5
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1595,
+        "skipped": 1
+      }
+    },
+    "snapshots/molrs/tests/6/tests-linux-x86_64-d3d5d2d8d993.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "d3d5d2d8d993dacbd9dad993d2cfd4db",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-22T10:00:00Z",
+          "workflow_run": 446
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 6
+        }
+      },
+      "payload": {
+        "failed": 2,
+        "passed": 1596,
+        "skipped": 2
+      }
+    },
+    "snapshots/molrs/tests/7/tests-linux-x86_64-e4e6e3e9eaa4.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "e4e6e3e9eaa4ebdceaebeaa4e3e0e5ec",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-23T10:00:00Z",
+          "workflow_run": 447
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 7
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1601,
+        "skipped": 3
+      }
+    },
+    "snapshots/molrs/tests/8/tests-linux-x86_64-f5f7f4fafbb5.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "f5f7f4fafbb5fcedfbfcfbb5f4f1f6fd",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-24T10:00:00Z",
+          "workflow_run": 448
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 8
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1604,
+        "skipped": 0
+      }
+    },
+    "snapshots/molrs/tests/9/tests-linux-x86_64-0608050b0cc6.json": {
+      "manifest": {
+        "producer": "cargo-test",
+        "profile": "linux-x86_64",
+        "provenance": {},
+        "record": "tests",
+        "schema_version": "1",
+        "source": {
+          "commit": "0608050b0cc60dfe0c0d0cc60502070e",
+          "producer_version": null,
+          "ref": "refs/heads/main",
+          "repository": "MolCrafts/molrs",
+          "run_attempt": null,
+          "timestamp": "2026-09-25T10:00:00Z",
+          "workflow_run": 449
+        },
+        "tracking": {
+          "enabled": true,
+          "generation": 9
+        }
+      },
+      "payload": {
+        "failed": 0,
+        "passed": 1607,
+        "skipped": 1
       }
     }
   }

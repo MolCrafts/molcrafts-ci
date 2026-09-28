@@ -22,6 +22,17 @@ export function formatNumber(v: number): string {
   return String(v);
 }
 
+/** Every percentage in this app keeps one decimal place — 88 → "88.0%". */
+export function formatPercent(v: number | null | undefined): string {
+  return v == null || Number.isNaN(v) ? "—" : `${v.toFixed(1)}%`;
+}
+
+/** Format a measure for tiles, tips and deltas. */
+export function formatMeasure(value: number, unit?: string): string {
+  if (unit === "%") return formatPercent(value);
+  return formatNumber(value) + (unit ?? "");
+}
+
 export interface CoverageTotals {
   lines?: number;
   branches?: number;
@@ -105,7 +116,15 @@ export interface ScalarField {
 
 function scalar(label: string, v: unknown): ScalarField | null {
   if (typeof v === "number" && Number.isFinite(v)) {
-    return { label, value: formatNumber(v), numeric: true };
+    // Coverage-ish field names keep one decimal; everything else stays free-form.
+    const percentish = /(?:^|[._])(?:lines|branches|functions|statements|percent|pct)$/i.test(
+      label,
+    );
+    return {
+      label,
+      value: percentish ? v.toFixed(1) : formatNumber(v),
+      numeric: true,
+    };
   }
   if (typeof v === "string" || typeof v === "boolean") {
     return { label, value: String(v), numeric: false };

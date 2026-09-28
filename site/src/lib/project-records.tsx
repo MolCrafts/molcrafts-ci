@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { fetchRecordEntries, fetchSnapshot, newestFirst } from "@/lib/snapshot-data";
-import { STATUS_ORDER, summarise, type RecordSummary } from "@/lib/record-summary";
+import { profilesOf, STATUS_ORDER, summarise, type RecordSummary } from "@/lib/record-summary";
 import type { ProjectContext } from "@/plugins/types";
 
 export interface ProjectRecordsState {
@@ -34,8 +34,17 @@ async function loadRecords(
   const summaries = await Promise.all(
     project.records.map(async (record) => {
       const entries = newestFirst(await fetchRecordEntries(project.id, record));
+      const profiles = profilesOf(entries);
+      // Resolve the profile *before* capping history. Taking the newest N across
+      // every machine and then filtering leaves a dual-profile record with one
+      // or two points and a flat sparkline.
+      const profile =
+        preferredProfile && profiles.includes(preferredProfile)
+          ? preferredProfile
+          : (entries[0]?.profile ?? null);
+      const focused = entries.filter((e) => (e.profile ?? null) === profile);
       const bodies = await Promise.all(
-        entries.slice(0, HISTORY_DEPTH).map(async (entry) => ({
+        focused.slice(0, HISTORY_DEPTH).map(async (entry) => ({
           entry,
           snapshot: await fetchSnapshot(entry),
         })),

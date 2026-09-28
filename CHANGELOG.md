@@ -13,11 +13,16 @@ schema version to keep in step.
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-09-28
+
 `manifest.schema_version` is unchanged: nothing here alters the shape of a
 snapshot, so this is a patch, not a minor.
 
 ### Added
 
+- **`molci snapshot --cargo-test`.** Rust test totals come from the
+  `test result:` summary `cargo test` already prints. `--junit` is the
+  pytest path.
 - **`actions/submit` carries a snapshot all the way to the site.** It resolves
   paths and globs, validates, uploads the run artifact and — for snapshots with
   `tracking.enabled` — ingests into the index repository and pushes, which is
@@ -36,17 +41,23 @@ snapshot, so this is a patch, not a minor.
   token that cannot reach another repository.
 - **Self-hosting.** `molcrafts-ci` now publishes its own `tests` and `coverage`
   records through its own `actions/submit`, so every push to master exercises
-  the path a downstream repository depends on. `scripts/ci_snapshot.py` reads
-  pytest's JUnit XML and coverage.py's JSON; `pytest-cov` joins the dev extra.
-  The self-push uses `GITHUB_TOKEN` — the push is to its own repository, and
-  because GitHub does not start a workflow from a `GITHUB_TOKEN` push, the
-  ingest commit cannot trigger another ingest. Cloudflare Pages is unaffected
-  and still redeploys.
+  the path a downstream repository depends on. CI builds those snapshots with
+  `molci snapshot`; `pytest-cov` joins the dev extra. The self-push uses
+  `GITHUB_TOKEN` — the push is to its own repository, and because GitHub does
+  not start a workflow from a `GITHUB_TOKEN` push, the ingest commit cannot
+  trigger another ingest. Cloudflare Pages is unaffected and still redeploys.
 - CI now lints `scripts/` alongside `src` and `tests`, matching what the
   pre-commit hooks already covered.
 
 ### Changed
 
+- **Site charts use `@molcrafts/molplot` `<molplot-chart>` instead of ECharts.**
+  Overview sparklines are Vega-Lite web components; history loads one profile
+  before capping depth so dual-profile records keep a full series. Percentages
+  always keep one decimal place (`formatPercent` / `formatMeasure`).
+- **Bare visits open the newest project** (replaceState, so Back leaves the
+  site rather than landing on an empty “Select a project”). Mock fixtures grew
+  to ~140 generations across four projects and now expose `published`.
 - **The index moved to a `data` branch, and the site reads it at runtime.**
   Section 18 of the specification always described the data as living on its
   own branch; keeping it on `master` meant the ingest bot committed there,
@@ -61,9 +72,18 @@ snapshot, so this is a patch, not a minor.
   — and new snapshots appear within the CDN's five-minute cache.
 
   `molci ingest` maintains `index-listing.json` at the data root, since HTTP has
-  nothing to enumerate. `site/scripts/fetch-data.mjs` fetches the branch for
+  nothing to enumerate. The listing also carries each project's newest
+  timestamp, so the site can open on whatever published last without fetching
+  every index over HTTP. `site/scripts/fetch-data.mjs` fetches the branch for
   `dev:data`, and `clean-public-data.mjs` keeps a leftover local copy from
   shipping in a production build and being served as if it were current.
+- **Site: one place to read a generation.** The right-hand inspector and its
+  `SelectionProvider` channel are gone. A dock or overview click navigates to
+  the record tab at that snapshot; the tab header carries commit, run, profile
+  and producer. Overview keeps situation above (`MetaStrip`, verdicts, table)
+  and history below (one reading + delta + sparkline per record). Tests and
+  coverage both render through `MeasureBand`. The workbench shell is navigator
+  + work + dock — no inspector column.
 - **`actions/submit` takes an `ssh-key`.** A deploy key is the narrowest
   credential that works for a cross-repository push — one repository, git only —
   and, unlike a GitHub App or a PAT, it can be created from the API. Host keys
@@ -72,16 +92,18 @@ snapshot, so this is a patch, not a minor.
 
 - **`molci snapshot`** builds `tests` and `coverage` snapshots from a test run's
   native output, so a producer repository no longer carries its own adapter.
-  JUnit XML covers pytest and cargo-nextest; coverage is read from coverage.py
-  JSON or an LCOV tracefile (`cargo-llvm-cov`, `grcov`). `scripts/ci_snapshot.py`
-  is gone — this repository's own CI uses the command it ships.
+  pytest emits JUnit XML (`--junit`); Rust's totals come from the
+  `test result:` summary `cargo test` already prints (`--cargo-test`). Coverage
+  is read from coverage.py JSON or an LCOV tracefile (`llvm-cov export
+  -format=lcov`). `scripts/ci_snapshot.py` is gone — this repository's own CI
+  uses the command it ships.
 
   These two payload shapes are infrastructure rather than domain semantics: the
   frontend already reads them without being told which record it is looking at.
   Benchmark payloads remain the domain's.
 
   Coverage file paths are made relative to `--source-root` (the working
-  directory by default). cargo-llvm-cov reports absolute build paths, so an
+  directory by default). llvm-cov reports absolute build paths, so an
   unprocessed payload recorded the runner's directory layout and never matched
   the same file measured anywhere else.
 
@@ -115,6 +137,9 @@ snapshot, so this is a patch, not a minor.
 
 ### Removed
 
+- **Right-hand snapshot inspector** and the `SelectionProvider` channel that
+  fed it. Provenance that changes a reader's next move (commit, run, profile,
+  producer) lives on the record tab; the rest stays in the GitHub Actions run.
 - **`ingest.yml`.** The reusable workflow could not have worked: a called
   workflow runs with the caller's `GITHUB_TOKEN`, and `download-artifact`
   without `run-id` only ever sees artifacts from its own run, so it could not
@@ -193,5 +218,6 @@ git tag v0.1.0
 git push origin main --follow-tags
 ```
 
-[Unreleased]: https://github.com/MolCrafts/molcrafts-ci/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/MolCrafts/molcrafts-ci/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/MolCrafts/molcrafts-ci/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/MolCrafts/molcrafts-ci/releases/tag/v0.1.0

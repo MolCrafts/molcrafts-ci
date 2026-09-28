@@ -3,13 +3,27 @@
 Shared GitHub-native engineering infrastructure for MolCrafts:
 collect, validate, track, publish, and present developer-facing CI data.
 
-**GitHub:** `MolCrafts/molcrafts-ci`
+**GitHub:** [`MolCrafts/molcrafts-ci`](https://github.com/MolCrafts/molcrafts-ci)
 
 **Domain peers:**
 - [`molcrafts-bench`](https://github.com/MolCrafts/molcrafts-bench)
 - [`molcrafts-molrec`](https://github.com/MolCrafts/molcrafts-molrec)
 
 These are standalone developer-facing repositories (MolCrafts is not a monorepo).
+
+## What it is
+
+| Piece | Role |
+| --- | --- |
+| Python package `molcrafts_ci` (`import molci`) | Snapshot model, validate, ingest, `molci snapshot` adapters |
+| `actions/submit` | One producer step: validate → artifact → ingest → push `data` branch |
+| `data` branch | Published indexes and immutable snapshot bodies |
+| `site/` | Cloudflare Pages browser over that branch |
+
+A **snapshot** is infrastructure metadata (`Manifest`) plus a record-specific
+payload. This repository owns the `tests` and `coverage` payload shapes; a
+benchmark or domain record is built by its own producer and only *submitted*
+here.
 
 ## Install (Python)
 
@@ -22,6 +36,7 @@ pip install -e ".[dev]"
 Downstream code should use the short import:
 
 ```python
+from pathlib import Path
 import molci as mci
 
 snap = mci.Snapshot(
@@ -55,18 +70,23 @@ producer repository does not carry its own adapter:
 # Python: pytest --junitxml=junit.xml --cov-report=json:coverage.json
 molci snapshot --out out/ --junit junit.xml --coverage coverage.json --track
 
-# Rust: cargo llvm-cov nextest --lcov --output-path lcov.info --profile ci
+# Rust: RUSTFLAGS="-C instrument-coverage" cargo test --lib | tee cargo-test.log
+#       llvm-profdata merge … && llvm-cov export -format=lcov …
 molci snapshot --out out/ \
-  --junit target/nextest/ci/junit.xml \
+  --cargo-test cargo-test.log \
   --coverage lcov.info --coverage-format lcov \
-  --tests-producer cargo-nextest --coverage-producer cargo-llvm-cov --track
+  --coverage-producer llvm-cov --track
 ```
 
-JUnit XML is the common format — pytest and cargo-nextest both emit it.
-Coverage is read from coverage.py's JSON or an LCOV tracefile
-(`cargo-llvm-cov`, `grcov`, `gcov`). Provenance comes from the `GITHUB_*`
-environment; `--track` refuses to run without a real `GITHUB_SHA`, so a
-placeholder commit can never enter published history.
+| Input | Meaning |
+| --- | --- |
+| `--junit` | JUnit XML from pytest `--junitxml` |
+| `--cargo-test` | Log whose `test result:` lines are the totals (`ignored` → skipped) |
+| `--coverage` | coverage.py JSON (default) or LCOV (`--coverage-format lcov`) |
+
+`--junit` and `--cargo-test` are mutually exclusive. Provenance comes from the
+`GITHUB_*` environment; `--track` refuses to run without a real `GITHUB_SHA`,
+so a placeholder commit can never enter published history.
 
 These two payload shapes are infrastructure, not domain semantics: the frontend
 already reads them without being told which record it is looking at. A
@@ -74,30 +94,46 @@ benchmark payload is **not** built here — that belongs to its domain.
 
 ## Submitting data from another repository
 
-A producer repository (`molpy`, `molrs`, `molcrafts-molrec`, …) writes a
-Snapshot JSON during its own CI and hands it to one Action. That Action
-validates it, ingests it into this repository's `data/`, and pushes — and that
-push is what makes Cloudflare Pages rebuild the site. There is nothing to
-trigger afterwards.
+A producer repository (`molpy`, `molrs`, `molcrafts-molrec`, …) writes Snapshot
+JSON during its own CI and hands it to one Action. That Action validates it,
+ingests it into this repository's `data` branch, and pushes — and that push is
+what makes Cloudflare Pages rebuild the site. There is nothing to trigger
+afterwards.
+
+### End-to-end (tests + coverage)
 
 ```yaml
-# .github/workflows/bench.yml, in the producer repository
+# .github/workflows/ci.yml in the producer repository
 permissions:
   contents: read
 
 jobs:
-  bench:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pytest --benchmark-json=raw.json          # your producer
-      - run: python tools/to_snapshot.py raw.json out/ # your adapter
-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install molcrafts-ci pytest pytest-cov
+      - run: pytest --junitxml=junit.xml --cov --cov-report=json:coverage.json
+      - run: molci snapshot --out .ci-out --junit junit.xml --coverage coverage.json --track
       - uses: MolCrafts/molcrafts-ci/actions/submit@master
         with:
-          snapshot-path: out/*.json
+          snapshot-path: .ci-out/*.json
           project: molpy
           ssh-key: ${{ secrets.MOLCRAFTS_CI_SSH_KEY }}
+```
+
+A domain producer that already builds its own Snapshot JSON skips `molci
+snapshot` and only calls `submit`:
+
+```yaml
+- uses: MolCrafts/molcrafts-ci/actions/submit@master
+  with:
+    snapshot-path: out/*.json
+    project: molpy
+    ssh-key: ${{ secrets.MOLCRAFTS_CI_SSH_KEY }}
 ```
 
 `snapshot-path` takes a path, a glob, or a newline-separated list, so one run
@@ -143,7 +179,7 @@ went red is exactly the run whose `tests` record is worth keeping.
 | `tracking.enabled` | What `submit` does |
 | --- | --- |
 | `false` | validates, uploads the workflow artifact, pushes nothing |
-| `true` | also ingests into `data/` and pushes, which deploys the site |
+| `true` | also ingests into the `data` branch and pushes, which deploys the site |
 
 So a pull-request run and a merge run can use the identical step; only the
 snapshot the producer wrote differs.
@@ -155,6 +191,10 @@ orphaned, its root is the data root (`index/`, `snapshots/`,
 `index-listing.json`), and nothing but this Action writes to it. Keeping it off
 `master` is what keeps ingest commits out of the code history and keeps a clone
 of the source from carrying every snapshot ever published.
+
+`index-listing.json` lists every `index/<project>/<record>.jsonl` path and each
+project's newest timestamp (`published`), so the site can open on whatever ran
+last without fetching every index over HTTP.
 
 The site reads that branch at runtime from `raw.githubusercontent.com`, so a
 published snapshot appears within the CDN's five-minute cache with no rebuild,
@@ -219,6 +259,9 @@ molci ingest path/to/snapshot.json --project molpy --data-root data --if-exists 
 git add data && git commit -m "ingest: molpy" && git push
 ```
 
+(For the published site, push to the `data` branch with that branch's root as
+the data root — the same layout `actions/submit` uses.)
+
 ## Frontend (`site/`)
 
 Built with **molcrafts-ui** (shadcn registry copy-in). Dev mocks use
@@ -235,6 +278,20 @@ cd site && npm install && npm run dev
 - `npm run seed:mock` — `import molci as mci` ingest → `.mock-data/` (gitignored) + refreshes `site/mock/fixtures.ts`. These snapshots carry invented commit SHAs, so they are kept out of the tracked `data/` tree.
 - `npm run dev:data` — skip mock plugin; fetch the `data` branch and serve it locally
 - `npm run build` — reads the `data` branch at runtime; bundles no data at all
+
+### How the browser is organised
+
+- **Navigator** — projects, ordered by newest publish first (from
+  `index-listing.json`'s `published` map).
+- **Overview** — situation above (facts, verdict distribution, record table),
+  history below (one reading + delta + sparkline per record).
+- **Record tab** — one generation at a time: header carries commit, CI run,
+  profile and producer; body is `PayloadView` (tests and coverage both use a
+  `MeasureBand`).
+- **Dock** — publish log and problems; a row opens that record tab at that
+  generation via the URL.
+
+There is no side inspector. A shared link is `?project=&tab=&snapshot=&profile=`.
 
 Register an extra tab without editing the shell:
 
@@ -261,6 +318,10 @@ pip install build twine
 python -m build
 # twine upload dist/*   # when ready for PyPI
 ```
+
+Versioning: while the project is `0.x`, the **minor** is the breaking-change
+axis. `manifest.schema_version` is taken from that minor, so the snapshot shape
+and the release move together. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Specification
 

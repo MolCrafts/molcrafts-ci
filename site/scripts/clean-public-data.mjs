@@ -10,9 +10,16 @@
  * machine that ran dev:data yesterday.
  */
 
-import { rm } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-await rm(path.join(siteRoot, "public/data"), { recursive: true, force: true });
+const publicData = path.join(siteRoot, "public/data");
+
+// Emptied, not removed. rsbuild's `output.copy` fails outright on a source
+// directory that does not exist, so deleting it broke any `dev:data` server
+// running alongside a build. An empty directory copies nothing, which is the
+// whole point, and costs nobody a rebuild.
+await rm(publicData, { recursive: true, force: true });
+await mkdir(publicData, { recursive: true });

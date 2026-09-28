@@ -7,6 +7,7 @@ import pytest
 from molcrafts_ci.producers import (
     MAX_UNCOVERED_PER_FILE,
     github_source,
+    read_cargo_test,
     read_coverage_py,
     read_junit,
     read_lcov,
@@ -23,7 +24,7 @@ class TestTestsFromJunit:
         assert read_junit(path) == {"passed": 4, "failed": 3, "skipped": 3}
 
     def test_sums_nested_suites(self, tmp_path) -> None:
-        """cargo-nextest wraps its suites in <testsuites>; pytest does not."""
+        """A document wrapped in <testsuites>, which some reporters emit."""
         path = tmp_path / "junit.xml"
         path.write_text(
             "<testsuites>"
@@ -38,6 +39,37 @@ class TestTestsFromJunit:
         path = tmp_path / "junit.xml"
         path.write_text('<testsuite tests="4"/>', encoding="utf-8")
         assert read_junit(path) == {"passed": 4, "failed": 0, "skipped": 0}
+
+
+class TestTestsFromCargoTest:
+    def test_sums_every_target_and_maps_ignored_to_skipped(self, tmp_path) -> None:
+        path = tmp_path / "cargo-test.log"
+        path.write_text(
+            "\n".join(
+                [
+                    "running 3 tests",
+                    "test a ... ok",
+                    "test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured",
+                    "test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        assert read_cargo_test(path) == {"passed": 3, "failed": 1, "skipped": 1}
+
+    def test_reads_a_colored_summary(self, tmp_path) -> None:
+        path = tmp_path / "cargo-test.log"
+        path.write_text(
+            "test result: \x1b[32mok\x1b[0m. 4 passed; 0 failed; 0 ignored;\n",
+            encoding="utf-8",
+        )
+        assert read_cargo_test(path) == {"passed": 4, "failed": 0, "skipped": 0}
+
+    def test_refuses_a_log_with_no_summary(self, tmp_path) -> None:
+        path = tmp_path / "cargo-test.log"
+        path.write_text("compiling\n", encoding="utf-8")
+        with pytest.raises(ValueError, match="no cargo test summary"):
+            read_cargo_test(path)
 
 
 class TestCoverageFromCoveragePy:

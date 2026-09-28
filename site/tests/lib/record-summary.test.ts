@@ -40,6 +40,7 @@ describe("headlineOf", () => {
   it("summarises each real payload shape", () => {
     expect(headlineOf({ passed: 418, failed: 0 })).toBe("418 passed · 0 failed");
     expect(headlineOf({ totals: { lines: 82.3 } })).toBe("82.3% lines");
+    expect(headlineOf({ totals: { lines: 88 } })).toBe("88.0% lines");
     expect(headlineOf({ metrics: { mean_ns: 12.5 } })).toBe("12.5 ns mean");
     expect(headlineOf({ max_abs_error: 1.2e-8 })).toBe("1.2e-8 max abs error");
   });

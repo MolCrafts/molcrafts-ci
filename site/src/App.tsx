@@ -5,7 +5,6 @@ import { WorkbenchShell } from "@/components/layout/WorkbenchShell";
 import { OperationsDock } from "@/components/operations-dock";
 import { ProfileSelect } from "@/components/profile-select";
 import { ProjectList } from "@/components/project-list";
-import { SnapshotInspector } from "@/components/snapshot-inspector";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Separator } from "@/components/ui/separator";
@@ -13,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { loadIndexListing, projectsFromListing } from "@/lib/index-data";
 import { ProjectRecordsProvider } from "@/lib/project-records";
 import { useProjectRecords } from "@/lib/project-records";
-import { SelectionProvider, useSelection } from "@/lib/selection";
 import { useUrlState, type UrlPatch } from "@/lib/use-url-state";
 import type { UrlState } from "@/lib/url-state";
 import { pluginsFor } from "@/plugins/registry";
@@ -56,25 +54,22 @@ export function App() {
 
   return (
     <ProjectRecordsProvider project={selected} profile={url.profile}>
-      <SelectionProvider resetKey={selected?.id ?? null}>
-        <Workbench
-          projects={projects}
-          loadError={loadError}
-          selected={selected}
-          url={url}
-          setUrl={setUrl}
-        />
-      </SelectionProvider>
+      <Workbench
+        projects={projects}
+        loadError={loadError}
+        selected={selected}
+        url={url}
+        setUrl={setUrl}
+      />
     </ProjectRecordsProvider>
   );
 }
 
 /**
- * Everything inside the providers.
+ * Everything inside the project-records provider.
  *
- * The shell needs to know whether anything is selected — that is what decides
- * whether the inspector column exists at all — and only a child of
- * `SelectionProvider` can answer that.
+ * URL state owns project/tab/snapshot. Provenance for the open generation
+ * lives on the record tab header — there is no side inspector.
  */
 function Workbench({
   projects,
@@ -89,7 +84,6 @@ function Workbench({
   url: UrlState;
   setUrl: (patch: UrlPatch) => void;
 }) {
-  const selection = useSelection();
   const { profiles } = useProjectRecords();
 
   const tabs = selected ? pluginsFor(selected) : [];
@@ -158,7 +152,6 @@ function Workbench({
           )}
         </LeftExplorer>
       }
-      inspector={selection ? <SnapshotInspector /> : null}
       dock={<OperationsDock />}
     >
       {!selected ? (

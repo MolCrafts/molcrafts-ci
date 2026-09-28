@@ -6,7 +6,6 @@ import { WorkSurface } from "@/components/layout/WorkSurface";
 import { PayloadView } from "@/components/payload-view";
 import { RunLink } from "@/components/run-link";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useSelect } from "@/lib/selection";
 import { useUrlState } from "@/lib/use-url-state";
 import {
   fetchRecordEntries,
@@ -31,8 +30,9 @@ import type { RecordTabPanelProps, RecordTabPlugin, ProjectContext } from "./typ
  * has to reach the recent past. That split is what lets this fold be one
  * reading instead of a table competing with it.
  *
- * The header carries where this generation came from — commit and CI run — so
- * the detail this site deliberately does not render is one click away.
+ * The header carries where this generation came from — commit, CI run, the
+ * profile it was measured on and what produced it. Anything further is in the
+ * Actions run.
  */
 export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
   function RecordTab({ project }: RecordTabPanelProps) {
@@ -42,7 +42,6 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
     const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
     const [snapshotSettled, setSnapshotSettled] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const select = useSelect();
     const [url, setUrl] = useUrlState();
 
     useEffect(() => {
@@ -61,7 +60,6 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
           // A shared link names a generation; a bare visit gets the newest.
           const named = url.snapshot && sorted.find((e) => e.snapshot_id === url.snapshot);
           setActiveId((named ? named.snapshot_id : sorted[0]?.snapshot_id) ?? null);
-          if (named) select({ record: record ?? named.record ?? "", entry: named, snapshot: null });
         })
         .catch((err: unknown) => {
           if (!cancelled) {
@@ -124,22 +122,18 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
                 selectedId={activeId}
                 onSelect={(snapshotId) => {
                   setActiveId(snapshotId);
-                  // An explicit pick is what points the inspector, and what the
-                  // address records so the view can be shared. The body is
-                  // fetched there, so the pick does not wait on it.
-                  const entry = entries?.find((e) => e.snapshot_id === snapshotId);
-                  if (entry) {
-                    select({ record: record ?? entry.record ?? "", entry, snapshot: null });
-                  }
+                  // The address records the pick, so the view can be shared.
                   setUrl({ snapshot: snapshotId });
                 }}
               />
               {active && (
-                <span className="flex items-center gap-x-3 text-label text-muted-foreground">
+                <span className="flex min-w-0 flex-wrap items-center gap-x-3 text-label text-muted-foreground">
                   <CommitLink repository={active.repository} commit={active.commit} />
                   <RunLink repository={active.repository} run={active.workflow_run}>
                     run
                   </RunLink>
+                  {active.profile && <span className="font-mono">{active.profile}</span>}
+                  {active.producer && <span className="truncate">{active.producer}</span>}
                 </span>
               )}
             </div>

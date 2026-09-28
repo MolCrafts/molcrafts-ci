@@ -7,8 +7,9 @@ import { StatusMark } from "@/components/snapshot-status";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { openRecord } from "@/lib/open-record";
 import { useProjectRecords } from "@/lib/project-records";
-import { useSelect } from "@/lib/selection";
+import { useUrlState } from "@/lib/use-url-state";
 import { relativeTime, type IndexEntry } from "@/lib/snapshot-data";
 import { cn } from "@/lib/utils";
 import type { RecordSummary } from "@/lib/record-summary";
@@ -30,7 +31,13 @@ interface LogLine {
 export function OperationsDock(): JSX.Element {
   const { records, error } = useProjectRecords();
   const { collapsed, toggle } = useDock();
-  const select = useSelect();
+  const [url, setUrl] = useUrlState();
+
+  const open = (record: string, snapshotId: string | undefined) => {
+    if (!url.project) return;
+    const patch = openRecord(url.project, record, snapshotId ?? null);
+    if (patch) setUrl(patch);
+  };
   const [tab, setTab] = useState<DockTab>("log");
 
   const lines: LogLine[] = (records ?? [])
@@ -87,7 +94,7 @@ export function OperationsDock(): JSX.Element {
                 <li
                   key={entry.snapshot_id ?? `${record.record}-${i}`}
                   className="flex h-5 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
-                  onClick={() => select({ record: record.record, entry, snapshot: null })}
+                  onClick={() => open(record.record, entry.snapshot_id)}
                 >
                   <span className="shrink-0 font-mono text-micro tabular-nums text-muted-foreground">
                     {entry.timestamp?.slice(0, 16).replace("T", " ") ?? "—"}
@@ -97,7 +104,7 @@ export function OperationsDock(): JSX.Element {
                     className="w-24 shrink-0 truncate rounded-hairline text-left font-mono text-micro text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={(e) => {
                       e.stopPropagation();
-                      select({ record: record.record, entry, snapshot: null });
+                      open(record.record, entry.snapshot_id);
                     }}
                   >
                     {record.record}
@@ -127,10 +134,7 @@ export function OperationsDock(): JSX.Element {
               <li
                 key={record.record}
                 className="flex h-5 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
-                onClick={() =>
-                  record.entry &&
-                  select({ record: record.record, entry: record.entry, snapshot: record.snapshot })
-                }
+                onClick={() => open(record.record, record.entry?.snapshot_id)}
               >
                 <StatusMark status="failed" className="self-center" />
                 <button
@@ -138,23 +142,18 @@ export function OperationsDock(): JSX.Element {
                   className="w-24 shrink-0 truncate rounded-hairline text-left font-mono text-micro text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (record.entry)
-                      select({
-                        record: record.record,
-                        entry: record.entry,
-                        snapshot: record.snapshot,
-                      });
+                    open(record.record, record.entry?.snapshot_id);
                   }}
                 >
                   {record.record}
                 </button>
-                  <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
-                    {record.statusLabel} · {record.headline} ·{" "}
-                    <CommitLink
-                      repository={record.entry?.repository}
-                      commit={record.entry?.commit}
-                    />{" "}
-                    · {relativeTime(record.entry?.timestamp)}
+                <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
+                  {record.statusLabel} · {record.headline} ·{" "}
+                  <CommitLink
+                    repository={record.entry?.repository}
+                    commit={record.entry?.commit}
+                  />{" "}
+                  · {relativeTime(record.entry?.timestamp)}
                 </span>
               </li>
             ))}

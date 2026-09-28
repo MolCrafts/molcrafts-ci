@@ -116,11 +116,27 @@ def write_index_listing(data_root: Path) -> Path:
     enumerate — it has to be told what exists. This used to be generated at
     build time, which meant new data only appeared when the site was rebuilt;
     writing it here puts it next to the data it describes.
+
+    ``published`` is each project's newest index timestamp, so the site can
+    land on whatever ran last without fetching every ``*.jsonl`` over HTTP.
     """
     index_root = data_root / "index"
     listing = sorted(path.relative_to(data_root).as_posix() for path in index_root.rglob("*.jsonl"))
+    published: dict[str, str] = {}
+    for path in index_root.rglob("*.jsonl"):
+        project = path.relative_to(index_root).parts[0]
+        latest = published.get(project)
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            stamp = json.loads(line).get("timestamp")
+            if isinstance(stamp, str) and (latest is None or stamp > latest):
+                latest = stamp
+        if latest is not None:
+            published[project] = latest
     path = data_root / "index-listing.json"
-    write_json(path, {"indexes": listing})
+    write_json(path, {"indexes": listing, "published": published})
     return path
 
 

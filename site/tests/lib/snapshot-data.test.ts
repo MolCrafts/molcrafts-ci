@@ -87,6 +87,21 @@ describe("projectsFromListing", () => {
     ]);
   });
 
+  it("orders projects by newest published timestamp first", () => {
+    const projects = projectsFromListing({
+      indexes: [
+        "data/index/molpy/tests.jsonl",
+        "data/index/molrs/tests.jsonl",
+        "data/index/alpha/tests.jsonl",
+      ],
+      published: {
+        molpy: "2026-09-20T10:00:00Z",
+        molrs: "2026-09-21T10:00:00Z",
+      },
+    });
+    expect(projects.map((p) => p.id)).toEqual(["molrs", "molpy", "alpha"]);
+  });
+
   it("ignores paths that are not an index entry", () => {
     expect(
       projectsFromListing({ indexes: ["data/index/molpy", "README.md", "./data/index/x/y.jsonl"] }),

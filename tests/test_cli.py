@@ -47,7 +47,11 @@ def write_snapshot_file(tmp_path: Path, record: str, *, tracked: bool = True) ->
     snap = Snapshot(
         manifest=Manifest(
             record=record,
-            source=Source(repository="MolCrafts/molpy", commit="abc123def456789"),
+            source=Source(
+                repository="MolCrafts/molpy",
+                commit="abc123def456789",
+                timestamp="2026-09-20T12:00:00Z",
+            ),
             producer="pytest-benchmark",
             profile="linux-x86_64",
             tracking=Tracking(enabled=tracked, generation=1),
@@ -105,7 +109,10 @@ class TestIngest:
         capsys.readouterr()
 
         listing = json.loads((data_root / "index-listing.json").read_text(encoding="utf-8"))
-        assert listing == {"indexes": ["index/molpy/benchmark.jsonl"]}
+        assert listing == {
+            "indexes": ["index/molpy/benchmark.jsonl"],
+            "published": {"molpy": "2026-09-20T12:00:00Z"},
+        }
 
     def test_if_exists_skip_reports_the_snapshot_as_already_stored(
         self, tmp_path: Path, capsys
@@ -129,3 +136,43 @@ class TestIngest:
         assert main([*args, "--skip-untracked"]) == 0
         assert [r["status"] for r in read_lines(capsys)] == ["untracked"]
         assert not data_root.exists()
+
+
+class TestSnapshot:
+    def test_builds_tests_from_a_cargo_test_log(self, tmp_path: Path, capsys, monkeypatch) -> None:
+        monkeypatch.setenv("GITHUB_REPOSITORY", "MolCrafts/molrs")
+        monkeypatch.setenv("GITHUB_SHA", "abcdef0123456789")
+        log = tmp_path / "cargo-test.log"
+        log.write_text("test result: ok. 2 passed; 0 failed; 1 ignored;\n", encoding="utf-8")
+        out = tmp_path / "out"
+
+        assert main(["snapshot", "--out", str(out), "--cargo-test", str(log)]) == 0
+        row = read_lines(capsys)[0]
+        assert row["ok"] is True
+        assert row["record"] == "tests"
+        snap = json.loads((out / "tests.json").read_text(encoding="utf-8"))
+        assert snap["manifest"]["producer"] == "cargo-test"
+        assert snap["payload"] == {"passed": 2, "failed": 0, "skipped": 1}
+
+    def test_refuses_junit_and_cargo_test_together(self, tmp_path: Path, capsys) -> None:
+        junit = tmp_path / "junit.xml"
+        junit.write_text('<testsuite tests="1" failures="0" skipped="0"/>', encoding="utf-8")
+        log = tmp_path / "cargo-test.log"
+        log.write_text("test result: ok. 1 passed; 0 failed; 0 ignored;\n", encoding="utf-8")
+
+        assert (
+            main(
+                [
+                    "snapshot",
+                    "--out",
+                    str(tmp_path / "out"),
+                    "--junit",
+                    str(junit),
+                    "--cargo-test",
+                    str(log),
+                ]
+            )
+            == 2
+        )
+        err = json.loads(capsys.readouterr().err)
+        assert "not both" in err["error"]

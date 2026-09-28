@@ -42,7 +42,7 @@ def _uncovered(lines: list[int]) -> dict[str, Any]:
 def _relative(path: str, source_root: Path | None) -> str:
     """Coverage tools report build paths; a snapshot should carry repo paths.
 
-    cargo-llvm-cov writes absolute paths, so an unprocessed payload records the
+    llvm-cov writes absolute paths, so an unprocessed payload records the
     runner's directory layout and never matches the same file measured
     elsewhere. coverage.py already reports relative paths and is left alone.
     """
@@ -81,7 +81,7 @@ def github_source(*, require_commit: bool = False) -> Source:
 
 
 def read_junit(path: Path) -> dict[str, Any]:
-    """JUnit XML, which pytest and cargo-nextest both emit.
+    """JUnit XML, which pytest emits (`--junitxml`).
 
     Named `read_*` rather than `tests_*` so importing it into a test module
     does not make pytest collect it as a test.
@@ -99,6 +99,33 @@ def read_junit(path: Path) -> dict[str, Any]:
     failed = total("failures") + total("errors")
     skipped = total("skipped")
     return {"passed": ran - failed - skipped, "failed": failed, "skipped": skipped}
+
+
+# `cargo test` prints one of these per target. `ignored` is a skipped test.
+# The word after the colon is `ok` or `FAILED`, sometimes wrapped in color.
+_CARGO_TEST_RESULT = re.compile(r"test result: .*?(\d+) passed; (\d+) failed; (\d+) ignored;")
+
+
+def read_cargo_test(path: Path) -> dict[str, Any]:
+    """Totals from a ``cargo test`` log.
+
+    The log is the text ``cargo test`` already prints. One binary prints one
+    ``test result:`` line; a run with several targets prints several, and they
+    add up.
+    """
+    passed = failed = skipped = 0
+    found = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = _CARGO_TEST_RESULT.search(line)
+        if not match:
+            continue
+        found = True
+        passed += int(match.group(1))
+        failed += int(match.group(2))
+        skipped += int(match.group(3))
+    if not found:
+        raise ValueError(f"no cargo test summary in {path}")
+    return {"passed": passed, "failed": failed, "skipped": skipped}
 
 
 def _percent(hit: float, found: float) -> float | None:
@@ -137,7 +164,7 @@ _LCOV_FIELD = re.compile(r"^(SF|DA|LF|LH|BRF|BRH|FNF|FNH):(.*)$")
 
 
 def read_lcov(path: Path, *, source_root: Path | None = None) -> dict[str, Any]:
-    """LCOV tracefile, which cargo-llvm-cov, grcov and gcov all emit.
+    """LCOV tracefile from ``llvm-cov export -format=lcov``.
 
     Totals are summed from the per-file counters rather than read from a
     summary line, because a tracefile has no summary record.

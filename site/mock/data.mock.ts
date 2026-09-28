@@ -13,7 +13,10 @@ export default defineMock([
   {
     url: "/data/index-listing.json",
     method: "GET",
-    body: () => ({ indexes: store.value.indexes }),
+    body: () => ({
+      indexes: store.value.indexes,
+      published: store.value.published ?? {},
+    }),
   },
   {
     url: "/data/index/:project/:record.jsonl",

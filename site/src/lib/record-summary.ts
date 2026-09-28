@@ -8,7 +8,9 @@
 import type { SnapshotStatus } from "@/components/snapshot-status";
 import {
   asRecord,
+  formatMeasure,
   formatNumber,
+  formatPercent,
   num,
   readCoverage,
   readMeasure,
@@ -42,7 +44,7 @@ export interface RecordSummary extends RecordVerdict {
   entries: IndexEntry[];
   /** Newest entry in the index, or null when the index is empty. */
   entry: IndexEntry | null;
-  /** Body of the newest snapshot, so the inspector needs no second fetch. */
+  /** Body of the newest snapshot, so overview and problems need no second fetch. */
   snapshot: Snapshot | null;
   /** Oldest first, so a chart reads left to right. Capped by the provider. */
   history: HistoryPoint[];
@@ -91,10 +93,16 @@ export function verdictOf(payload: unknown): RecordVerdict {
  */
 export function headlineOf(payload: unknown): string {
   const tests = readTests(payload);
-  if (tests) return `${tests.passed} passed · ${tests.failed} failed`;
+  if (tests) {
+    // Skips are named only when there are some: a trailing "· 0 skipped" on
+    // every green suite is words that never change anything.
+    const parts = [`${tests.passed} passed`, `${tests.failed} failed`];
+    if (tests.skipped > 0) parts.push(`${tests.skipped} skipped`);
+    return parts.join(" · ");
+  }
 
   const coverage = readCoverage(payload);
-  if (coverage?.totals.lines != null) return `${coverage.totals.lines.toFixed(1)}% lines`;
+  if (coverage?.totals.lines != null) return `${formatPercent(coverage.totals.lines)} lines`;
 
   const p = asRecord(payload);
   const mean = p ? num(asRecord(p.metrics)?.mean_ns) : null;
@@ -105,6 +113,26 @@ export function headlineOf(payload: unknown): string {
 
   const first = readScalars(payload)[0];
   return first ? `${first.label} ${first.value}` : "—";
+}
+
+/**
+ * Change against the previous generation, or null when there is none.
+ *
+ * Direction is not the same as good. Coverage rising is an improvement and a
+ * benchmark's nanoseconds rising is a regression, so the reading carries
+ * `higherIsBetter` and the colour follows that rather than the sign.
+ */
+export function deltaOf(record: RecordSummary): { text: string; better: boolean } | null {
+  const plotted = record.history.filter((p) => p.measure != null);
+  if (plotted.length < 2) return null;
+  const now = plotted[plotted.length - 1]!.measure!;
+  const before = plotted[plotted.length - 2]!.measure!;
+  const diff = now.value - before.value;
+  if (diff === 0) return null;
+  return {
+    text: `${diff > 0 ? "+" : "−"}${formatMeasure(Math.abs(diff), now.unit)}`,
+    better: diff > 0 === (now.higherIsBetter !== false),
+  };
 }
 
 /**
