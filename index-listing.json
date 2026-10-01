@@ -4,12 +4,13 @@
     "index/molcrafts-ci/tests.jsonl",
     "index/molpy/coverage.jsonl",
     "index/molpy/tests.jsonl",
+    "index/molrs/conformance.jsonl",
     "index/molrs/coverage.jsonl",
     "index/molrs/tests.jsonl"
   ],
   "published": {
     "molcrafts-ci": "2026-09-28T12:12:24Z",
     "molpy": "2026-09-20T19:30:32Z",
-    "molrs": "2026-09-20T19:17:13Z"
+    "molrs": "2026-10-01T15:22:30Z"
   }
 }

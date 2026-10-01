@@ -1,0 +1,304 @@
+{
+  "manifest": {
+    "producer": "molrec",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "conformance",
+    "schema_version": "1",
+    "source": {
+      "commit": "8d6685a92d40dfe991ab72f8d74d3a1f60c22976",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molrs",
+      "run_attempt": 1,
+      "timestamp": "2026-10-01T15:22:30Z",
+      "workflow_run": 36883412317
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "failed": 34,
+    "failures": [
+      {
+        "backend": "zarr",
+        "case_id": "structure",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "structure",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "system-and-frame",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "system-and-frame",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "meta-identity-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "meta-identity-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "meta-unknown-keys-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "meta-unknown-keys-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "record-with-box",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "record-with-box",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/empty-frame",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/empty-frame",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/coordinates",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/coordinates",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/every-dtype",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/every-dtype",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/no-silent-widening",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/no-silent-widening",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/block-named-meta",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/block-named-meta",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/trailing-axis",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/trailing-axis",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/structural-shape",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/structural-shape",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/block-without-columns",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/block-without-columns",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/independent-block-counts",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/independent-block-counts",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/triclinic-box",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/triclinic-box",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/unknown-names-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/unknown-names-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/frame-meta-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "write",
+        "module": "record",
+        "status": "error"
+      },
+      {
+        "backend": "zarr",
+        "case_id": "frame/frame-meta-preserved",
+        "detail": "AttributeError: module 'molrs' has no attribute 'Record'",
+        "direction": "read",
+        "module": "record",
+        "status": "error"
+      }
+    ],
+    "implementation": "molrs",
+    "modules": "record",
+    "passed": 2,
+    "skipped": 0,
+    "version": "0.14.0"
+  }
+}
