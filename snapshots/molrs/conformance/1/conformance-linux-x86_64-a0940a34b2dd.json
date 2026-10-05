@@ -1,0 +1,31 @@
+{
+  "manifest": {
+    "producer": "molrec",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "conformance",
+    "schema_version": "1",
+    "source": {
+      "commit": "a0940a34b2dd6d746424aecfa67bb2cec5f5feb9",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molrs",
+      "run_attempt": 1,
+      "timestamp": "2026-10-05T09:46:17Z",
+      "workflow_run": 37291783982
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "failed": 0,
+    "failures": [],
+    "implementation": "molrs",
+    "modules": "forcefield, record, trajectory",
+    "passed": 207,
+    "skipped": 0,
+    "version": "0.15.0"
+  }
+}
