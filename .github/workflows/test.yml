@@ -1,11 +1,12 @@
 name: test
 
-# Two tiers (`tier` decides):
+# Two tiers (`test / tier` decides):
 #
-#   fast  a feature-branch push to MolCrafts: Python 3.12 and the site tests.
-#   full  everything else -- dev/master/main, pull requests, dispatches, and
-#         every push to a fork, so a fork branch is proven before its pull
-#         request is opened: + Python 3.13.
+#   fast  a feature-branch push to MolCrafts: Python 3.12, the site tests and
+#         the shared actions.
+#   full  every push to a fork (proven before its pull request), dev, master
+#         and main on MolCrafts, pull requests, tags and dispatches:
+#         + Python 3.13.
 #
 # Upstream only, `test / python (3.12)` also publishes this run's tests and
 # coverage through ./actions/submit: molcrafts-ci is its own first producer.
@@ -15,25 +16,26 @@ on:
   pull_request:
     branches: [dev, master, main]
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
   group: test-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   tier:
     name: test / tier
-    # A pull request inside a fork was already built by its push.
+    # A pull request inside a fork was already run, full tier, by its push.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.repository_owner == 'MolCrafts'
     runs-on: ubuntu-latest
     outputs:
       full: ${{ steps.tier.outputs.full }}
     steps:
       - id: tier
-        run: echo "full=${{ !(github.repository_owner == 'MolCrafts' && github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main') }}" | tee -a "$GITHUB_OUTPUT"
+        run: echo "full=${{ github.repository_owner != 'MolCrafts' || contains(fromJSON('["dev","master","main"]'), github.ref_name) || github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') }}" | tee -a "$GITHUB_OUTPUT"
 
   python:
     name: test / python (${{ matrix.python }})
@@ -52,7 +54,7 @@ jobs:
         python: ${{ fromJSON(needs.tier.outputs.full == 'true' && '["3.12","3.13"]' || '["3.12"]') }}
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-python
+      - uses: ./actions/setup-python
         with:
           python-version: ${{ matrix.python }}
       - run: uv pip install --system -e ".[dev]"
@@ -91,8 +93,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-node
+      - uses: ./actions/setup-node
         with:
           working-directory: site
       - run: npm test
         working-directory: site
+
+  # The shared setup actions every MolCrafts repository uses, from this
+  # checkout: each one run once, so a broken action fails here before any
+  # repository picks it up from master.
+  actions:
+    name: test / actions
+    needs: tier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./actions/setup-python
+        with:
+          python-version: "3.13"
+      - run: python --version | grep -F 3.13 && uv --version
+      - uses: ./actions/setup-node
+        with:
+          working-directory: site
+      - run: node --version && test -d site/node_modules
+      - run: |
+          mkdir -p .ci-out/rust
+          printf '[toolchain]\nchannel = "stable"\nprofile = "minimal"\n' > .ci-out/rust/rust-toolchain.toml
+      - uses: ./actions/setup-rust
+        with:
+          toolchain-dir: .ci-out/rust
+          components: clippy
+          targets: wasm32-unknown-unknown
+      - run: |
+          cd .ci-out/rust
+          cargo --version && cargo clippy --version
+          rustup target list --installed | grep -Fx wasm32-unknown-unknown
+      - uses: ./actions/setup-partners
+        with:
+          repository: MolCrafts/molrec
+          path: .ci-out/molrec
+      - run: test -f .ci-out/molrec/.github/partners.env

@@ -325,20 +325,31 @@ and the release move together. See [CHANGELOG.md](CHANGELOG.md).
 
 ## CI
 
-One file per kind of work. Feature branches get the fast tier; `dev`, `master`,
-pull requests and every fork push get the full tier. Shared setup lives in
-`.github/actions/setup-python` and `.github/actions/setup-node`.
+One file per kind of work. A feature-branch push to MolCrafts gets the fast
+tier; every push to a fork, `dev`/`master`/`main` on MolCrafts, pull requests,
+tags and dispatches get the full tier (`test / tier` decides).
 
 | workflow | jobs | runs |
 | --- | --- | --- |
-| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc) | every push, PRs into dev/master |
-| `test.yml` | `test / python (3.12)` (+ `3.13` on the full tier), `test / site` | every push, PRs into dev/master; the self-snapshot publish is MolCrafts-only |
-| `docs.yml` | `docs / site` (the Cloudflare Pages build) | every push, PRs into dev/master; Cloudflare deploys, not CI |
-| `release.yml` | verify, build, publish to PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload is MolCrafts-only |
+| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint) | every push, PRs into dev/master/main |
+| `test.yml` | `test / tier`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared action run once) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
+| `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master/main; Cloudflare deploys, not CI |
+| `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload is MolCrafts-only |
 
-`actions/submit` is the public Action other repositories call as
-`MolCrafts/molcrafts-ci/actions/submit@master`; it is not part of this
-repository's own CI setup.
+## Shared actions
+
+Every MolCrafts repository uses these as
+`MolCrafts/molcrafts-ci/actions/<name>@master` (`master` is their dev line);
+this repository uses its own checkout (`./actions/<name>`), so a change is
+tested before anyone picks it up.
+
+| action | does | inputs |
+| --- | --- | --- |
+| `actions/setup-python` | Python on PATH, uv with its cache | `python-version` (3.12) |
+| `actions/setup-node` | Node (`.nvmrc`, else `node-version`), npm cache on the lockfile, `npm ci` / `npm install` | `node-version` (22), `working-directory`, `registry-url`, `install` |
+| `actions/setup-rust` | the toolchain `rust-toolchain.toml` pins, extra targets/components, rust-cache | `toolchain-dir`, `targets`, `components`, `cache`, `workspaces` |
+| `actions/setup-partners` | partner repositories: every one `.github/partners.env` names (via `scripts/partners.py`), or one `repository` into `path`; a branch ref follows a same-named branch on the fork, then upstream | `repository`, `ref` (dev), `path` |
+| `actions/submit` | validate, upload and ingest CI snapshots | see below |
 
 ## Specification
 
