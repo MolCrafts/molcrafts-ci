@@ -8,23 +8,24 @@ on:
   pull_request:
     branches: [dev, master, main]
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
   group: lint-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   python:
     name: lint / python
-    # A pull request inside a fork was already built by its push.
+    # A pull request inside a fork was already run by its push.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.repository_owner == 'MolCrafts'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-python
+      - uses: ./actions/setup-python
       - run: uv pip install --system -e ".[dev]" pyyaml
       - run: ruff check src tests scripts
       - run: ruff format --check src tests scripts
@@ -37,10 +38,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-node
+      - uses: ./actions/setup-node
         with:
           working-directory: site
-      # rsbuild does not type-check, so a clean `docs / site` build says
-      # nothing about types. This is the only place tsc runs.
+      # rsbuild does not type-check, so a clean `docs / build` says nothing
+      # about types. This is the only place tsc runs.
       - run: npm run typecheck
         working-directory: site
+
+  # Every workflow through actionlint, and every shared composite action's
+  # action.yml against the action metadata schema: an invalid action.yml
+  # breaks every repository that uses it, at their next run, not here.
+  actions:
+    name: lint / actions
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.repository_owner == 'MolCrafts'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./actions/setup-python
+      - run: uvx check-jsonschema --builtin-schema vendor.github-actions actions/*/action.yml
+      - run: uvx check-jsonschema --builtin-schema vendor.github-workflows .github/workflows/*.yml
+      - uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color

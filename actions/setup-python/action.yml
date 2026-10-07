@@ -1,5 +1,7 @@
 name: setup-python
-description: Python on PATH, and uv with its cache.
+description: >
+  Python on PATH, and uv with its cache. Shared by every MolCrafts repository
+  as MolCrafts/molcrafts-ci/actions/setup-python@master.
 inputs:
   python-version:
     description: Python on PATH (uv calls name their own with --python)

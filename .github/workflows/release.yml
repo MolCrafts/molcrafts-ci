@@ -1,12 +1,12 @@
-# Tag-triggered release to PyPI via trusted publishing.
-#
-# No API token lives in this repository: PyPI verifies a short-lived OIDC
-# token minted by GitHub for this exact workflow. That binding is configured
-# once on PyPI (see the checklist in CHANGELOG.md).
-name: Release
+name: release
 
-# A workflow_dispatch is a dry run: the same gates and the build, no upload.
-# Uploading needs a v* tag on MolCrafts itself.
+# A `v*` tag on MolCrafts/molcrafts-ci: guard -> lint + the full test tier ->
+# build -> PyPI (trusted publishing: no API token lives in this repository;
+# PyPI trusts a short-lived OIDC token GitHub mints for this exact file, see
+# the checklist in CHANGELOG.md) -> GitHub Release.
+#
+# A dispatch is the dry run, on any branch, fork or upstream: the same gates
+# and the build, no upload. Only a tag push on MolCrafts uploads.
 on:
   push:
     tags: ["v*"]
@@ -15,59 +15,54 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  verify:
+  guard:
+    name: release / guard
+    if: github.event_name == 'workflow_dispatch' || github.repository_owner == 'MolCrafts'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-python
-      - run: uv pip install --system -e ".[dev]"
-
       # A tag that disagrees with pyproject would publish a version nobody
       # asked for, under a name nobody can reproduce from the tree.
-      - name: Tag matches the packaged version
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: The tag is the package version
+        if: github.event_name == 'push'
         run: |
-          tag="${GITHUB_REF_NAME#v}"
-          pkg="$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
-          if [ "$tag" != "$pkg" ]; then
-            echo "::error::tag $GITHUB_REF_NAME does not match pyproject version $pkg"
-            exit 1
-          fi
-          echo "releasing $pkg"
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          [ "$GITHUB_REF_NAME" = "v$version" ] || { echo "::error::tag $GITHUB_REF_NAME is not v$version"; exit 1; }
 
-      # The same checks lint.yml and test.yml run; a tag must not skip them.
-      - run: ruff check src tests scripts
-      - run: ruff format --check src tests scripts
-      - run: pytest -q
+  lint:
+    needs: guard
+    uses: ./.github/workflows/lint.yml
 
-  site:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-node
-        with:
-          working-directory: site
-      - run: npm run typecheck
-        working-directory: site
-      - run: npm test
-        working-directory: site
+  test:
+    needs: guard
+    uses: ./.github/workflows/test.yml
+    # test / python publishes its own snapshot (contents: write on itself).
+    permissions:
+      contents: write
 
   build:
-    needs: [verify, site]
+    name: release / build
+    needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-python
+      - uses: ./actions/setup-python
       - run: uv build
+      - run: uvx twine check --strict dist/*
       - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
 
-  publish:
+  pypi:
+    name: release / pypi
     needs: build
-    if: github.repository_owner == 'MolCrafts' && startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && github.repository_owner == 'MolCrafts'
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -80,19 +75,25 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
-  github-release:
-    needs: publish
-    if: github.repository_owner == 'MolCrafts' && startsWith(github.ref, 'refs/tags/v')
+  github:
+    name: release / github
+    needs: pypi
+    if: github.event_name == 'push' && github.repository_owner == 'MolCrafts'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
-      - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
-        env:
+      - env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber
