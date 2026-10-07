@@ -5,9 +5,12 @@
 # once on PyPI (see the checklist in CHANGELOG.md).
 name: Release
 
+# A workflow_dispatch is a dry run: the same gates and the build, no upload.
+# Uploading needs a v* tag on MolCrafts itself.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,14 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - run: pip install -e ".[dev]"
+      - uses: ./.github/actions/setup-python
+      - run: uv pip install --system -e ".[dev]"
 
       # A tag that disagrees with pyproject would publish a version nobody
       # asked for, under a name nobody can reproduce from the tree.
       - name: Tag matches the packaged version
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           tag="${GITHUB_REF_NAME#v}"
           pkg="$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
@@ -34,22 +36,18 @@ jobs:
           fi
           echo "releasing $pkg"
 
-      # The same checks ci.yml runs; a tag must not skip them.
-      - run: ruff check src tests
-      - run: ruff format --check src tests
+      # The same checks lint.yml and test.yml run; a tag must not skip them.
+      - run: ruff check src tests scripts
+      - run: ruff format --check src tests scripts
       - run: pytest -q
 
   site:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: ./.github/actions/setup-node
         with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: site/package-lock.json
-      - run: npm ci
-        working-directory: site
+          working-directory: site
       - run: npm run typecheck
         working-directory: site
       - run: npm test
@@ -60,11 +58,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - run: pip install build
-      - run: python -m build
+      - uses: ./.github/actions/setup-python
+      - run: uv build
       - uses: actions/upload-artifact@v7
         with:
           name: dist
@@ -72,6 +67,7 @@ jobs:
 
   publish:
     needs: build
+    if: github.repository_owner == 'MolCrafts' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -87,6 +83,7 @@ jobs:
 
   github-release:
     needs: publish
+    if: github.repository_owner == 'MolCrafts' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write

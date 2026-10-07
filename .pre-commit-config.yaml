@@ -1,7 +1,7 @@
 # Commit-time half of the CI gate.
 #
 # Every project-tool hook is `repo: local` + `language: system` running the
-# exact command .github/workflows/ci.yml runs, so there is one invocation and
+# exact command .github/workflows/lint.yml and test.yml run, so there is one invocation and
 # no second pinned version to drift. They resolve from `pip install -e ".[dev]"`
 # and `site/node_modules`.
 #

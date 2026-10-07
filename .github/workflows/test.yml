@@ -1,0 +1,98 @@
+name: test
+
+# Two tiers (`tier` decides):
+#
+#   fast  a feature-branch push to MolCrafts: Python 3.12 and the site tests.
+#   full  everything else -- dev/master/main, pull requests, dispatches, and
+#         every push to a fork, so a fork branch is proven before its pull
+#         request is opened: + Python 3.13.
+#
+# Upstream only, `test / python (3.12)` also publishes this run's tests and
+# coverage through ./actions/submit: molcrafts-ci is its own first producer.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [dev, master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main' }}
+
+jobs:
+  tier:
+    name: test / tier
+    # A pull request inside a fork was already built by its push.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.repository_owner == 'MolCrafts'
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.tier.outputs.full }}
+    steps:
+      - id: tier
+        run: echo "full=${{ !(github.repository_owner == 'MolCrafts' && github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main') }}" | tee -a "$GITHUB_OUTPUT"
+
+  python:
+    name: test / python (${{ matrix.python }})
+    needs: tier
+    runs-on: ubuntu-latest
+    permissions:
+      # The publish steps push this run's tests and coverage into data/. Same
+      # repository, so GITHUB_TOKEN is the right credential -- and since GitHub
+      # does not start a workflow from a GITHUB_TOKEN push, it is also what
+      # keeps the ingest commit from triggering another run. Cloudflare Pages
+      # builds from its own webhook, so the site still redeploys.
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ${{ fromJSON(needs.tier.outputs.full == 'true' && '["3.12","3.13"]' || '["3.12"]') }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv pip install --system -e ".[dev]"
+      # One run is both the gate and the measurement.
+      - run: >-
+          pytest -q --junitxml=.ci-out/junit.xml
+          --cov=molcrafts_ci --cov-branch --cov-report=json:.ci-out/coverage.json
+
+      # These run even when the gate failed: a run whose tests went red is
+      # exactly the run whose test record is worth keeping. The gate has
+      # already decided the job's verdict.
+      - name: Build snapshots
+        if: ${{ !cancelled() && github.repository_owner == 'MolCrafts' && matrix.python == '3.12' && hashFiles('.ci-out/junit.xml') != '' }}
+        # Only a push to master becomes project history; anything else
+        # produces the same snapshots untracked, which submit validates and
+        # uploads without publishing.
+        run: |
+          molci snapshot \
+            --out .ci-out/snapshots \
+            --junit .ci-out/junit.xml \
+            --coverage .ci-out/coverage.json \
+            ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master') && '--track' || '' }}
+      - name: Publish to the index
+        if: ${{ !cancelled() && github.repository_owner == 'MolCrafts' && matrix.python == '3.12' && hashFiles('.ci-out/snapshots/*.json') != '' }}
+        uses: ./actions/submit
+        with:
+          snapshot-path: .ci-out/snapshots/*.json
+          project: molcrafts-ci
+          artifact-name: molcrafts-ci-self-snapshot
+          # Writing to its own repository is the one case GITHUB_TOKEN covers.
+          token: ${{ github.token }}
+
+  site:
+    name: test / site
+    needs: tier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node
+        with:
+          working-directory: site
+      - run: npm test
+        working-directory: site
