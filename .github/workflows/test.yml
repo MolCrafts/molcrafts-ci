@@ -132,4 +132,6 @@ jobs:
         with:
           repository: MolCrafts/molrec
           path: .ci-out/molrec
-      - run: test -f .ci-out/molrec/.github/partners.env
+      # Any branch of molrec: on master this follows molrec's master (the
+      # same-named branch), elsewhere its dev.
+      - run: git -C .ci-out/molrec log -1 --oneline && test -f .ci-out/molrec/pyproject.toml
