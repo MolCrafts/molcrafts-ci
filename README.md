@@ -143,7 +143,7 @@ release tag once one exists.
 ### This repository is its own first producer
 
 `molcrafts-ci` publishes its own `tests` and `coverage` records through the same
-Action, in `.github/workflows/ci.yml`:
+Action, in `.github/workflows/test.yml`:
 
 ```yaml
 - uses: ./actions/submit
@@ -154,7 +154,7 @@ Action, in `.github/workflows/ci.yml`:
 ```
 
 So the publish path runs on every push to master, not only when a downstream
-repository adopts it.
+repository adopts it. It runs on MolCrafts only, never in a fork.
 
 Two things make the self-hosted case different from a downstream one:
 
@@ -322,6 +322,23 @@ python -m build
 Versioning: while the project is `0.x`, the **minor** is the breaking-change
 axis. `manifest.schema_version` is taken from that minor, so the snapshot shape
 and the release move together. See [CHANGELOG.md](CHANGELOG.md).
+
+## CI
+
+One file per kind of work. Feature branches get the fast tier; `dev`, `master`,
+pull requests and every fork push get the full tier. Shared setup lives in
+`.github/actions/setup-python` and `.github/actions/setup-node`.
+
+| workflow | jobs | runs |
+| --- | --- | --- |
+| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc) | every push, PRs into dev/master |
+| `test.yml` | `test / python (3.12)` (+ `3.13` on the full tier), `test / site` | every push, PRs into dev/master; the self-snapshot publish is MolCrafts-only |
+| `docs.yml` | `docs / site` (the Cloudflare Pages build) | every push, PRs into dev/master; Cloudflare deploys, not CI |
+| `release.yml` | verify, build, publish to PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload is MolCrafts-only |
+
+`actions/submit` is the public Action other repositories call as
+`MolCrafts/molcrafts-ci/actions/submit@master`; it is not part of this
+repository's own CI setup.
 
 ## Specification
 

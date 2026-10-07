@@ -1,0 +1,20 @@
+name: setup-node
+description: Node on PATH, npm cache keyed on the lockfile, and `npm ci`.
+inputs:
+  node-version:
+    description: Node version
+    default: "22"
+  working-directory:
+    description: Directory holding package.json and package-lock.json
+    default: "."
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+    - run: npm ci
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}

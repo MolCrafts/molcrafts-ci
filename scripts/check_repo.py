@@ -10,6 +10,7 @@ how a gate stops being read.
 
 from __future__ import annotations
 
+import fnmatch
 import re
 import subprocess
 import sys
@@ -72,7 +73,9 @@ def check_workflow_branches() -> list[str]:
         if not isinstance(push, dict):
             continue
         branches = push.get("branches")
-        if branches and branch not in branches:
+        # Filters are globs (`**` is every branch); fnmatch's `*` also
+        # crosses `/`, which only makes this check more lenient.
+        if branches and not any(fnmatch.fnmatchcase(branch, b) for b in branches):
             problems.append(
                 f"{path.relative_to(ROOT)}: push.branches={branches} "
                 f"does not include the default branch {branch!r}"
