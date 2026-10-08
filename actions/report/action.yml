@@ -80,7 +80,10 @@ runs:
         [ -n "$JUNIT" ] && args+=(--junit "$JUNIT")
         [ -n "$CARGO_TEST" ] && args+=(--cargo-test "$CARGO_TEST")
         [ -n "$COVERAGE" ] && args+=(--coverage "$COVERAGE")
-        table=$("$python" -m molcrafts_ci.cli "${args[@]}") || warn "molci report exited $?"
+        # UTF-8 and LF on every OS: Windows Python would print the table in
+        # cp1252 with CRLF line ends.
+        table=$(PYTHONUTF8=1 "$python" -m molcrafts_ci.cli "${args[@]}") || warn "molci report exited $?"
+        table=${table//$'\r'/}
         printf '%s\n\n' "$table" >> "$GITHUB_STEP_SUMMARY"
         delimiter="molcrafts-ci-report-$RANDOM$RANDOM"
         printf 'table<<%s\n%s\n%s\n' "$delimiter" "$table" "$delimiter" >> "$GITHUB_OUTPUT"
