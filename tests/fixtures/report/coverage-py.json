@@ -8,5 +8,5 @@
       "excluded_lines": []
     }
   },
-  "totals": {"covered_lines": 3, "num_statements": 4, "percent_covered": 78.4567, "percent_covered_display": "78", "missing_lines": 1, "excluded_lines": 0, "num_branches": 8, "covered_branches": 5, "missing_branches": 3, "num_partial_branches": 1}
+  "totals": {"covered_lines": 3, "num_statements": 4, "percent_covered": 66.66666666666667, "percent_covered_display": "67", "percent_statements_covered": 75.0, "missing_lines": 1, "excluded_lines": 0, "num_branches": 8, "covered_branches": 5, "missing_branches": 3, "num_partial_branches": 1}
 }

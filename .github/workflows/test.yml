@@ -196,7 +196,7 @@ jobs:
           PYTEST: ${{ steps.pytest.outputs.table }}
           CARGO: ${{ steps.cargo.outputs.table }}
         run: |
-          grep -Fx '| 14 | 3 | 3 | 78.5% | 62.5% |' <<< "$PYTEST"
+          grep -Fx '| 14 | 3 | 3 | 75.0% | 62.5% |' <<< "$PYTEST"
           grep -Fx '| 14 | 1 | 2 | 75.0% | — |' <<< "$CARGO"
 
   # ./actions/ci-context against synthetic contexts: every kind of run the

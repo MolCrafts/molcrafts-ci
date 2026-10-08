@@ -26,8 +26,8 @@ class TestRenderReport:
             coverage=FIXTURES / "coverage-py.json",
         )
         assert out.startswith("### test / python\n")
-        # 20 run, 2 failures + 1 error, 3 skipped; 78.4567 % lines, 5/8 branches.
-        assert _row(out) == "| 14 | 3 | 3 | 78.5% | 62.5% |"
+        # 20 run, 2 failures + 1 error, 3 skipped; 3/4 statements, 5/8 branches.
+        assert _row(out) == "| 14 | 3 | 3 | 75.0% | 62.5% |"
         assert "Read from `pytest.xml`, `coverage-py.json` (coverage.py)." in out
 
     def test_numbers_are_the_dashboards(self) -> None:
@@ -63,7 +63,7 @@ class TestRenderReport:
             junit=tmp_path / "junit.xml",
             coverage=FIXTURES / "coverage-py.json",
         )
-        assert _row(out) == "| — | — | — | 78.5% | 62.5% |"
+        assert _row(out) == "| — | — | — | 75.0% | 62.5% |"
         assert f"- `{tmp_path / 'junit.xml'}` was not produced" in out
 
     def test_unreadable_input_is_named_not_raised(self, tmp_path: Path) -> None:

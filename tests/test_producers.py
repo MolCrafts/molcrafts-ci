@@ -79,13 +79,22 @@ class TestCoverageFromCoveragePy:
             json.dumps(
                 {
                     "totals": {
-                        "percent_covered": 82.345,
+                        "covered_lines": 7,
+                        "num_statements": 8,
+                        # (7 + 3) / (8 + 10): the blend, not the line coverage.
+                        "percent_covered": 55.555,
                         "num_branches": 10,
-                        "covered_branches": 7,
+                        "covered_branches": 3,
                     },
                     "files": {
-                        "pkg/b.py": {"summary": {"percent_covered": 50.0}, "missing_lines": [3]},
-                        "pkg/a.py": {"summary": {"percent_covered": 90.0}, "missing_lines": []},
+                        "pkg/b.py": {
+                            "summary": {"covered_lines": 3, "num_statements": 4},
+                            "missing_lines": [3],
+                        },
+                        "pkg/a.py": {
+                            "summary": {"covered_lines": 4, "num_statements": 4},
+                            "missing_lines": [],
+                        },
                     },
                 }
             ),
@@ -93,14 +102,22 @@ class TestCoverageFromCoveragePy:
         )
         out = read_coverage_py(path)
 
-        assert out["totals"] == {"lines": 82.3, "branches": 70.0}
-        assert [f["path"] for f in out["files"]] == ["pkg/a.py", "pkg/b.py"]
+        assert out["totals"] == {"lines": 87.5, "branches": 30.0}
+        assert [(f["path"], f["lines"]) for f in out["files"]] == [
+            ("pkg/a.py", 100.0),
+            ("pkg/b.py", 75.0),
+        ]
 
     def test_omits_branches_when_not_measured(self, tmp_path) -> None:
         """Without --cov-branch there are no branches; reporting 0% would be a lie."""
         path = tmp_path / "coverage.json"
         path.write_text(
-            json.dumps({"totals": {"percent_covered": 50.0, "num_branches": 0}, "files": {}}),
+            json.dumps(
+                {
+                    "totals": {"covered_lines": 1, "num_statements": 2, "num_branches": 0},
+                    "files": {},
+                }
+            ),
             encoding="utf-8",
         )
         assert read_coverage_py(path)["totals"] == {"lines": 50.0}
