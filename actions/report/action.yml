@@ -48,15 +48,30 @@ runs:
         # A venv for the same reason actions/submit uses one: the CLI must not
         # depend on the caller's Python. Installed from the action's own
         # checkout, so the readers are exactly the ones `molci snapshot` (and
-        # so the dashboard) uses at the pinned ref.
+        # so the dashboard) uses at the pinned ref. Any OS: Windows has
+        # `python`, not `python3`, and puts a venv's executables in Scripts/.
+        for candidate in python3 python; do
+          if "$candidate" -c 'import sys; sys.exit(sys.version_info < (3, 12))' 2>/dev/null; then
+            base=$candidate
+            break
+          fi
+        done
+        [ -n "${base:-}" ] || warn "no Python 3.12+ on PATH"
         venv="$RUNNER_TEMP/molcrafts-ci-report/venv"
-        if [ ! -x "$venv/bin/molci" ]; then
-          python3 -m venv "$venv" \
-            && "$venv/bin/pip" install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/../.." \
+        python=""
+        for candidate in "$venv/bin/python" "$venv/Scripts/python.exe"; do
+          [ -x "$candidate" ] && python=$candidate
+        done
+        if [ -z "$python" ] || ! "$python" -c 'import molcrafts_ci' 2>/dev/null; then
+          "$base" -m venv "$venv" || warn "could not create a venv"
+          for candidate in "$venv/bin/python" "$venv/Scripts/python.exe"; do
+            [ -x "$candidate" ] && python=$candidate
+          done
+          "$python" -m pip install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/../.." \
             || warn "could not install molcrafts-ci"
         fi
         args=(report --title "$TITLE" --summary "$GITHUB_STEP_SUMMARY" --coverage-format "$COVERAGE_FORMAT")
         [ -n "$JUNIT" ] && args+=(--junit "$JUNIT")
         [ -n "$CARGO_TEST" ] && args+=(--cargo-test "$CARGO_TEST")
         [ -n "$COVERAGE" ] && args+=(--coverage "$COVERAGE")
-        "$venv/bin/molci" "${args[@]}" || warn "molci report exited $?"
+        "$python" -m molcrafts_ci.cli "${args[@]}" || warn "molci report exited $?"

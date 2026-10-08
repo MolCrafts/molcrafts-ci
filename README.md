@@ -341,7 +341,7 @@ its outputs.
 | workflow | jobs | runs |
 | --- | --- | --- |
 | `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint), `lint / workflows` (`actions/check-workflows`) | every push, PRs into dev/master/main |
-| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
+| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / report (<os>)` (`actions/report` on the fixtures, every OS), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
 | `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master/main; Cloudflare deploys, not CI |
 | `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload only when `publish` is true |
 
