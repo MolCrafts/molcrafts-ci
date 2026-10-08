@@ -1,6 +1,6 @@
 name: test
 
-# Two tiers (`test / tier` decides):
+# Two tiers (`test / context` decides, through ./actions/ci-context):
 #
 #   fast  a feature-branch push to MolCrafts: Python 3.12, the site tests and
 #         the shared actions.
@@ -29,20 +29,30 @@ concurrency:
   cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
-  tier:
-    name: test / tier
-    # A pull request inside a fork was already run, full tier, by its push.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.repository_owner == 'MolCrafts'
+  # Where this run happens, decided once (./actions/ci-context). Every other
+  # MolCrafts repository runs the same job from
+  # MolCrafts/molcrafts-ci/actions/ci-context@master; this one runs its own
+  # checkout, so a change to the rules is exercised before anyone follows it.
+  context:
+    name: test / context
     runs-on: ubuntu-latest
     outputs:
-      full: ${{ steps.tier.outputs.full }}
+      tier: ${{ steps.context.outputs.tier }}
+      upstream: ${{ steps.context.outputs.upstream }}
+      integration: ${{ steps.context.outputs.integration }}
+      skip-pr: ${{ steps.context.outputs.skip-pr }}
+      cancel: ${{ steps.context.outputs.cancel }}
     steps:
-      - id: tier
-        run: echo "full=${{ github.repository_owner != 'MolCrafts' || contains(fromJSON('["dev","master","main"]'), github.ref_name) || github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') }}" | tee -a "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: actions/ci-context
+      - id: context
+        uses: ./actions/ci-context
 
   python:
     name: test / python (${{ matrix.python }})
-    needs: tier
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
     runs-on: ubuntu-latest
     permissions:
       # The publish steps push this run's tests and coverage into data/. Same
@@ -54,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ${{ fromJSON(needs.tier.outputs.full == 'true' && '["3.12","3.13"]' || '["3.12"]') }}
+        python: ${{ fromJSON(needs.context.outputs.tier == 'full' && '["3.12","3.13"]' || '["3.12"]') }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./actions/setup-python
@@ -70,7 +80,7 @@ jobs:
       # exactly the run whose test record is worth keeping. The gate has
       # already decided the job's verdict.
       - name: Build snapshots
-        if: ${{ !cancelled() && github.repository_owner == 'MolCrafts' && matrix.python == '3.12' && hashFiles('.ci-out/junit.xml') != '' }}
+        if: ${{ !cancelled() && needs.context.outputs.upstream == 'true' && matrix.python == '3.12' && hashFiles('.ci-out/junit.xml') != '' }}
         # Only a push to master becomes project history; anything else
         # produces the same snapshots untracked, which submit validates and
         # uploads without publishing.
@@ -81,7 +91,7 @@ jobs:
             --coverage .ci-out/coverage.json \
             ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master') && '--track' || '' }}
       - name: Publish to the index
-        if: ${{ !cancelled() && github.repository_owner == 'MolCrafts' && matrix.python == '3.12' && hashFiles('.ci-out/snapshots/*.json') != '' }}
+        if: ${{ !cancelled() && needs.context.outputs.upstream == 'true' && matrix.python == '3.12' && hashFiles('.ci-out/snapshots/*.json') != '' }}
         uses: ./actions/submit
         with:
           snapshot-path: .ci-out/snapshots/*.json
@@ -92,7 +102,8 @@ jobs:
 
   site:
     name: test / site
-    needs: tier
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -107,7 +118,8 @@ jobs:
   # repository picks it up from master.
   actions:
     name: test / actions
-    needs: tier
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -138,3 +150,156 @@ jobs:
       # Any branch of molrec: on master this follows molrec's master (the
       # same-named branch), elsewhere its dev.
       - run: git -C .ci-out/molrec log -1 --oneline && test -f .ci-out/molrec/pyproject.toml
+
+  # ./actions/ci-context against synthetic contexts: every kind of run the
+  # rules distinguish, with the outputs it must produce. tests/test_ci_context.py
+  # runs the same table through context.sh; this job proves the action.yml
+  # wiring (inputs, outputs) and, in its last step, that the defaults read
+  # this run's own context exactly as the old inline expressions did.
+  ci-context:
+    name: test / ci-context (${{ matrix.case }})
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: fork feature push
+            owner: Roy-Kid
+            repository: Roy-Kid/molrs
+            event: push
+            ref: refs/heads/feature
+            head: ""
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", cancel: "true"}
+          - case: fork dev push
+            owner: Roy-Kid
+            repository: Roy-Kid/molrs
+            event: push
+            ref: refs/heads/dev
+            head: ""
+            expect: {tier: full, upstream: "false", integration: "true", skip-pr: "false", cancel: "false"}
+          - case: upstream feature push
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: push
+            ref: refs/heads/feature
+            head: ""
+            expect: {tier: fast, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+          - case: upstream dev push
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: push
+            ref: refs/heads/dev
+            head: ""
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+          - case: upstream master push
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: push
+            ref: refs/heads/master
+            head: ""
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+          - case: pull request from a fork
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: pull_request
+            ref: refs/pull/7/merge
+            head: Roy-Kid/molrs
+            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+          - case: same-repository pull request upstream
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: pull_request
+            ref: refs/pull/8/merge
+            head: MolCrafts/molrs
+            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+          - case: in-fork pull request
+            owner: Roy-Kid
+            repository: Roy-Kid/molrs
+            event: pull_request
+            ref: refs/pull/3/merge
+            head: Roy-Kid/molrs
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "true", cancel: "true"}
+          - case: pull request into a fork from another fork
+            owner: Roy-Kid
+            repository: Roy-Kid/molrs
+            event: pull_request
+            ref: refs/pull/4/merge
+            head: someone/molrs
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", cancel: "true"}
+          - case: upstream tag
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: push
+            ref: refs/tags/v0.16.0
+            head: ""
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+          - case: upstream dispatch on a feature branch
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: workflow_dispatch
+            ref: refs/heads/feature
+            head: ""
+            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+          - case: fork dispatch
+            owner: Roy-Kid
+            repository: Roy-Kid/molrs
+            event: workflow_dispatch
+            ref: refs/heads/feature
+            head: ""
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", cancel: "true"}
+          - case: upstream schedule
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: schedule
+            ref: refs/heads/master
+            head: ""
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: actions/ci-context
+      - id: synthetic
+        uses: ./actions/ci-context
+        with:
+          owner: ${{ matrix.owner }}
+          repository: ${{ matrix.repository }}
+          event-name: ${{ matrix.event }}
+          ref: ${{ matrix.ref }}
+          pr-head-repository: ${{ matrix.head }}
+      - env:
+          GOT: ${{ toJSON(steps.synthetic.outputs) }}
+          WANT: ${{ toJSON(matrix.expect) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          got, want = json.loads(os.environ["GOT"]), json.loads(os.environ["WANT"])
+          assert got == want, f"got {got}, want {want}"
+          PY
+      # No inputs: the defaults are this run's github context, and the
+      # outputs must agree with the expressions every workflow inlined
+      # before ci-context existed (spec Revision 2).
+      - id: live
+        uses: ./actions/ci-context
+      - env:
+          GOT: ${{ toJSON(steps.live.outputs) }}
+          WANT_TIER: ${{ (github.repository_owner != 'MolCrafts' || contains(fromJSON('["dev","master","main"]'), github.ref_name) || github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) && 'full' || 'fast' }}
+          WANT_UPSTREAM: ${{ github.repository_owner == 'MolCrafts' }}
+          WANT_RUN: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.repository_owner == 'MolCrafts' }}
+          WANT_CANCEL: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          got = json.loads(os.environ["GOT"])
+          e = os.environ
+          want = {
+              "tier": e["WANT_TIER"],
+              "upstream": e["WANT_UPSTREAM"],
+              "skip-pr": "false" if e["WANT_RUN"] == "true" else "true",
+              "cancel": e["WANT_CANCEL"],
+              "integration": "false" if e["WANT_CANCEL"] == "true" else "true",
+          }
+          assert got == want, f"got {got}, want {want}"
+          print(got)
+          PY

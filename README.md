@@ -327,12 +327,14 @@ and the release move together. See [CHANGELOG.md](CHANGELOG.md).
 
 One file per kind of work. A feature-branch push to MolCrafts gets the fast
 tier; every push to a fork, `dev`/`master`/`main` on MolCrafts, pull requests,
-tags and dispatches get the full tier (`test / tier` decides).
+tags and dispatches get the full tier. Each workflow's first job,
+`<file> / context`, runs `actions/ci-context`, and every other job gates on
+its outputs.
 
 | workflow | jobs | runs |
 | --- | --- | --- |
 | `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint) | every push, PRs into dev/master/main |
-| `test.yml` | `test / tier`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared action run once) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
+| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
 | `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master/main; Cloudflare deploys, not CI |
 | `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload is MolCrafts-only |
 
@@ -349,7 +351,45 @@ tested before anyone picks it up.
 | `actions/setup-node` | Node (`.nvmrc`, else `node-version`), npm cache on the lockfile, `npm ci` / `npm install` | `node-version` (22), `working-directory`, `registry-url`, `install` |
 | `actions/setup-rust` | the toolchain `rust-toolchain.toml` pins, extra targets/components, rust-cache | `toolchain-dir`, `targets`, `components`, `cache`, `workspaces` |
 | `actions/setup-partners` | partner repositories: every one `.github/partners.env` names (via `scripts/partners.py`), or one `repository` into `path`; a branch ref follows a same-named branch on the fork, then upstream | `repository`, `ref` (dev), `path` |
+| `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `cancel` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository` default to the run's github context |
 | `actions/submit` | validate, upload and ingest CI snapshots | see below |
+
+`ci-context` is the one place the CI rules live. Every workflow starts with
+the same job, and the rest of the file reads `needs.context.outputs.*`:
+
+```yaml
+jobs:
+  context:
+    name: test / context            # <file> / context
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.context.outputs.tier }}
+      upstream: ${{ steps.context.outputs.upstream }}
+      integration: ${{ steps.context.outputs.integration }}
+      skip-pr: ${{ steps.context.outputs.skip-pr }}
+      cancel: ${{ steps.context.outputs.cancel }}
+    steps:
+      - id: context
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+
+  rust:
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'   # deploys: upstream == 'true'
+    strategy:
+      matrix:
+        os: ${{ fromJSON(needs.context.outputs.tier == 'full' && '["ubuntu-latest","macos-latest"]' || '["ubuntu-latest"]') }}
+```
+
+| output | `"true"` / value when |
+| --- | --- |
+| `upstream` | the owner is MolCrafts |
+| `integration` | the ref is `dev`, `master`, `main` or a tag |
+| `tier` | `fast` only for a feature-branch push to MolCrafts; `full` otherwise |
+| `skip-pr` | a pull request inside a fork (its push already ran the full tier) |
+| `cancel` | a feature ref, whose superseded runs may be cancelled |
+
+The workflow-level `concurrency` block cannot read job outputs, so it stays
+inline and identical in every file.
 
 ## Specification
 

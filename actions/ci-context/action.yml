@@ -1,0 +1,61 @@
+name: ci-context
+description: >
+  Every CI decision that depends on where a run happens -- fork or upstream,
+  feature or integration ref, which test tier, whether a pull request is a
+  duplicate of its push -- made once, here. Shared by every MolCrafts
+  repository as MolCrafts/molcrafts-ci/actions/ci-context@master, from one
+  first job per workflow (`<file> / context`) whose outputs every other job
+  reads through `needs.context.outputs.*`.
+
+  Outputs are the strings "true"/"false", and `tier` is "full" or "fast".
+  The inputs default to the run's own github context; they exist so that the
+  rules can be tested against synthetic contexts.
+inputs:
+  owner:
+    description: Repository owner (github.repository_owner)
+    default: ${{ github.repository_owner }}
+  repository:
+    description: owner/name of the repository the run belongs to (github.repository)
+    default: ${{ github.repository }}
+  event-name:
+    description: Triggering event (github.event_name)
+    default: ${{ github.event_name }}
+  ref:
+    description: Fully qualified ref (github.ref)
+    default: ${{ github.ref }}
+  pr-head-repository:
+    description: owner/name of a pull request's head repository; empty for other events
+    default: ${{ github.event.pull_request.head.repo.full_name }}
+outputs:
+  tier:
+    description: >
+      "full" (every fork run, dev/master/main and tags upstream, pull
+      requests, dispatches, schedules) or "fast" (a feature-branch push to
+      MolCrafts)
+    value: ${{ steps.context.outputs.tier }}
+  upstream:
+    description: The repository belongs to MolCrafts (deploy, publish, nightly, org secrets)
+    value: ${{ steps.context.outputs.upstream }}
+  integration:
+    description: The ref is dev, master, main or a tag
+    value: ${{ steps.context.outputs.integration }}
+  skip-pr:
+    description: >
+      A pull request inside a fork, whose push already ran the full tier;
+      every job but the context job is skipped
+    value: ${{ steps.context.outputs.skip-pr }}
+  cancel:
+    description: A newer run on this ref may cancel this one (a feature ref)
+    value: ${{ steps.context.outputs.cancel }}
+runs:
+  using: composite
+  steps:
+    - id: context
+      shell: bash
+      env:
+        CI_OWNER: ${{ inputs.owner }}
+        CI_REPOSITORY: ${{ inputs.repository }}
+        CI_EVENT: ${{ inputs.event-name }}
+        CI_REF: ${{ inputs.ref }}
+        CI_PR_HEAD: ${{ inputs.pr-head-repository }}
+      run: bash "$GITHUB_ACTION_PATH/context.sh"
