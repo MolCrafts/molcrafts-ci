@@ -41,7 +41,7 @@ jobs:
       upstream: ${{ steps.context.outputs.upstream }}
       integration: ${{ steps.context.outputs.integration }}
       skip-pr: ${{ steps.context.outputs.skip-pr }}
-      cancel: ${{ steps.context.outputs.cancel }}
+      publish: ${{ steps.context.outputs.publish }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -171,91 +171,112 @@ jobs:
             event: push
             ref: refs/heads/feature
             head: ""
-            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", cancel: "true"}
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", publish: "false"}
           - case: fork dev push
             owner: Roy-Kid
             repository: Roy-Kid/molrs
             event: push
             ref: refs/heads/dev
             head: ""
-            expect: {tier: full, upstream: "false", integration: "true", skip-pr: "false", cancel: "false"}
+            expect: {tier: full, upstream: "false", integration: "true", skip-pr: "false", publish: "false"}
           - case: upstream feature push
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: push
             ref: refs/heads/feature
             head: ""
-            expect: {tier: fast, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+            expect: {tier: fast, upstream: "true", integration: "false", skip-pr: "false", publish: "false"}
           - case: upstream dev push
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: push
             ref: refs/heads/dev
             head: ""
-            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", publish: "false"}
           - case: upstream master push
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: push
             ref: refs/heads/master
             head: ""
-            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", publish: "false"}
           - case: pull request from a fork
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: pull_request
             ref: refs/pull/7/merge
             head: Roy-Kid/molrs
-            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", publish: "false"}
           - case: same-repository pull request upstream
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: pull_request
             ref: refs/pull/8/merge
             head: MolCrafts/molrs
-            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", publish: "false"}
           - case: in-fork pull request
             owner: Roy-Kid
             repository: Roy-Kid/molrs
             event: pull_request
             ref: refs/pull/3/merge
             head: Roy-Kid/molrs
-            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "true", cancel: "true"}
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "true", publish: "false"}
           - case: pull request into a fork from another fork
             owner: Roy-Kid
             repository: Roy-Kid/molrs
             event: pull_request
             ref: refs/pull/4/merge
             head: someone/molrs
-            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", cancel: "true"}
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", publish: "false"}
           - case: upstream tag
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: push
             ref: refs/tags/v0.16.0
             head: ""
-            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", publish: "true"}
+          - case: fork tag
+            owner: Roy-Kid
+            repository: Roy-Kid/molrs
+            event: push
+            ref: refs/tags/v0.16.0
+            head: ""
+            expect: {tier: full, upstream: "false", integration: "true", skip-pr: "false", publish: "false"}
+          - case: upstream tag that is not a release
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: push
+            ref: refs/tags/nightly-2026-10-08
+            head: ""
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", publish: "false"}
+          - case: upstream dispatch on a tag
+            owner: MolCrafts
+            repository: MolCrafts/molrs
+            event: workflow_dispatch
+            ref: refs/tags/v0.16.0
+            head: ""
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", publish: "false"}
           - case: upstream dispatch on a feature branch
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: workflow_dispatch
             ref: refs/heads/feature
             head: ""
-            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", cancel: "true"}
+            expect: {tier: full, upstream: "true", integration: "false", skip-pr: "false", publish: "false"}
           - case: fork dispatch
             owner: Roy-Kid
             repository: Roy-Kid/molrs
             event: workflow_dispatch
             ref: refs/heads/feature
             head: ""
-            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", cancel: "true"}
+            expect: {tier: full, upstream: "false", integration: "false", skip-pr: "false", publish: "false"}
           - case: upstream schedule
             owner: MolCrafts
             repository: MolCrafts/molrs
             event: schedule
             ref: refs/heads/master
             head: ""
-            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", cancel: "false"}
+            expect: {tier: full, upstream: "true", integration: "true", skip-pr: "false", publish: "false"}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -279,7 +300,8 @@ jobs:
           PY
       # No inputs: the defaults are this run's github context, and the
       # outputs must agree with the expressions every workflow inlined
-      # before ci-context existed (spec Revision 2).
+      # before ci-context existed (spec Revision 2), and `publish` with its
+      # definition (Revision 4).
       - id: live
         uses: ./actions/ci-context
       - env:
@@ -287,7 +309,11 @@ jobs:
           WANT_TIER: ${{ (github.repository_owner != 'MolCrafts' || contains(fromJSON('["dev","master","main"]'), github.ref_name) || github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) && 'full' || 'fast' }}
           WANT_UPSTREAM: ${{ github.repository_owner == 'MolCrafts' }}
           WANT_RUN: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.repository_owner == 'MolCrafts' }}
+          # The canonical feature-ref expression of every workflow-level
+          # concurrency block (actions/check-workflows): integration is its
+          # negation.
           WANT_CANCEL: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
+          WANT_PUBLISH: ${{ github.repository_owner == 'MolCrafts' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
         run: |
           python3 - <<'PY'
           import json, os
@@ -297,8 +323,8 @@ jobs:
               "tier": e["WANT_TIER"],
               "upstream": e["WANT_UPSTREAM"],
               "skip-pr": "false" if e["WANT_RUN"] == "true" else "true",
-              "cancel": e["WANT_CANCEL"],
               "integration": "false" if e["WANT_CANCEL"] == "true" else "true",
+              "publish": e["WANT_PUBLISH"],
           }
           assert got == want, f"got {got}, want {want}"
           print(got)

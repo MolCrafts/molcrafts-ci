@@ -1,26 +1,21 @@
 name: docs
 
-# The site exactly as Cloudflare Pages builds it (root `site`, `npm run
-# build`). Cloudflare Pages deploys it from MolCrafts itself, on its own
-# webhook, so no job here deploys.
+# Under workflow_call (release.yml running lint/test) github.workflow and
+# github.event_name are the caller's.
 on:
   push:
     branches: ["**"]
   pull_request:
     branches: [dev, master, main]
-  workflow_dispatch:
 
 permissions:
   contents: read
 
-# One group per file, workflow, event and ref; only a feature ref cancels its
-# superseded runs. The canonical block: actions/check-workflows.
 concurrency:
   group: docs-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
-  # Where this run happens, decided once: ./actions/ci-context.
   context:
     name: docs / context
     runs-on: ubuntu-latest
@@ -31,22 +26,13 @@ jobs:
       skip-pr: ${{ steps.context.outputs.skip-pr }}
       publish: ${{ steps.context.outputs.publish }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout: actions/ci-context
       - id: context
-        uses: ./actions/ci-context
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
 
   build:
     name: docs / build
     needs: context
-    # A pull request inside a fork was already run by its push.
     if: needs.context.outputs.skip-pr != 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./actions/setup-node
-        with:
-          working-directory: site
-      - run: npm run build
-        working-directory: site
+      - run: echo ok

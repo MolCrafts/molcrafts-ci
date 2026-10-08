@@ -1,0 +1,6 @@
+name: setup-partners
+description: local wrapper
+runs:
+  using: composite
+  steps:
+    - uses: MolCrafts/molcrafts-ci/actions/setup-partners@dev

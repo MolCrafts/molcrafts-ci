@@ -1,0 +1,25 @@
+name: check-workflows
+description: >
+  The MolCrafts CI scheme, checked against the calling repository's
+  .github/workflows/*.yml: the `<file> / context` job and the outputs it maps,
+  every job reaching it through `needs`, the `skip-pr` gate on every job a
+  pull request can run (transitive skipping included), the `publish` gate on
+  every upload, the canonical workflow-level `concurrency` block, shared
+  actions at @master, no stray workflow_call comment, and `<file> / <what>`
+  job names. Fails with one `file:line: job: [rule] message` per violation.
+
+  Run it from every repository's lint.yml, after actions/checkout:
+  `uses: MolCrafts/molcrafts-ci/actions/check-workflows@master`. The script
+  is a PEP 723 script (Python and PyYAML come through uv, nothing global).
+inputs:
+  path:
+    description: Root of the repository to check (the one holding .github/workflows)
+    default: .
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v10.2.0
+    - shell: bash
+      env:
+        ROOT: ${{ inputs.path }}
+      run: uv run --no-project --script "$GITHUB_ACTION_PATH/check_workflows.py" "$ROOT"

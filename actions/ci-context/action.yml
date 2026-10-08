@@ -8,6 +8,20 @@ description: >
   reads through `needs.context.outputs.*`.
 
   Outputs are the strings "true"/"false", and `tier` is "full" or "fast".
+
+  `publish` is the one gate for anything that leaves the repository: every
+  job that uploads to a registry (PyPI, crates.io, npm, the VS Code
+  marketplace), deploys, or creates a GitHub Release has
+  `if: needs.context.outputs.publish == 'true'` and tests no raw
+  `github.event_name` / `github.ref`, so adding a trigger to release.yml can
+  never publish by accident. A tag-only docs or site deploy may gate on it
+  too. (nightly.yml publishes its nightly channel from a branch and gates on
+  `upstream` instead.) actions/check-workflows enforces this.
+
+  Workflow-level `concurrency:` cannot read job outputs, so it stays inline;
+  actions/check-workflows holds the one canonical expression and checks every
+  copy against it.
+
   The inputs default to the run's own github context; they exist so that the
   rules can be tested against synthetic contexts.
 inputs:
@@ -44,9 +58,12 @@ outputs:
       A pull request inside a fork, whose push already ran the full tier;
       every job but the context job is skipped
     value: ${{ steps.context.outputs.skip-pr }}
-  cancel:
-    description: A newer run on this ref may cancel this one (a feature ref)
-    value: ${{ steps.context.outputs.cancel }}
+  publish:
+    description: >
+      A `v*` tag pushed to MolCrafts: the only run that uploads, deploys to a
+      registry or creates a GitHub Release (never a fork, a branch or a
+      dispatch)
+    value: ${{ steps.context.outputs.publish }}
 runs:
   using: composite
   steps:

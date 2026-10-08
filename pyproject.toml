@@ -33,7 +33,7 @@ dev = [
   # coverage.py JSON reports for `molci snapshot --coverage`.
   "pytest-cov>=5.0",
   "ruff>=0.11",
-  # scripts/check_repo.py and tests/test_ci_context.py read the workflows.
+  # scripts/check_repo.py, actions/check-workflows and the tests read the workflows.
   "pyyaml>=6.0",
 ]
 

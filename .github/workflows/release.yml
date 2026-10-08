@@ -6,7 +6,8 @@ name: release
 # the checklist in CHANGELOG.md) -> GitHub Release.
 #
 # A dispatch is the dry run, on any branch, fork or upstream: the same gates
-# and the build, no upload. Only a tag push on MolCrafts uploads.
+# and the build, no upload. Only a `v*` tag pushed to MolCrafts uploads
+# (`needs.context.outputs.publish`).
 on:
   push:
     tags: ["v*"]
@@ -15,9 +16,8 @@ on:
 permissions:
   contents: read
 
-# One group per file, workflow, event and ref. Under workflow_call (release.yml
-# running lint/test) github.workflow and github.event_name are the caller's, so
-# a called run never shares, and so never cancels, a direct run's group.
+# One group per file, workflow, event and ref; a release is never cancelled.
+# The canonical block: actions/check-workflows.
 concurrency:
   group: release-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
@@ -32,7 +32,7 @@ jobs:
       upstream: ${{ steps.context.outputs.upstream }}
       integration: ${{ steps.context.outputs.integration }}
       skip-pr: ${{ steps.context.outputs.skip-pr }}
-      cancel: ${{ steps.context.outputs.cancel }}
+      publish: ${{ steps.context.outputs.publish }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -83,9 +83,10 @@ jobs:
   pypi:
     name: release / pypi
     needs: [context, build]
-    if: github.event_name == 'push' && needs.context.outputs.upstream == 'true'
+    # A `v*` tag on MolCrafts, and nothing else: actions/ci-context decides.
+    if: needs.context.outputs.publish == 'true'
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'push' && 'pypi' || '' }}
+    environment: pypi
     permissions:
       id-token: write # the OIDC token PyPI trades for an upload
     steps:
@@ -100,7 +101,7 @@ jobs:
   github:
     name: release / github
     needs: [context, pypi]
-    if: github.event_name == 'push' && needs.context.outputs.upstream == 'true'
+    if: needs.context.outputs.publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -39,6 +39,42 @@ def test_table_covers_every_kind_of_run() -> None:
     assert any(c["ref"].startswith("refs/tags/") for c in CASES)
     assert any(c["expect"]["skip-pr"] == "true" for c in CASES)
     assert any(c["expect"]["tier"] == "fast" for c in CASES)
+    # publish: the upstream v* tag push, and the near misses around it.
+    assert [c["case"] for c in CASES if c["expect"]["publish"] == "true"] == ["upstream tag"]
+    names = {c["case"] for c in CASES}
+    assert {"fork tag", "upstream master push", "upstream dispatch on a tag"} <= names
+
+
+@pytest.mark.parametrize(
+    ("owner", "event", "ref", "publish"),
+    [
+        ("MolCrafts", "push", "refs/tags/v0.16.0", "true"),
+        ("MolCrafts", "push", "refs/tags/v1", "true"),
+        ("Roy-Kid", "push", "refs/tags/v0.16.0", "false"),  # a fork's tag
+        ("MolCrafts", "push", "refs/heads/master", "false"),  # a branch, even master
+        ("MolCrafts", "push", "refs/heads/v0.16.0", "false"),  # a branch named like a tag
+        ("MolCrafts", "push", "refs/tags/release-0.16", "false"),  # not a v* tag
+        ("MolCrafts", "workflow_dispatch", "refs/tags/v0.16.0", "false"),  # the dry run
+        ("MolCrafts", "schedule", "refs/tags/v0.16.0", "false"),
+    ],
+)
+def test_publish(tmp_path: Path, owner: str, event: str, ref: str, publish: str) -> None:
+    proc = run(tmp_path, owner=owner, repository=f"{owner}/molrs", event=event, ref=ref)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert outputs(tmp_path)["publish"] == publish
+
+
+def test_outputs_are_the_action_outputs(tmp_path: Path) -> None:
+    action = yaml.safe_load((ROOT / "actions/ci-context/action.yml").read_text(encoding="utf-8"))
+    run(
+        tmp_path,
+        owner="MolCrafts",
+        repository="MolCrafts/molrs",
+        event="push",
+        ref="refs/heads/dev",
+    )
+    assert list(outputs(tmp_path)) == list(action["outputs"])
+    assert "cancel" not in action["outputs"]
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c["case"] for c in CASES])
