@@ -1,0 +1,102 @@
+{
+  "manifest": {
+    "producer": "coverage.py",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "coverage",
+    "schema_version": "1",
+    "source": {
+      "commit": "6dd720916c7a7f98cce93575be24b340cf27a8e8",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molcrafts-ci",
+      "run_attempt": 1,
+      "timestamp": "2026-10-08T12:52:16Z",
+      "workflow_run": 37779950094
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "files": [
+      {
+        "lines": 80.0,
+        "path": "src/molcrafts_ci/__init__.py",
+        "uncovered": [
+          23,
+          24
+        ]
+      },
+      {
+        "lines": 85.3,
+        "path": "src/molcrafts_ci/cli.py",
+        "uncovered": [
+          76,
+          77,
+          78,
+          128,
+          137,
+          166,
+          176,
+          177,
+          178,
+          179,
+          253,
+          254,
+          255,
+          259
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/gate.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/index.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/jsonutil.py",
+        "uncovered": []
+      },
+      {
+        "lines": 93.5,
+        "path": "src/molcrafts_ci/manifest.py",
+        "uncovered": [
+          48,
+          49
+        ]
+      },
+      {
+        "lines": 94.9,
+        "path": "src/molcrafts_ci/persist.py",
+        "uncovered": [
+          78,
+          132
+        ]
+      },
+      {
+        "lines": 95.9,
+        "path": "src/molcrafts_ci/producers.py",
+        "uncovered": [
+          185,
+          190
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/snapshot.py",
+        "uncovered": []
+      }
+    ],
+    "totals": {
+      "branches": 85.7,
+      "lines": 92.5
+    }
+  }
+}
