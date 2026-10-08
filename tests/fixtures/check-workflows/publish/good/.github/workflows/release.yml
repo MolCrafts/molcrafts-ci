@@ -1,0 +1,67 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  context:
+    name: release / context
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.context.outputs.tier }}
+      upstream: ${{ steps.context.outputs.upstream }}
+      integration: ${{ steps.context.outputs.integration }}
+      skip-pr: ${{ steps.context.outputs.skip-pr }}
+      publish: ${{ steps.context.outputs.publish }}
+    steps:
+      - id: context
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+
+  build:
+    name: release / build
+    needs: context
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo publish --dry-run
+      - run: npm publish --dry-run
+
+  pypi:
+    name: release / pypi
+    needs: [context, build]
+    if: needs.context.outputs.publish == 'true'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/x
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  crate:
+    name: release / crate
+    needs: [context, build]
+    if: ${{ needs.context.outputs.publish == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cargo publish \
+            --locked
+      - run: npx @vscode/vsce publish
+
+  github:
+    name: release / github
+    needs: [context, pypi]
+    if: needs.context.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}

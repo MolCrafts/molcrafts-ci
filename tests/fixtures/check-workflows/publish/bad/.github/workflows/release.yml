@@ -1,0 +1,60 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  context:
+    name: release / context
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.context.outputs.tier }}
+      upstream: ${{ steps.context.outputs.upstream }}
+      integration: ${{ steps.context.outputs.integration }}
+      skip-pr: ${{ steps.context.outputs.skip-pr }}
+      publish: ${{ steps.context.outputs.publish }}
+    steps:
+      - id: context
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+
+  pypi:
+    name: release / pypi
+    needs: context
+    if: github.event_name == 'push' && needs.context.outputs.upstream == 'true'
+    environment: ${{ github.event_name == 'push' && 'pypi' || '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  crate:
+    name: release / crate
+    needs: context
+    if: needs.context.outputs.upstream == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo publish ${{ github.event_name != 'push' && '--dry-run' || '' }}
+
+  npm:
+    name: release / npm
+    needs: context
+    if: needs.context.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - if: startsWith(github.ref, 'refs/tags/')
+        run: npm publish
+
+  github:
+    name: release / github
+    needs: context
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh release create "$GITHUB_REF_NAME"

@@ -1,0 +1,47 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  context:
+    name: release / context
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.context.outputs.tier }}
+      upstream: ${{ steps.context.outputs.upstream }}
+      integration: ${{ steps.context.outputs.integration }}
+      skip-pr: ${{ steps.context.outputs.skip-pr }}
+      publish: ${{ steps.context.outputs.publish }}
+    steps:
+      - id: context
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+
+  guard:
+    needs: context
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+
+  build:
+    name: Build wheels
+    needs: context
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+
+  test:
+    name: test / python
+    needs: context
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok

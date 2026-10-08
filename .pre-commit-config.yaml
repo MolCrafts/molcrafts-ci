@@ -72,6 +72,16 @@ repos:
         pass_filenames: false
         require_serial: true
 
+      # The CI scheme (actions/check-workflows), the same script every
+      # MolCrafts repository's `lint / workflows` runs.
+      - id: check-workflows
+        name: CI scheme (actions/check-workflows)
+        entry: python3 actions/check-workflows/check_workflows.py
+        language: system
+        files: ^(\.github/workflows/|actions/(ci-context|check-workflows)/)
+        pass_filenames: false
+        require_serial: true
+
       # Invariants a formatter and a type checker cannot see. Each one is
       # here because the thing it looks for already shipped and broke.
       - id: repo-invariants

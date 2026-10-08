@@ -333,10 +333,10 @@ its outputs.
 
 | workflow | jobs | runs |
 | --- | --- | --- |
-| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint) | every push, PRs into dev/master/main |
+| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint), `lint / workflows` (`actions/check-workflows`) | every push, PRs into dev/master/main |
 | `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
 | `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master/main; Cloudflare deploys, not CI |
-| `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload is MolCrafts-only |
+| `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload only when `publish` is true |
 
 ## Shared actions
 
@@ -351,7 +351,8 @@ tested before anyone picks it up.
 | `actions/setup-node` | Node (`.nvmrc`, else `node-version`), npm cache on the lockfile, `npm ci` / `npm install` | `node-version` (22), `working-directory`, `registry-url`, `install` |
 | `actions/setup-rust` | the toolchain `rust-toolchain.toml` pins, extra targets/components, rust-cache | `toolchain-dir`, `targets`, `components`, `cache`, `workspaces` |
 | `actions/setup-partners` | partner repositories: every one `.github/partners.env` names (via `scripts/partners.py`), or one `repository` into `path`; a branch ref follows a same-named branch on the fork, then upstream | `repository`, `ref` (dev), `path` |
-| `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `cancel` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository` default to the run's github context |
+| `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `publish` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository` default to the run's github context |
+| `actions/check-workflows` | checks the calling repository's workflows against the CI scheme (below); fails with `file:line: job: [rule] message` | `path` (`.`) |
 | `actions/submit` | validate, upload and ingest CI snapshots | see below |
 
 `ci-context` is the one place the CI rules live. Every workflow starts with
@@ -367,7 +368,7 @@ jobs:
       upstream: ${{ steps.context.outputs.upstream }}
       integration: ${{ steps.context.outputs.integration }}
       skip-pr: ${{ steps.context.outputs.skip-pr }}
-      cancel: ${{ steps.context.outputs.cancel }}
+      publish: ${{ steps.context.outputs.publish }}
     steps:
       - id: context
         uses: MolCrafts/molcrafts-ci/actions/ci-context@master
@@ -386,10 +387,60 @@ jobs:
 | `integration` | the ref is `dev`, `master`, `main` or a tag |
 | `tier` | `fast` only for a feature-branch push to MolCrafts; `full` otherwise |
 | `skip-pr` | a pull request inside a fork (its push already ran the full tier) |
-| `cancel` | a feature ref, whose superseded runs may be cancelled |
+| `publish` | a `v*` tag pushed to MolCrafts: never a fork, a branch or a dispatch |
+
+Every job that uploads to a registry, deploys or creates a GitHub Release has
+`if: needs.context.outputs.publish == 'true'` and tests no raw
+`github.event_name` / `github.ref`, so a new trigger on `release.yml` cannot
+publish by accident. (A nightly channel that publishes from a branch, in
+`nightly.yml`, gates on `upstream` instead.)
 
 The workflow-level `concurrency` block cannot read job outputs, so it stays
-inline and identical in every file.
+inline, identical in every file; `actions/check-workflows` holds the one
+canonical copy:
+
+```yaml
+concurrency:
+  group: <file>-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
+```
+
+(`cancel-in-progress: false` in `nightly.yml`, `release.yml` and `deploy.yml`.)
+
+### Checking the workflows
+
+`actions/check-workflows` reads every `.github/workflows/*.yml` of the
+calling repository and fails on each violation of the scheme. Every
+repository runs it in `lint.yml`:
+
+```yaml
+  workflows:
+    name: lint / workflows
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/check-workflows@master
+```
+
+Locally, from the repository root (uv brings Python and PyYAML; the script is
+PEP 723):
+
+```bash
+uv run --script path/to/molcrafts-ci/actions/check-workflows/check_workflows.py .
+```
+
+| rule | checks |
+| --- | --- |
+| `context` | the first job is `context`, named `<file> / context`, has a step `id: context` running `ci-context@master`, and maps exactly the action's outputs |
+| `needs` | every other job reaches `context` through `needs` |
+| `skip-pr` | in a workflow a pull request can run (`pull_request`, `workflow_call`), every job is skipped on an in-fork PR: its `if` requires `skip-pr != 'true'` (or `upstream`/`publish == 'true'`, or an `event_name` test excluding `pull_request`), or it needs a job that is so skipped and its `if` has no `always()`/`cancelled()` |
+| `publish` | a job with an `environment:`, `pypa/gh-action-pypi-publish`, `cargo`/`npm publish` without a literal `--dry-run`, `vsce`/`ovsx publish`, `softprops/action-gh-release` or `gh release create`/`upload` requires `publish == 'true'` in its `if`, and no `if`, `environment` or `env` of it tests `github.event_name`/`github.ref*` (in `nightly.yml`: `upstream == 'true'`) |
+| `concurrency` | the workflow-level block above, exactly |
+| `pin` | `MolCrafts/molcrafts-ci/actions/*` at `@master`, in workflows and `.github/actions/*/action.yml` |
+| `comment` | no comment mentions `workflow_call` in a workflow without that trigger |
+| `name` | every job (but a reusable-workflow call) is named `<file> / <what>` |
 
 ## Specification
 

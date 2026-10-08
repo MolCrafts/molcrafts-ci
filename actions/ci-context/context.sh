@@ -36,14 +36,18 @@ if [ "$CI_EVENT" = pull_request ] && [ "${CI_PR_HEAD:-}" = "$CI_REPOSITORY" ] &&
     skip_pr=true
 fi
 
-# Only feature refs cancel their superseded runs.
-cancel=true
-[ "$integration" = true ] && cancel=false
+# Publish: upload to a registry, deploy, cut a GitHub Release. Only a `v*`
+# tag pushed to MolCrafts: never a fork's tag, never a branch (not even
+# master), never a dispatch -- a dispatch of release.yml is the dry run.
+publish=false
+if [ "$upstream" = true ] && [ "$CI_EVENT" = push ]; then
+    case "$CI_REF" in refs/tags/v*) publish=true ;; esac
+fi
 
 {
     echo "tier=$tier"
     echo "upstream=$upstream"
     echo "integration=$integration"
     echo "skip-pr=$skip_pr"
-    echo "cancel=$cancel"
+    echo "publish=$publish"
 } | tee -a "${GITHUB_OUTPUT:-/dev/null}"

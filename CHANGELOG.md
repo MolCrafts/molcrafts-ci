@@ -18,12 +18,25 @@ schema version to keep in step.
 - **`actions/ci-context`: the CI rules in one place.** Fork or upstream,
   feature or integration ref, fast or full tier, and whether a pull request
   only repeats its push, as outputs (`tier`, `upstream`, `integration`,
-  `skip-pr`, `cancel`). Every MolCrafts workflow starts with a
+  `skip-pr`, `publish`). Every MolCrafts workflow starts with a
   `<file> / context` job running it, so changing a rule is one pull request
   here instead of one per repository. `test / context` replaces `test / tier`
-  as a required check. `test / ci-context` runs the action against thirteen
+  as a required check. `test / ci-context` runs the action against sixteen
   synthetic contexts, and `tests/test_ci_context.py` runs the same table
   through its script.
+- **`ci-context` outputs `publish`**: `"true"` only for a `v*` tag pushed to
+  MolCrafts. Every upload, registry deploy and GitHub Release gates on it
+  instead of testing `github.event_name` / `github.ref` itself. It replaces
+  the `cancel` output of the first cut: a workflow-level `concurrency:` cannot
+  read job outputs, so nothing could use it, and the inline expression it
+  duplicated is now checked by `actions/check-workflows` instead.
+- **`actions/check-workflows`**: the CI scheme, checked. A PEP 723 script
+  (uv brings Python and PyYAML) that every repository's `lint / workflows`
+  runs: the context job and its outputs, `needs`, the `skip-pr` gate on every
+  job a pull request can run (transitive skipping and `always()` included),
+  the `publish` gate on every upload, the canonical concurrency block, `@master`
+  pins, stray `workflow_call` comments and `<file> / <what>` job names. Unit
+  tests run one good and one bad fixture repository per rule.
 
 ## [0.1.1] — 2026-09-28
 
