@@ -25,6 +25,7 @@ from molcrafts_ci.producers import (
     read_junit,
     read_lcov,
 )
+from molcrafts_ci.report import render_report
 from molcrafts_ci.snapshot import Snapshot
 
 
@@ -180,6 +181,22 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_report(args: argparse.Namespace) -> int:
+    markdown = render_report(
+        title=args.title,
+        junit=Path(args.junit) if args.junit else None,
+        cargo_test=Path(args.cargo_test) if args.cargo_test else None,
+        coverage=Path(args.coverage) if args.coverage else None,
+        coverage_format=args.coverage_format,
+    )
+    if args.summary:
+        with open(args.summary, "a", encoding="utf-8") as fh:
+            fh.write(markdown + "\n")
+    else:
+        print(markdown)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="molcrafts-ci")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -246,6 +263,27 @@ def main(argv: list[str] | None = None) -> int:
         "branch should do this; a pull request must not.",
     )
     p_sn.set_defaults(func=_cmd_snapshot)
+
+    p_rp = sub.add_parser(
+        "report",
+        help="Write a test run's counts and coverage as a markdown table (never gates)",
+    )
+    p_rp.add_argument("--title", required=True, help="Heading above the table, e.g. the job name")
+    tests_in = p_rp.add_mutually_exclusive_group()
+    tests_in.add_argument("--junit", help="JUnit XML from pytest --junitxml")
+    tests_in.add_argument("--cargo-test", help="Log from cargo test")
+    p_rp.add_argument("--coverage", help="Coverage report; see --coverage-format")
+    p_rp.add_argument(
+        "--coverage-format",
+        choices=["coverage.py", "lcov"],
+        default="coverage.py",
+        help="coverage.py JSON (default) or an LCOV tracefile",
+    )
+    p_rp.add_argument(
+        "--summary",
+        help="Append to this file (the step summary) instead of printing",
+    )
+    p_rp.set_defaults(func=_cmd_report)
 
     args = parser.parse_args(argv)
     try:

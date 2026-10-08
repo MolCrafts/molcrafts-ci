@@ -1007,6 +1007,21 @@ loop-free, because GitHub does not start a workflow from a `GITHUB_TOKEN` push,
 while the Cloudflare Pages webhook is not subject to that rule and still
 redeploys.
 
+### `MolCrafts/molcrafts-ci/report`
+
+Purpose:
+
+```text
+read the run's JUnit / cargo test log and coverage report
+append passed, failed, skipped, line and branch coverage to the step summary
+```
+
+Every MolCrafts test job states its numbers in its own run and pull request
+summary. The Action reads them with the same readers as `molci snapshot`, so
+the summary and the published record never disagree. It reports and never
+gates: there are no thresholds, and neither the numbers nor a missing input
+fail the job.
+
 ### Domain-specific gate Actions
 
 If repeated integration warrants them:

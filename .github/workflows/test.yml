@@ -75,6 +75,15 @@ jobs:
       - run: >-
           pytest -q --junitxml=.ci-out/junit.xml
           --cov=molcrafts_ci --cov-branch --cov-report=json:.ci-out/coverage.json
+      # The run's numbers in its summary, from this checkout's actions/report:
+      # every MolCrafts test job runs the same step @master.
+      - name: Report
+        if: ${{ !cancelled() }}
+        uses: ./actions/report
+        with:
+          title: test / python (${{ matrix.python }})
+          junit: .ci-out/junit.xml
+          coverage: .ci-out/coverage.json
 
       # These run even when the gate failed: a run whose tests went red is
       # exactly the run whose test record is worth keeping. The gate has
