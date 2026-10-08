@@ -83,14 +83,12 @@ class TestRenderReport:
 
 
 class TestReportCli:
-    def test_appends_to_the_summary(self, tmp_path: Path) -> None:
-        summary = tmp_path / "summary.md"
-        summary.write_text("earlier step\n", encoding="utf-8")
+    def test_prints_the_table(self, capsys) -> None:
         argv = ["report", "--title", "test / python", "--junit", str(FIXTURES / "pytest.xml")]
-        assert main([*argv, "--summary", str(summary)]) == 0
-        text = summary.read_text(encoding="utf-8")
-        assert text.startswith("earlier step\n### test / python\n")
-        assert _row(text) == "| 14 | 3 | 3 | — | — |"
+        assert main(argv) == 0
+        out = capsys.readouterr().out
+        assert out.startswith("### test / python\n")
+        assert _row(out) == "| 14 | 3 | 3 | — | — |"
 
     def test_failed_tests_do_not_fail_the_command(self, capsys) -> None:
         argv = ["report", "--title", "t", "--cargo-test", str(FIXTURES / "cargo-test.log")]

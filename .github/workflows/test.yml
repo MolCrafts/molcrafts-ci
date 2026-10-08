@@ -178,20 +178,26 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./actions/setup-python
-      - uses: ./actions/report
+      - id: pytest
+        uses: ./actions/report
         with:
           title: fixtures (pytest)
           junit: tests/fixtures/report/pytest.xml
           coverage: tests/fixtures/report/coverage-py.json
-      - uses: ./actions/report
+      - id: cargo
+        uses: ./actions/report
         with:
           title: fixtures (cargo)
           cargo-test: tests/fixtures/report/cargo-test.log
           coverage: tests/fixtures/report/lcov.info
           coverage-format: lcov
-      - run: |
-          grep -Fx '| 14 | 3 | 3 | 78.5% | 62.5% |' "$GITHUB_STEP_SUMMARY"
-          grep -Fx '| 14 | 1 | 2 | 75.0% | — |' "$GITHUB_STEP_SUMMARY"
+      # Each step has its own summary file, so the check reads the output.
+      - env:
+          PYTEST: ${{ steps.pytest.outputs.table }}
+          CARGO: ${{ steps.cargo.outputs.table }}
+        run: |
+          grep -Fx '| 14 | 3 | 3 | 78.5% | 62.5% |' <<< "$PYTEST"
+          grep -Fx '| 14 | 1 | 2 | 75.0% | — |' <<< "$CARGO"
 
   # ./actions/ci-context against synthetic contexts: every kind of run the
   # rules distinguish, with the outputs it must produce. tests/test_ci_context.py

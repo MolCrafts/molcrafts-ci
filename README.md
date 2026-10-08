@@ -361,7 +361,7 @@ tested before anyone picks it up.
 | `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `publish` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository` default to the run's github context |
 | `actions/check-workflows` | checks the calling repository's workflows against the CI scheme (below); fails with `file:line: job: [rule] message` | `path` (`.`) |
 | `actions/submit` | validate, upload and ingest CI snapshots | see below |
-| `actions/report` | the run's passed/failed/skipped counts and line/branch coverage, one markdown table appended to the step summary; report only, never fails the job | `title`, `junit` or `cargo-test`, `coverage`, `coverage-format` (`coverage.py`/`lcov`) |
+| `actions/report` | the run's passed/failed/skipped counts and line/branch coverage, one markdown table appended to the step summary; report only, never fails the job | `title`, `junit` or `cargo-test`, `coverage`, `coverage-format` (`coverage.py`/`lcov`); output `table` |
 
 `ci-context` is the one place the CI rules live. Every workflow starts with
 the same job, and the rest of the file reads `needs.context.outputs.*`:

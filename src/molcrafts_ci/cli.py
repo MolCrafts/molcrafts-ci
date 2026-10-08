@@ -189,11 +189,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
         coverage=Path(args.coverage) if args.coverage else None,
         coverage_format=args.coverage_format,
     )
-    if args.summary:
-        with open(args.summary, "a", encoding="utf-8") as fh:
-            fh.write(markdown + "\n")
-    else:
-        print(markdown)
+    print(markdown)
     return 0
 
 
@@ -278,10 +274,6 @@ def main(argv: list[str] | None = None) -> int:
         choices=["coverage.py", "lcov"],
         default="coverage.py",
         help="coverage.py JSON (default) or an LCOV tracefile",
-    )
-    p_rp.add_argument(
-        "--summary",
-        help="Append to this file (the step summary) instead of printing",
     )
     p_rp.set_defaults(func=_cmd_report)
 

@@ -25,10 +25,16 @@ inputs:
     required: false
     default: coverage.py
 
+outputs:
+  table:
+    description: The markdown block appended to the step summary (empty when there was no report).
+    value: ${{ steps.report.outputs.table }}
+
 runs:
   using: composite
   steps:
     - name: Report test results
+      id: report
       shell: bash
       env:
         TITLE: ${{ inputs.title }}
@@ -70,8 +76,11 @@ runs:
           "$python" -m pip install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/../.." \
             || warn "could not install molcrafts-ci"
         fi
-        args=(report --title "$TITLE" --summary "$GITHUB_STEP_SUMMARY" --coverage-format "$COVERAGE_FORMAT")
+        args=(report --title "$TITLE" --coverage-format "$COVERAGE_FORMAT")
         [ -n "$JUNIT" ] && args+=(--junit "$JUNIT")
         [ -n "$CARGO_TEST" ] && args+=(--cargo-test "$CARGO_TEST")
         [ -n "$COVERAGE" ] && args+=(--coverage "$COVERAGE")
-        "$python" -m molcrafts_ci.cli "${args[@]}" || warn "molci report exited $?"
+        table=$("$python" -m molcrafts_ci.cli "${args[@]}") || warn "molci report exited $?"
+        printf '%s\n\n' "$table" >> "$GITHUB_STEP_SUMMARY"
+        delimiter="molcrafts-ci-report-$RANDOM$RANDOM"
+        printf 'table<<%s\n%s\n%s\n' "$delimiter" "$table" "$delimiter" >> "$GITHUB_OUTPUT"
