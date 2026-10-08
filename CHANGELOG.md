@@ -13,6 +13,18 @@ schema version to keep in step.
 
 ## [Unreleased]
 
+### Added
+
+- **`actions/ci-context`: the CI rules in one place.** Fork or upstream,
+  feature or integration ref, fast or full tier, and whether a pull request
+  only repeats its push, as outputs (`tier`, `upstream`, `integration`,
+  `skip-pr`, `cancel`). Every MolCrafts workflow starts with a
+  `<file> / context` job running it, so changing a rule is one pull request
+  here instead of one per repository. `test / context` replaces `test / tier`
+  as a required check. `test / ci-context` runs the action against thirteen
+  synthetic contexts, and `tests/test_ci_context.py` runs the same table
+  through its script.
+
 ## [0.1.1] — 2026-09-28
 
 `manifest.schema_version` is unchanged: nothing here alters the shape of a
