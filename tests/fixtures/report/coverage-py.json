@@ -1,0 +1,12 @@
+{
+  "meta": {"format": 3, "version": "7.6.1", "branch_coverage": true, "show_contexts": false},
+  "files": {
+    "src/pkg/a.py": {
+      "executed_lines": [1, 2, 3],
+      "summary": {"covered_lines": 3, "num_statements": 4, "percent_covered": 75.0, "missing_lines": 1, "excluded_lines": 0, "num_branches": 2, "covered_branches": 1},
+      "missing_lines": [4],
+      "excluded_lines": []
+    }
+  },
+  "totals": {"covered_lines": 3, "num_statements": 4, "percent_covered": 66.66666666666667, "percent_covered_display": "67", "percent_statements_covered": 75.0, "missing_lines": 1, "excluded_lines": 0, "num_branches": 8, "covered_branches": 5, "missing_branches": 3, "num_partial_branches": 1}
+}

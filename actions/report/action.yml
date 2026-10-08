@@ -1,0 +1,89 @@
+name: Report MolCrafts CI test results
+description: >
+  Append a test run's passed/failed/skipped counts and its line and branch
+  coverage to the job's step summary, as one short markdown table. Report
+  only: it never fails the job, whatever the numbers or the inputs are.
+
+inputs:
+  title:
+    description: Heading above the table; the job name reads best (e.g. "test / python").
+    required: true
+  junit:
+    description: JUnit XML (pytest --junitxml). Exclusive with cargo-test.
+    required: false
+    default: ""
+  cargo-test:
+    description: A cargo test log, whose "test result:" lines are the totals. Exclusive with junit.
+    required: false
+    default: ""
+  coverage:
+    description: Coverage report; see coverage-format.
+    required: false
+    default: ""
+  coverage-format:
+    description: coverage.py (JSON, the default) or lcov (llvm-cov export -format=lcov).
+    required: false
+    default: coverage.py
+
+outputs:
+  table:
+    description: The markdown block appended to the step summary (empty when there was no report).
+    value: ${{ steps.report.outputs.table }}
+
+runs:
+  using: composite
+  steps:
+    - name: Report test results
+      id: report
+      shell: bash
+      env:
+        TITLE: ${{ inputs.title }}
+        JUNIT: ${{ inputs.junit }}
+        CARGO_TEST: ${{ inputs.cargo-test }}
+        COVERAGE: ${{ inputs.coverage }}
+        COVERAGE_FORMAT: ${{ inputs.coverage-format }}
+      # No `set -e`: the job's verdict belongs to the gate that ran the tests.
+      # Anything that goes wrong here becomes a warning and a line in the
+      # summary, never a red step.
+      run: |
+        warn() {
+          echo "::warning title=actions/report::$1"
+          printf '### %s\n\nNo report: %s\n\n' "$TITLE" "$1" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        }
+        # A venv for the same reason actions/submit uses one: the CLI must not
+        # depend on the caller's Python. Installed from the action's own
+        # checkout, so the readers are exactly the ones `molci snapshot` (and
+        # so the dashboard) uses at the pinned ref. Any OS: Windows has
+        # `python`, not `python3`, and puts a venv's executables in Scripts/.
+        for candidate in python3 python; do
+          if "$candidate" -c 'import sys; sys.exit(sys.version_info < (3, 12))' 2>/dev/null; then
+            base=$candidate
+            break
+          fi
+        done
+        [ -n "${base:-}" ] || warn "no Python 3.12+ on PATH"
+        venv="$RUNNER_TEMP/molcrafts-ci-report/venv"
+        python=""
+        for candidate in "$venv/bin/python" "$venv/Scripts/python.exe"; do
+          [ -x "$candidate" ] && python=$candidate
+        done
+        if [ -z "$python" ] || ! "$python" -c 'import molcrafts_ci' 2>/dev/null; then
+          "$base" -m venv "$venv" || warn "could not create a venv"
+          for candidate in "$venv/bin/python" "$venv/Scripts/python.exe"; do
+            [ -x "$candidate" ] && python=$candidate
+          done
+          "$python" -m pip install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/../.." \
+            || warn "could not install molcrafts-ci"
+        fi
+        args=(report --title "$TITLE" --coverage-format "$COVERAGE_FORMAT")
+        [ -n "$JUNIT" ] && args+=(--junit "$JUNIT")
+        [ -n "$CARGO_TEST" ] && args+=(--cargo-test "$CARGO_TEST")
+        [ -n "$COVERAGE" ] && args+=(--coverage "$COVERAGE")
+        # UTF-8 and LF on every OS: Windows Python would print the table in
+        # cp1252 with CRLF line ends.
+        table=$(PYTHONUTF8=1 "$python" -m molcrafts_ci.cli "${args[@]}") || warn "molci report exited $?"
+        table=${table//$'\r'/}
+        printf '%s\n\n' "$table" >> "$GITHUB_STEP_SUMMARY"
+        delimiter="molcrafts-ci-report-$RANDOM$RANDOM"
+        printf 'table<<%s\n%s\n%s\n' "$delimiter" "$table" "$delimiter" >> "$GITHUB_OUTPUT"

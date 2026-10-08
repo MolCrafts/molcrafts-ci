@@ -59,7 +59,14 @@ mci.ingest_snapshot(Path("data"), "molpy", snap)
 molci validate-snapshot path/to/snapshot.json
 molci ingest path/to/snapshot.json --project molpy --data-root data
 molci snapshot --out out/ --junit junit.xml --coverage coverage.json
+molci report --title "test / python" --junit junit.xml --coverage coverage.json
 ```
+
+`molci report` (and `actions/report`, which runs it into `$GITHUB_STEP_SUMMARY`)
+reads the same inputs through the same readers as `molci snapshot`, so a pull
+request's summary and the dashboard show the same numbers for the same run. It
+only reports: no thresholds, and it exits 0 whatever the counts; an input that
+is missing or unreadable is named under the table.
 
 ### `molci snapshot`
 
@@ -334,7 +341,7 @@ its outputs.
 | workflow | jobs | runs |
 | --- | --- | --- |
 | `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint), `lint / workflows` (`actions/check-workflows`) | every push, PRs into dev/master/main |
-| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
+| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / report (<os>)` (`actions/report` on the fixtures, every OS), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
 | `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master/main; Cloudflare deploys, not CI |
 | `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload only when `publish` is true |
 
@@ -354,6 +361,7 @@ tested before anyone picks it up.
 | `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `publish` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository` default to the run's github context |
 | `actions/check-workflows` | checks the calling repository's workflows against the CI scheme (below); fails with `file:line: job: [rule] message` | `path` (`.`) |
 | `actions/submit` | validate, upload and ingest CI snapshots | see below |
+| `actions/report` | the run's passed/failed/skipped counts and line/branch coverage, one markdown table appended to the step summary; report only, never fails the job | `title`, `junit` or `cargo-test`, `coverage`, `coverage-format` (`coverage.py`/`lcov`); output `table` |
 
 `ci-context` is the one place the CI rules live. Every workflow starts with
 the same job, and the rest of the file reads `needs.context.outputs.*`:

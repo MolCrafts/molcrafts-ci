@@ -135,16 +135,18 @@ def _percent(hit: float, found: float) -> float | None:
 def read_coverage_py(path: Path, *, source_root: Path | None = None) -> dict[str, Any]:
     """coverage.py's JSON report (`--cov-report=json`).
 
-    coverage.py measures statements and branches but not functions, and its
-    `percent_covered` is a statement percentage — reporting it again under a
-    separate `statements` total would dress one reading up as two.
+    coverage.py measures statements and branches but not functions. Lines are
+    covered statements over statements. Its `percent_covered` is not that: with
+    `--cov-branch` it folds the branches in, (statements + branches covered) /
+    (statements + branches), which would report one blend as line coverage.
     """
     data = json.loads(path.read_text(encoding="utf-8"))
     totals = data.get("totals", {})
 
     out: dict[str, Any] = {"totals": {}}
-    if "percent_covered" in totals:
-        out["totals"]["lines"] = round(totals["percent_covered"], 1)
+    lines = _percent(totals.get("covered_lines", 0), totals.get("num_statements", 0))
+    if lines is not None:
+        out["totals"]["lines"] = lines
     branches = _percent(totals.get("covered_branches", 0), totals.get("num_branches", 0))
     if branches is not None:
         out["totals"]["branches"] = branches
@@ -152,7 +154,11 @@ def read_coverage_py(path: Path, *, source_root: Path | None = None) -> dict[str
     out["files"] = [
         {
             "path": _relative(name, source_root),
-            "lines": round(info.get("summary", {}).get("percent_covered", 0.0), 1),
+            "lines": _percent(
+                info.get("summary", {}).get("covered_lines", 0),
+                info.get("summary", {}).get("num_statements", 0),
+            )
+            or 0.0,
             **_uncovered(info.get("missing_lines", [])),
         }
         for name, info in sorted(data.get("files", {}).items())

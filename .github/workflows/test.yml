@@ -75,6 +75,15 @@ jobs:
       - run: >-
           pytest -q --junitxml=.ci-out/junit.xml
           --cov=molcrafts_ci --cov-branch --cov-report=json:.ci-out/coverage.json
+      # The run's numbers in its summary, from this checkout's actions/report:
+      # every MolCrafts test job runs the same step @master.
+      - name: Report
+        if: ${{ !cancelled() }}
+        uses: ./actions/report
+        with:
+          title: test / python (${{ matrix.python }})
+          junit: .ci-out/junit.xml
+          coverage: .ci-out/coverage.json
 
       # These run even when the gate failed: a run whose tests went red is
       # exactly the run whose test record is worth keeping. The gate has
@@ -150,6 +159,45 @@ jobs:
       # Any branch of molrec: on master this follows molrec's master (the
       # same-named branch), elsewhere its dev.
       - run: git -C .ci-out/molrec log -1 --oneline && test -f .ci-out/molrec/pyproject.toml
+
+  # ./actions/report on every OS a MolCrafts test job runs on, against the
+  # unit-test fixtures: the table must land in the step summary (the action
+  # itself never fails, so this job is what notices it stopped working).
+  report:
+    name: test / report (${{ matrix.os }})
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./actions/setup-python
+      - id: pytest
+        uses: ./actions/report
+        with:
+          title: fixtures (pytest)
+          junit: tests/fixtures/report/pytest.xml
+          coverage: tests/fixtures/report/coverage-py.json
+      - id: cargo
+        uses: ./actions/report
+        with:
+          title: fixtures (cargo)
+          cargo-test: tests/fixtures/report/cargo-test.log
+          coverage: tests/fixtures/report/lcov.info
+          coverage-format: lcov
+      # Each step has its own summary file, so the check reads the output.
+      - env:
+          PYTEST: ${{ steps.pytest.outputs.table }}
+          CARGO: ${{ steps.cargo.outputs.table }}
+        run: |
+          grep -Fx '| 14 | 3 | 3 | 75.0% | 62.5% |' <<< "$PYTEST"
+          grep -Fx '| 14 | 1 | 2 | 75.0% | — |' <<< "$CARGO"
 
   # ./actions/ci-context against synthetic contexts: every kind of run the
   # rules distinguish, with the outputs it must produce. tests/test_ci_context.py
