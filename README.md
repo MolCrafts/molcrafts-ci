@@ -271,7 +271,9 @@ the data root — the same layout `actions/submit` uses.)
 
 ## Frontend (`site/`)
 
-Built with **molcrafts-ui** (shadcn registry copy-in). Dev mocks use
+Built with **MolCrafts Design** public packages and compiled CSS. Basic controls use
+`@molcrafts/design`; charts use the optional `@molcrafts/design-vega-lite` compiler
+and its shared Vega View runtime, without MolPlot or vega-embed. Dev mocks use
 **`rspack-plugin-mock`** (Rsbuild-native) — not hand-served static files.
 
 ```bash
@@ -316,7 +318,11 @@ registerPlugin({
 
 Import the module from `src/index.tsx` (side-effect registration).
 
-UI sources are synced from the sibling `molcrafts-ui` checkout via `npm run sync-ui`.
+Design packages are unpublished. Four fixed compiled tarballs under
+`site/vendor/design/` make npm installation independent of sibling checkouts and
+producer CI workflows. `npm run verify:design` checks producer provenance, hashes,
+exports and licenses. See [Design consumer integration](docs/design-consumer.md).
+No UI source copying or compatibility aliases remain.
 
 ## Publish package
 
@@ -464,8 +470,8 @@ site build. Pre-push runs every gate without changed-file filters.
 
 Synthetic CI context scenarios run in pytest; one hosted job checks the real
 Action wiring. Native OS behavior still requires the hosted platform matrix.
-The site build uses committed UI sources; `npm run sync-ui` is an explicit
-maintenance operation, never an implicit build dependency.
+The site build uses the vendored, checksum-verified `@molcrafts/design`
+packages under `site/vendor/design` (`npm run verify:design`).
 
 `molcrafts_ci.partners` is the shared dependency resolver, also used by
 setup-partners. Consumers bootstrap it at `CI_REF`, a full commit SHA in

@@ -24,7 +24,7 @@ export function RunLink({ repository, run, className, children }: RunLinkProps):
   const label = children ?? (run != null ? `#${run}` : "—");
 
   if (!repository || run == null) {
-    return <span className={cn("font-mono", className)}>{label}</span>;
+    return <span className={cn(className)}>{label}</span>;
   }
 
   return (

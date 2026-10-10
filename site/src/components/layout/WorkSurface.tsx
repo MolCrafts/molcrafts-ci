@@ -1,6 +1,6 @@
 import type { JSX, ReactNode } from "react";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@molcrafts/design";
 
 /**
  * The one layout every tab renders into.

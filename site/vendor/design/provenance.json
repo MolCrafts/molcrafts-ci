@@ -1,0 +1,31 @@
+{
+  "mode": "unpublished-fixed-package-artifacts",
+  "repository": "https://github.com/MolCrafts/molcrafts-ui",
+  "commit": "a1a4ea73111bbc23df98873f61398980df3a50be",
+  "packages": [
+    {
+      "name": "@molcrafts/design-tokens",
+      "version": "0.0.1",
+      "file": "molcrafts-design-tokens-0.0.1.tgz",
+      "sha256": "5e7ed345e916723e5ffb27a175ebc5ff943ef4579c38b7a2bbe0091ab30c0aaf"
+    },
+    {
+      "name": "@molcrafts/design",
+      "version": "0.0.1",
+      "file": "molcrafts-design-0.0.1.tgz",
+      "sha256": "5243c8f52234e0a68b1993fbc54b7f944cc0d705e7392982aa6e514f584863fd"
+    },
+    {
+      "name": "@molcrafts/design-vega",
+      "version": "0.0.1",
+      "file": "molcrafts-design-vega-0.0.1.tgz",
+      "sha256": "71886905e04d16b83d9dc404576ebf0258ed0b1926c4ce6c216f6235d2ba44d7"
+    },
+    {
+      "name": "@molcrafts/design-vega-lite",
+      "version": "0.0.1",
+      "file": "molcrafts-design-vega-lite-0.0.1.tgz",
+      "sha256": "e5729bf9b41874f43ecad9fc0f970d4bca0b72043bc82533018eff38bc893963"
+    }
+  ]
+}

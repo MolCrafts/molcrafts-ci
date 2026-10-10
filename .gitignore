@@ -25,3 +25,6 @@ junit.xml
 
 # Pinned local lint executable provisioned by scripts/bootstrap.py.
 .tools/
+
+site/test-results/
+site/playwright-report/

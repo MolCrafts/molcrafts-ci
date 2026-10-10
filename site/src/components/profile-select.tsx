@@ -1,4 +1,5 @@
-import { Layers } from "lucide-react";
+import { NativeSelect } from "@molcrafts/design";
+import { LayerRegular as Layers } from "@fluentui/react-icons";
 import type { JSX } from "react";
 
 export interface ProfileSelectProps {
@@ -28,8 +29,7 @@ export function ProfileSelect({ profiles, value, onChange }: ProfileSelectProps)
     >
       <Layers className="size-icon-sm" aria-hidden="true" />
       <span className="sr-only">Build profile</span>
-      <select
-        className="h-control-compact rounded-control border border-border bg-surface px-2 font-mono text-label text-foreground"
+      <NativeSelect
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
       >
@@ -38,7 +38,7 @@ export function ProfileSelect({ profiles, value, onChange }: ProfileSelectProps)
             {profile}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   );
 }

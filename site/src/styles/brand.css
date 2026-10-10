@@ -1,0 +1,33 @@
+/* Product owns complete brand families; neutral/status/geometry roles come from Design. */
+:root {
+  --primary: #0d7377;
+  --primary-hover: #0a5f62;
+  --primary-pressed: #074548;
+  --primary-foreground: #ffffff;
+  --primary-muted: #e0f0f0;
+  --primary-muted-foreground: #074548;
+  --primary-link: #0a5f62;
+  --primary-link-hover: #074548;
+  --secondary: #3d536d;
+  --secondary-hover: #2c4058;
+  --secondary-pressed: #1a2d43;
+  --secondary-foreground: #ffffff;
+  --secondary-muted: #e5ebf2;
+  --secondary-muted-foreground: #1a2d43;
+}
+.dark {
+  --primary: #0e777b;
+  --primary-hover: #16858a;
+  --primary-pressed: #0a6266;
+  --primary-foreground: #ffffff;
+  --primary-muted: #133638;
+  --primary-muted-foreground: #8ce0db;
+  --primary-link: #8ce0db;
+  --primary-link-hover: #b1eeea;
+  --secondary: #526880;
+  --secondary-hover: #607790;
+  --secondary-pressed: #41576f;
+  --secondary-foreground: #ffffff;
+  --secondary-muted: #263442;
+  --secondary-muted-foreground: #cad9ea;
+}

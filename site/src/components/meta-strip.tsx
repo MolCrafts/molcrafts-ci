@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export interface MetaFact {
   label: string;
   value: ReactNode;
-  /** Quantities and identifiers are mono with tabular figures. */
+  /** Monospace is reserved for code and identifiers. */
   mono?: boolean;
 }
 
@@ -41,10 +41,10 @@ export const MetaStrip = ({ facts, className }: MetaStripProps): JSX.Element => 
           i > 0 && "border-l border-border",
         )}
       >
-        <dt className="text-micro text-muted-foreground whitespace-nowrap">{fact.label}</dt>
+        <dt className="text-label text-muted-foreground whitespace-nowrap">{fact.label}</dt>
         <dd
           className={cn(
-            "truncate text-body font-medium text-foreground",
+            "truncate text-body-lg font-medium tabular-nums text-foreground",
             fact.mono && "font-mono tabular-nums",
           )}
         >
@@ -61,7 +61,7 @@ export interface Measure {
   value: string;
   /** 0–100, drives the bar. Omit when the value is not a percentage. */
   percent?: number;
-  /** Bar colour class, e.g. `bg-status-warning`. Defaults to the accent. */
+  /** Bar colour class, e.g. `bg-status-warning`. Defaults to primary. */
   tone?: string;
 }
 
@@ -93,18 +93,18 @@ export const MeasureBand = ({ measures, className }: MeasureBandProps): JSX.Elem
           i > 0 && "border-l border-border",
         )}
       >
-        <dt className="text-micro text-muted-foreground">{m.label}</dt>
-        <dd className="font-mono text-title font-medium tabular-nums text-foreground">
+        <dt className="text-label text-muted-foreground">{m.label}</dt>
+        <dd className="text-title font-medium tabular-nums text-foreground">
           {m.value}
+          {m.percent != null && (
+            <div className="h-1 w-full overflow-hidden rounded-hairline bg-muted">
+              <div
+                className={cn("h-full", m.tone ?? "bg-primary")}
+                style={{ width: `${Math.max(0, Math.min(100, m.percent))}%` }}
+              />
+            </div>
+          )}
         </dd>
-        {m.percent != null && (
-          <div className="h-1 w-full overflow-hidden rounded-hairline bg-sunken">
-            <div
-              className={cn("h-full", m.tone ?? "bg-accent")}
-              style={{ width: `${Math.max(0, Math.min(100, m.percent))}%` }}
-            />
-          </div>
-        )}
       </div>
     ))}
   </dl>

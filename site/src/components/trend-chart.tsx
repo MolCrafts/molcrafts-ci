@@ -1,24 +1,13 @@
-import { defineMolplotChart } from "@molcrafts/molplot";
-import { createElement, useMemo, type JSX } from "react";
-
+import { useMemo, type JSX } from "react";
+import { VegaLiteView, type VegaLiteSpec, type ChartTheme } from "@molcrafts/design-vega-lite";
 import { formatMeasure } from "@/lib/payload";
 import type { HistoryPoint } from "@/lib/record-summary";
 import { relativeTime, shortCommit } from "@/lib/snapshot-data";
-import { useIsDark } from "@/lib/use-is-dark";
-
-defineMolplotChart();
-
-/** Theme values live in CSS, so read them rather than duplicating hexes here. */
-function token(el: HTMLElement | null, name: string, fallback: string): string {
-  if (!el) return fallback;
-  const value = getComputedStyle(el).getPropertyValue(name).trim();
-  return value || fallback;
-}
 
 function sparklineSpec(
   points: HistoryPoint[],
   colors: { line: string; failed: string; surface: string },
-): string {
+): VegaLiteSpec {
   const plotted = points.filter((p) => p.measure != null);
   const values = plotted.map((p, i) => {
     const value = p.measure ? formatMeasure(p.measure.value, p.measure.unit) : "—";
@@ -42,9 +31,10 @@ function sparklineSpec(
 
   // Size comes from the host box (RawChart measures it) — do not set
   // width/height here or they override the fitted numeric size.
-  return JSON.stringify({
+  return {
     padding: 2,
-    background: null,
+    autosize: { type: "fit", contains: "padding" },
+    background: "transparent",
     data: { values },
     layer: [
       {
@@ -113,53 +103,19 @@ function sparklineSpec(
       style: { cell: { stroke: null } },
       axis: { grid: false, ticks: false, domain: false, labels: false, title: null },
     },
-  });
+  };
 }
 
-export interface TrendChartProps {
-  points: HistoryPoint[];
-  height?: number;
-}
+export interface TrendChartProps { points: HistoryPoint[]; height?: number; }
 
-/**
- * One record's measure over its generations.
- *
- * One series, so no legend — the tile names it. Generations that failed are
- * marked in the status ramp; the line itself never carries state. No gridlines
- * and no axis labels: at this size they are noise, and the tooltip carries the
- * exact values.
- */
+/** CI owns the history mapping; the optional Design adapter owns compilation/rendering. */
 export function TrendChart({ points, height = 72 }: TrendChartProps): JSX.Element {
-  // Colours come from CSS tokens, so a theme flip has to rebuild the spec.
-  const dark = useIsDark();
-  const spec = useMemo(() => {
-    const root = typeof document !== "undefined" ? document.documentElement : null;
-    return sparklineSpec(points, {
-      line: token(root, "--mc-chart", dark ? "#00a9a4" : "#008f8c"),
-      failed: token(root, "--status-failed", "#c44"),
-      surface: token(root, "--mc-surface", dark ? "#0f1419" : "#fff"),
-    });
-  }, [points, dark]);
-
-  return createElement("molplot-chart", {
-    key: `${dark ? "dark" : "light"}:${spec.length}:${points.length}`,
-    className: "trend-sparkline",
-    preset: "molplot",
-    theme: dark ? "dark" : "light",
-    interactive: "false",
-    width: "100%",
-    spec,
-    style: {
-      display: "block",
-      width: "100%",
-      height,
-      maxWidth: "none",
-      aspectRatio: "unset",
-      // Compact sparkline: no inner air (molplot surface inset tracks this).
-      ["--molplot-pad" as string]: "0px",
-      padding: 0,
-      overflow: "hidden",
-    },
-    "aria-hidden": "true",
-  });
+  const spec = useMemo(() => (theme: ChartTheme) => sparklineSpec(points, {
+    line: theme.primary, failed: theme.danger, surface: theme.background,
+  }), [points]);
+  const plotted = points.filter(point => point.measure != null);
+  const summary = plotted.map(point => `${shortCommit(point.entry.commit)}: ${formatMeasure(point.measure!.value, point.measure!.unit)}${point.failed ? " (failed)" : ""}`).join("; ");
+  return <VegaLiteView label="Record measurement history" spec={spec} height={height}
+    empty={plotted.length === 0} className="trend-sparkline"
+    style={{ overflow: "hidden" }} aria-description={summary || "No measurements"} />;
 }
