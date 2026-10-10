@@ -57,7 +57,7 @@ export function HistorySelect({
       >
         <History className="size-icon-sm shrink-0" aria-hidden="true" />
         <span className="sr-only">Published generation</span>
-        <NativeSelect sizeVariant="compact"
+        <NativeSelect
           className="font-mono"
           value={selectedId ?? ""}
           onChange={(e) => onSelect(e.target.value)}
@@ -70,7 +70,7 @@ export function HistorySelect({
         </NativeSelect>
       </label>
       {hidden > 0 && (
-        <span className="text-micro whitespace-nowrap text-muted-foreground">
+        <span className="text-label whitespace-nowrap text-muted-foreground">
           newest {HISTORY_LIMIT} of {entries.length}
         </span>
       )}

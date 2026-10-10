@@ -43,7 +43,7 @@ export function PayloadView({
 
   if (payload == null) {
     return settled ? (
-      <EmptyState title="Snapshot body unavailable" density="compact" />
+      <EmptyState title="Snapshot body unavailable" />
     ) : (
       <BandSkeleton height="measure" />
     );
@@ -158,7 +158,7 @@ export function PayloadView({
 
   if (metrics.length === 0) {
     return (
-      <EmptyState title="Nothing readable in this snapshot" density="compact" />
+      <EmptyState title="Nothing readable in this snapshot" />
     );
   }
 

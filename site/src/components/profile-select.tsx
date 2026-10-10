@@ -29,8 +29,7 @@ export function ProfileSelect({ profiles, value, onChange }: ProfileSelectProps)
     >
       <Layers className="size-icon-sm" aria-hidden="true" />
       <span className="sr-only">Build profile</span>
-      <NativeSelect sizeVariant="compact"
-        className="font-mono"
+      <NativeSelect
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
       >

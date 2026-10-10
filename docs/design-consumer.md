@@ -47,3 +47,7 @@ and repeat all consumer checks. Do not preserve both paths or source-sync compat
 - Python CLI/Actions do not import the site or install UI dependencies. A future Design
   workflow may call pinned CI report/submit Actions independently of dashboard deployment.
 - MolPlot/Molab migration and native Web Component chart support are separate follow-ups.
+
+## Typography and density
+
+Comfortable density is the default, including engineering dashboards. Project navigation uses 44px rows and 16px labels. Ordinary values use sans typography with tabular figures. Monospace is reserved for code, paths, timestamps and commit identifiers. Compact layouts require a specific space constraint.

@@ -49,10 +49,10 @@ export function OperationsDock(): JSX.Element {
 
   return (
     <>
-      <div className="flex h-8 shrink-0 items-stretch gap-hairline border-b border-border px-2">
+      <div className="flex h-toolbar shrink-0 items-stretch gap-hairline border-b border-border px-2">
         <DockTabButton active={tab === "log"} onClick={() => setTab("log")} label="Log">
           {records && (
-            <span className="font-mono text-micro tabular-nums text-muted-foreground">
+            <span className="text-label tabular-nums text-muted-foreground">
               {lines.length}
             </span>
           )}
@@ -63,7 +63,7 @@ export function OperationsDock(): JSX.Element {
           label="Problems"
         >
           {problemCount > 0 && (
-            <span className="rounded-hairline bg-status-failed-soft px-1 font-mono text-micro tabular-nums text-foreground">
+            <span className="rounded-hairline bg-status-failed-soft px-1 text-label tabular-nums text-foreground">
               {problemCount}
             </span>
           )}
@@ -71,11 +71,11 @@ export function OperationsDock(): JSX.Element {
         <span className="flex-1" />
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           aria-label={collapsed ? "Expand panel" : "Collapse panel"}
           title={collapsed ? "Expand panel" : "Collapse panel"}
           aria-expanded={!collapsed}
-          className="my-hairline text-muted-foreground"
+          className="my-1 text-muted-foreground"
           onClick={toggle}
         >
           {collapsed ? <ChevronUp /> : <ChevronDown />}
@@ -93,15 +93,15 @@ export function OperationsDock(): JSX.Element {
               {lines.map(({ record, entry }, i) => (
                 <li
                   key={entry.snapshot_id ?? `${record.record}-${i}`}
-                  className="flex h-5 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
+                  className="flex min-h-8 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
                   onClick={() => open(record.record, entry.snapshot_id)}
                 >
-                  <span className="shrink-0 font-mono text-micro tabular-nums text-muted-foreground">
+                  <span className="shrink-0 text-label tabular-nums text-muted-foreground">
                     {entry.timestamp?.slice(0, 16).replace("T", " ") ?? "—"}
                   </span>
                   <button
                     type="button"
-                    className="w-24 shrink-0 truncate rounded-hairline text-left font-mono text-micro text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-24 shrink-0 truncate rounded-hairline text-left text-label text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={(e) => {
                       e.stopPropagation();
                       open(record.record, entry.snapshot_id);
@@ -109,7 +109,7 @@ export function OperationsDock(): JSX.Element {
                   >
                     {record.record}
                   </button>
-                  <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
+                  <span className="min-w-0 flex-1 truncate font-mono text-label text-muted-foreground">
                     gen {entry.generation ?? "—"} ·{" "}
                     <CommitLink repository={entry.repository} commit={entry.commit} /> ·{" "}
                     {entry.snapshot_id ?? entry.path ?? "—"}
@@ -125,21 +125,21 @@ export function OperationsDock(): JSX.Element {
         ) : (
           <ul className="py-1">
             {error && (
-              <li className="flex h-5 items-baseline gap-3 px-3">
+              <li className="flex min-h-8 items-baseline gap-3 px-3">
                 <StatusMark status="failed" className="self-center" />
-                <span className="truncate font-mono text-micro text-foreground">{error}</span>
+                <span className="truncate font-mono text-label text-foreground">{error}</span>
               </li>
             )}
             {problems.map((record) => (
               <li
                 key={record.record}
-                className="flex h-5 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
+                className="flex min-h-8 cursor-pointer items-baseline gap-3 px-3 hover:bg-interactive"
                 onClick={() => open(record.record, record.entry?.snapshot_id)}
               >
                 <StatusMark status="failed" className="self-center" />
                 <button
                   type="button"
-                  className="w-24 shrink-0 truncate rounded-hairline text-left font-mono text-micro text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="w-24 shrink-0 truncate rounded-hairline text-left text-label text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={(e) => {
                     e.stopPropagation();
                     open(record.record, record.entry?.snapshot_id);
@@ -147,7 +147,7 @@ export function OperationsDock(): JSX.Element {
                 >
                   {record.record}
                 </button>
-                <span className="min-w-0 flex-1 truncate font-mono text-micro text-muted-foreground">
+                <span className="min-w-0 flex-1 truncate font-mono text-label text-muted-foreground">
                   {record.statusLabel} · {record.headline} ·{" "}
                   <CommitLink
                     repository={record.entry?.repository}
@@ -179,7 +179,7 @@ const DockTabButton = ({
     type="button"
     aria-current={active ? "page" : undefined}
     className={cn(
-      "flex items-center gap-1 border-b-2 px-3 text-label transition-colors",
+      "flex items-center gap-1 border-b-2 px-3 text-body transition-colors",
       active
         ? "border-primary font-medium text-foreground"
         : "border-transparent text-muted-foreground hover:text-foreground",

@@ -38,7 +38,7 @@ export function MetricTable({ metrics, columns = 2, className }: MetricTableProp
           className="flex items-baseline justify-between gap-4 border-b border-border py-1 last:border-b-0"
         >
           <dt className="min-w-0 truncate text-label text-muted-foreground">{metric.label}</dt>
-          <dd className="shrink-0 font-mono text-body tabular-nums text-foreground">
+          <dd className="shrink-0 text-body tabular-nums text-foreground">
             {metric.value}
             {metric.unit && (
               <span className="ml-1 text-label text-muted-foreground">{metric.unit}</span>

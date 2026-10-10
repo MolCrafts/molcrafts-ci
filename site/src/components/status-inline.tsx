@@ -60,7 +60,7 @@ export const StatusInline = ({ total, segments, className }: StatusInlineProps):
         {shown.map((s) => (
           <span key={s.status} className="inline-flex items-center gap-1 text-label">
             <StatusMark status={s.status} />
-            <span className="font-mono tabular-nums text-foreground">{s.count}</span>
+            <span className="tabular-nums text-foreground">{s.count}</span>
             <span className="text-muted-foreground">{s.label}</span>
           </span>
         ))}

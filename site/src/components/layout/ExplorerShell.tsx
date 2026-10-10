@@ -51,7 +51,7 @@ export const LeftIconRail = ({
             aria-pressed={activeId === item.id}
             title={item.label}
             className={cn(
-              "relative size-8 rounded-control text-muted-foreground",
+              "relative rounded-control text-muted-foreground",
               "after:absolute after:-left-2 after:inset-y-1 after:w-0.5 after:rounded-full after:bg-transparent",
               activeId === item.id &&
                 "bg-background text-foreground after:bg-primary hover:bg-background",
@@ -118,9 +118,9 @@ export const LeftExplorer = ({
         className,
       )}
     >
-      <header className="flex h-toolbar-compact shrink-0 items-center border-b border-border px-2">
+      <header className="flex h-toolbar shrink-0 items-center border-b border-border px-3">
         <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <h2 className="min-w-0 truncate text-label font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="min-w-0 truncate text-body-lg font-semibold text-foreground">
             {title}
           </h2>
           {actions ? (
@@ -131,7 +131,7 @@ export const LeftExplorer = ({
       </header>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className={cn("min-h-full px-2 py-row-pad", bodyClassName)}>{children}</div>
+        <div className={cn("min-h-full p-3", bodyClassName)}>{children}</div>
       </ScrollArea>
     </div>
   );

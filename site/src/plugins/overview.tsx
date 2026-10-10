@@ -32,14 +32,14 @@ function projectFacts(records: RecordSummary[]): MetaFact[] {
   const profiles = [...new Set(records.flatMap((r) => r.profiles))];
 
   const facts: MetaFact[] = [
-    { label: "Records", value: records.length, mono: true },
-    { label: "Snapshots", value: snapshots, mono: true },
+    { label: "Records", value: records.length },
+    { label: "Snapshots", value: snapshots },
     { label: "Last published", value: relativeTime(latest) },
   ];
   if (profiles.length === 1) {
-    facts.push({ label: "Profile", value: profiles[0], mono: true });
+    facts.push({ label: "Profile", value: profiles[0] });
   } else if (profiles.length > 1) {
-    facts.push({ label: "Profiles", value: profiles.length, mono: true });
+    facts.push({ label: "Profiles", value: profiles.length });
   }
   return facts;
 }

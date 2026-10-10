@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export interface MetaFact {
   label: string;
   value: ReactNode;
-  /** Quantities and identifiers are mono with tabular figures. */
+  /** Monospace is reserved for code and identifiers. */
   mono?: boolean;
 }
 
@@ -41,10 +41,10 @@ export const MetaStrip = ({ facts, className }: MetaStripProps): JSX.Element => 
           i > 0 && "border-l border-border",
         )}
       >
-        <dt className="text-micro text-muted-foreground whitespace-nowrap">{fact.label}</dt>
+        <dt className="text-label text-muted-foreground whitespace-nowrap">{fact.label}</dt>
         <dd
           className={cn(
-            "truncate text-body font-medium text-foreground",
+            "truncate text-body-lg font-medium tabular-nums text-foreground",
             fact.mono && "font-mono tabular-nums",
           )}
         >
@@ -93,8 +93,8 @@ export const MeasureBand = ({ measures, className }: MeasureBandProps): JSX.Elem
           i > 0 && "border-l border-border",
         )}
       >
-        <dt className="text-micro text-muted-foreground">{m.label}</dt>
-        <dd className="font-mono text-title font-medium tabular-nums text-foreground">
+        <dt className="text-label text-muted-foreground">{m.label}</dt>
+        <dd className="text-title font-medium tabular-nums text-foreground">
           {m.value}
           {m.percent != null && (
             <div className="h-1 w-full overflow-hidden rounded-hairline bg-muted">

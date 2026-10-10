@@ -137,11 +137,10 @@ function Workbench({
           {projects === null ? (
             <EmptyState title="Loading projects…" density="inline" />
           ) : loadError ? (
-            <EmptyState title="Failed to load index" description={loadError} density="compact" />
+            <EmptyState title="Failed to load index" description={loadError} />
           ) : projects.length === 0 ? (
             <EmptyState
               title="No projects yet"
-              density="compact"
             />
           ) : (
             <ProjectList

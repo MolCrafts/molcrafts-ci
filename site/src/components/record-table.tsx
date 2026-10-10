@@ -41,7 +41,7 @@ export interface RecordTableProps {
  */
 export function RecordTable({ records, onOpen, emptyTitle }: RecordTableProps): JSX.Element {
   if (records !== null && records.length === 0) {
-    return <EmptyState title={emptyTitle} density="compact" />;
+    return <EmptyState title={emptyTitle} />;
   }
 
   return (
@@ -75,7 +75,7 @@ export function RecordTable({ records, onOpen, emptyTitle }: RecordTableProps): 
                   <button
                     type="button"
                     className={cn(
-                      "max-w-full truncate rounded-hairline text-left font-mono outline-none",
+                      "max-w-full truncate rounded-hairline text-left font-medium outline-none",
                       "focus-visible:ring-2 focus-visible:ring-ring",
                     )}
                     onClick={(e) => {

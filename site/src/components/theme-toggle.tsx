@@ -40,7 +40,7 @@ export function ThemeToggle(): JSX.Element {
   return (
     <Button
       variant="ghost"
-      size="icon-sm"
+      size="icon"
       aria-label={`Switch to ${next} theme`}
       title={`Switch to ${next} theme`}
       className="text-muted-foreground"

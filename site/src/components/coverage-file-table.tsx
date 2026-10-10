@@ -86,10 +86,10 @@ export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Ele
                     style={{ width: `${Math.max(0, Math.min(100, file.lines ?? 0))}%` }}
                   />
                 </span>
-                <span className="font-mono tabular-nums">{formatPercent(file.lines)}</span>
+                <span className="tabular-nums">{formatPercent(file.lines)}</span>
               </span>
             </TableCell>
-            <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+            <TableCell className="text-right tabular-nums text-muted-foreground">
               {uncoveredCount(file)}
             </TableCell>
           </TableRow>

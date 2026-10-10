@@ -40,7 +40,7 @@ export interface WorkbenchShellProps {
 }
 
 /** Just the dock's own tab strip stays visible when it is collapsed. */
-const DOCK_COLLAPSED_PX = 32;
+const DOCK_COLLAPSED_PX = 48;
 
 /** A row divider out of the vertical-by-default handle. */
 const HORIZONTAL_HANDLE =
