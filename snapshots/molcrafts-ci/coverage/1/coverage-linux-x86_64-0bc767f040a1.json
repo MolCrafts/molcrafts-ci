@@ -1,0 +1,166 @@
+{
+  "manifest": {
+    "producer": "coverage.py",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "coverage",
+    "schema_version": "1",
+    "source": {
+      "commit": "0bc767f040a1558799539e6c7012de4ffcc9f499",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molcrafts-ci",
+      "run_attempt": 1,
+      "timestamp": "2026-10-10T20:36:23Z",
+      "workflow_run": 38084378570
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "files": [
+      {
+        "lines": 80.0,
+        "path": "src/molcrafts_ci/__init__.py",
+        "uncovered": [
+          23,
+          24
+        ]
+      },
+      {
+        "lines": 88.7,
+        "path": "src/molcrafts_ci/cli.py",
+        "uncovered": [
+          77,
+          78,
+          79,
+          129,
+          138,
+          167,
+          177,
+          178,
+          179,
+          180,
+          283,
+          284,
+          285,
+          289
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/gate.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/index.py",
+        "uncovered": []
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/jsonutil.py",
+        "uncovered": []
+      },
+      {
+        "lines": 93.5,
+        "path": "src/molcrafts_ci/manifest.py",
+        "uncovered": [
+          48,
+          49
+        ]
+      },
+      {
+        "lines": 0.0,
+        "path": "src/molcrafts_ci/partners.py",
+        "uncovered": [
+          41,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          54,
+          55,
+          56,
+          58,
+          61,
+          62,
+          63,
+          66,
+          74,
+          81,
+          83,
+          84,
+          87,
+          90,
+          91,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          128,
+          129,
+          132
+        ],
+        "uncovered_total": 241
+      },
+      {
+        "lines": 97.2,
+        "path": "src/molcrafts_ci/persist.py",
+        "uncovered": [
+          78,
+          132
+        ]
+      },
+      {
+        "lines": 98.1,
+        "path": "src/molcrafts_ci/producers.py",
+        "uncovered": [
+          191,
+          196
+        ]
+      },
+      {
+        "lines": 97.7,
+        "path": "src/molcrafts_ci/report.py",
+        "uncovered": [
+          71
+        ]
+      },
+      {
+        "lines": 100.0,
+        "path": "src/molcrafts_ci/snapshot.py",
+        "uncovered": []
+      }
+    ],
+    "totals": {
+      "branches": 41.7,
+      "lines": 60.7
+    }
+  }
+}
