@@ -1,9 +1,4 @@
-"""actions/ci-context's rules, run through context.sh against the same table
-of synthetic contexts the `test / ci-context` job feeds the action itself.
-
-The table lives once, in .github/workflows/test.yml; this test reads it from
-there, so the two layers cannot drift apart.
-"""
+"""Context scenarios run locally and in the Python gate; one hosted job checks wiring."""
 
 from __future__ import annotations
 
@@ -16,8 +11,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "actions/ci-context/context.sh"
-WORKFLOW = yaml.safe_load((ROOT / ".github/workflows/test.yml").read_text(encoding="utf-8"))
-CASES = WORKFLOW["jobs"]["ci-context"]["strategy"]["matrix"]["include"]
+CASES = yaml.safe_load((ROOT / "tests/fixtures/ci-context.yml").read_text(encoding="utf-8"))
 
 
 def run(tmp_path: Path, **ctx: str) -> subprocess.CompletedProcess[str]:

@@ -22,3 +22,6 @@ junit.xml
 
 # The published index lives on the `data` branch, fetched by site/scripts/fetch-data.mjs
 /data/
+
+# Pinned local lint executable provisioned by scripts/bootstrap.py.
+.tools/

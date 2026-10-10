@@ -9,16 +9,14 @@ description: >
   repository's scripts/partners.py resolves -- the same resolver its git hooks
   use -- and its absolute path exported as <NAME>_DIR.
 
-  With `repository`: that one partner into `path`. A branch `ref` resolves to
-  the partner's branch named like the one being built when one exists (the
-  fork's first, then the upstream's), so a change spanning both repositories
-  is built against its counterpart; otherwise `ref` itself.
+  With `repository`: fetch exactly `ref` into `path`. No caller branch or
+  sibling checkout changes the selected dependency.
 inputs:
   repository:
     description: One partner, owner/name; empty checks out every partner .github/partners.env names
     default: ""
   ref:
-    description: The partner's branch, tag or commit when it has no branch named like this one (with `repository`)
+    description: Exact partner branch, tag or commit (with `repository`)
     default: dev
   path:
     description: Checkout directory, relative to the workspace (with `repository`)
@@ -28,39 +26,16 @@ runs:
   steps:
     - if: inputs.repository == ''
       shell: bash
-      run: |
-        set -euo pipefail
-        [ -f .github/partners.env ] && [ -f scripts/partners.py ] || {
-          echo "::error::setup-partners: no 'repository' input, and no .github/partners.env + scripts/partners.py"
-          exit 1
-        }
-        for name in $(sed -n 's/^\([A-Z][A-Z0-9_]*\)_REPOSITORY=.*/\1/p' .github/partners.env); do
-          # macOS ships bash 3.2: no ${name,,}.
-          dir="../$(echo "$name" | tr '[:upper:]' '[:lower:]')"
-          python3 scripts/partners.py fetch "$name" "$dir"
-          echo "${name}_DIR=$(python3 -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' "$dir")" >> "$GITHUB_ENV"
-        done
+      env:
+        MOLCRAFTS_PARTNERS_ROOT: ${{ github.workspace }}
+      run: python "$GITHUB_ACTION_PATH/../../src/molcrafts_ci/partners.py" fetch-all
     - if: inputs.repository != ''
       shell: bash
       env:
+        MOLCRAFTS_PARTNERS_ROOT: ${{ github.workspace }}
         REPO: ${{ inputs.repository }}
         REF: ${{ inputs.ref }}
         DEST: ${{ inputs.path }}
-        BRANCH: ${{ github.head_ref || github.ref_name }}
-        FORK: ${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}
       run: |
-        set -euo pipefail
         [ -n "$DEST" ] || { echo "::error::setup-partners: 'repository' needs 'path'"; exit 1; }
-        src="$REPO" ref="$REF"
-        if [ "$BRANCH" != "$REF" ]; then
-          for cand in "$FORK/${REPO#*/}" "$REPO"; do
-            if git ls-remote --exit-code --heads "https://github.com/$cand.git" "refs/heads/$BRANCH" >/dev/null 2>&1; then
-              src="$cand" ref="$BRANCH"
-              break
-            fi
-          done
-        fi
-        echo "partner $REPO -> $src@$ref ($DEST)"
-        git init -q "$DEST"
-        git -C "$DEST" fetch -q --depth=1 "https://github.com/$src.git" "$ref"
-        git -C "$DEST" checkout -q --detach FETCH_HEAD
+        python "$GITHUB_ACTION_PATH/../../src/molcrafts_ci/partners.py" fetch-one "$REPO" "$REF" "$DEST"

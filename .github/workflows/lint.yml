@@ -47,11 +47,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./actions/setup-python
-      - run: uv pip install --system -e ".[dev]"
-      - run: ruff check src tests scripts actions
-      - run: ruff format --check src tests scripts actions
-      # Invariants a formatter and a type checker cannot see.
-      - run: python scripts/check_repo.py
+      - run: uv sync --locked --extra dev
+      - run: uv run --locked --extra dev scripts/check.py dependencies lint
 
   site:
     name: lint / site
@@ -79,21 +76,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./actions/setup-python
-      - run: uvx check-jsonschema --builtin-schema vendor.github-actions actions/*/action.yml
-      - run: uvx check-jsonschema --builtin-schema vendor.github-workflows .github/workflows/*.yml
+      - run: uv run --locked --extra dev python -m check_jsonschema --builtin-schema vendor.github-actions actions/*/action.yml
+      - run: uv run --locked --extra dev python -m check_jsonschema --builtin-schema vendor.github-workflows .github/workflows/*.yml
       - uses: docker://rhysd/actionlint:1.7.12
         with:
           args: -color
-
-  # The CI scheme itself (context job, skip-pr and publish gates, the
-  # canonical concurrency block, @master pins, job names), from this
-  # checkout: every MolCrafts repository runs the same job through
-  # MolCrafts/molcrafts-ci/actions/check-workflows@master.
-  workflows:
-    name: lint / workflows
-    needs: context
-    if: needs.context.outputs.skip-pr != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./actions/check-workflows

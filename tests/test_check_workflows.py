@@ -348,3 +348,9 @@ def test_script_exit_status(rule: str, status: int) -> None:
     assert proc.returncode == status, proc.stdout + proc.stderr
     if status:
         assert "[comment]" in proc.stdout and "1 violation(s)" in proc.stdout
+
+
+def test_immutable_shared_action_refs(tmp_path: Path) -> None:
+    text = (FIXTURES / "pin/good/.github/workflows/lint.yml").read_text(encoding="utf-8")
+    text = text.replace("@master", "@" + "a" * 40)
+    assert cw.check(write(tmp_path, "lint.yml", text)) == []

@@ -35,6 +35,7 @@ dev = [
   "ruff>=0.11",
   # scripts/check_repo.py, actions/check-workflows and the tests read the workflows.
   "pyyaml>=6.0",
+  "check-jsonschema>=0.34",
 ]
 
 [project.scripts]

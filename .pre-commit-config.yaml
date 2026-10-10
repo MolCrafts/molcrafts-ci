@@ -1,15 +1,6 @@
-# Commit-time half of the CI gate.
-#
-# Every project-tool hook is `repo: local` + `language: system` running the
-# exact command .github/workflows/lint.yml and test.yml run, so there is one invocation and
-# no second pinned version to drift. They resolve from `pip install -e ".[dev]"`
-# and `site/node_modules`.
-#
-# `npm run build` is here: measured at 6.8s, cheaper than the typecheck and
-# half the cost of pytest. It was left out on an assumption that turned out
-# to be wrong.
-
-default_install_hook_types: [pre-commit]
+# Commit hooks are cheap; pre-push runs every local gate, without file filters.
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -26,68 +17,17 @@ repos:
 
   - repo: local
     hooks:
-      - id: ruff-check
-        name: ruff check
-        entry: python3 -m ruff check --fix
+      - id: lint
+        name: static checks
+        entry: uv run --locked --extra dev scripts/check.py lint
         language: system
-        types_or: [python, pyi]
-        require_serial: true
-
-      - id: ruff-format
-        name: ruff format
-        entry: python3 -m ruff format
-        language: system
-        types_or: [python, pyi]
-        require_serial: true
-
-      - id: pytest
-        name: pytest
-        entry: python3 -m pytest -q
-        language: system
-        types: [python]
         pass_filenames: false
-        require_serial: true
-
-      - id: site-typecheck
-        name: tsc --noEmit (site)
-        entry: npm --prefix site run typecheck
+        always_run: true
+        stages: [pre-commit]
+      - id: verify
+        name: complete local CI gates
+        entry: uv run --locked --extra dev scripts/check.py all
         language: system
-        files: ^site/(src/|tests/|tsconfig\.json|package\.json)
         pass_filenames: false
-        require_serial: true
-
-      - id: site-test
-        name: rstest (site)
-        entry: npm --prefix site test
-        language: system
-        files: ^site/(src/|tests/|rstest\.config\.ts|package\.json)
-        pass_filenames: false
-        require_serial: true
-
-      - id: site-build
-        name: rsbuild build (site)
-        entry: npm --prefix site run build
-        language: system
-        files: ^site/(src/|scripts/|public/|rsbuild\.config\.ts|package\.json)
-        pass_filenames: false
-        require_serial: true
-
-      # The CI scheme (actions/check-workflows), the same script every
-      # MolCrafts repository's `lint / workflows` runs.
-      - id: check-workflows
-        name: CI scheme (actions/check-workflows)
-        entry: python3 actions/check-workflows/check_workflows.py
-        language: system
-        files: ^(\.github/workflows/|actions/(ci-context|check-workflows)/)
-        pass_filenames: false
-        require_serial: true
-
-      # Invariants a formatter and a type checker cannot see. Each one is
-      # here because the thing it looks for already shipped and broke.
-      - id: repo-invariants
-        name: repository invariants
-        entry: python3 scripts/check_repo.py
-        language: system
-        files: ^(\.github/workflows/|actions/|site/src/.*\.tsx$|scripts/check_repo\.py)
-        pass_filenames: false
-        require_serial: true
+        always_run: true
+        stages: [pre-push]
