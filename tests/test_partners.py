@@ -72,6 +72,29 @@ class ResolutionTests(unittest.TestCase):
         ):
             partners.fetch("DEP", source, Path(tmp) / "dep")
 
+    def test_layout_reuses_build_state_between_runs(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            source = home / "source"
+            source.mkdir()
+            subprocess.run(["git", "init", "-q", str(source)], check=True)
+            with (
+                patch.object(partners, "ROOT", source),
+                patch.object(partners, "load", return_value={"SELF": "example"}),
+                patch.object(partners, "resolved", return_value={}),
+                patch.object(partners.Path, "home", return_value=home),
+                patch.dict(partners.os.environ),
+            ):
+                partners.os.environ.pop("MOLCRAFTS_PARTNER_CACHE", None)
+                make = (
+                    "from pathlib import Path; Path('.venv').mkdir(); Path('.venv/marker').touch()"
+                )
+                check = "from pathlib import Path; assert Path('.venv/marker').exists()"
+                self.assertEqual(partners.run([sys.executable, "-c", make]), 0)
+                self.assertEqual(partners.run([sys.executable, "-c", check]), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

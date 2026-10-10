@@ -471,6 +471,7 @@ maintenance operation, never an implicit build dependency.
 setup-partners. Consumers bootstrap it at `CI_REF`, a full commit SHA in
 `.github/partners.env`. Every partner ref is explicit. Resolution never uses
 the caller's branch or an uncommitted sibling; fetching uses the resolved SHA
-and verifies HEAD. Update a partner SHA in a commit and rerun lock/integration
+and verifies HEAD. Partner layouts and build caches persist across pushes under
+`~/.cache/molcrafts/partners` (override with `MOLCRAFTS_PARTNER_CACHE`). Update a partner SHA in a commit and rerun lock/integration
 gates for coordinated changes. Pin shared Actions to the same immutable CI
 commit; legacy `@master` remains accepted for repositories migrating later.

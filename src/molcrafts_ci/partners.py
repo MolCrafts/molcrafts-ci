@@ -29,10 +29,10 @@ once, fetch that exact commit, and verify the checkout before building.
                                   $PARTNERS_SOURCE naming this checkout (to
                                   copy a result back, e.g. a relocked file).
 
-``run`` keeps <root> under $MOLCRAFTS_PARTNER_CACHE when that is set (one
-directory per repository, so the partner builds stay warm between pushes and
-a partner checkout only moves to its newly resolved commit); otherwise <root>
-is a temp directory removed afterwards.
+``run`` keeps its layout in ~/.cache/molcrafts/partners by default, or
+$MOLCRAFTS_PARTNER_CACHE. A cross-platform file lock protects concurrent
+checks. Dependency builds and environments stay warm across pushes; source
+files are synchronized before each run.
 
 partners.env holds ``KEY=VALUE`` lines and comments, nothing else. ``SELF``
 names this repository's directory in the layout.
@@ -324,36 +324,34 @@ def run(cmd: list[str]) -> int:
     env = load()
     me = env.get("SELF") or die("partners.env names no SELF")
     found = resolved()
-    cache = os.environ.get("MOLCRAFTS_PARTNER_CACHE")
-    key = hashlib.sha256(repr(sorted(partners(env).items())).encode()).hexdigest()
-    root = (
-        Path(cache) / f"{me}-{key[:12]}"
-        if cache
-        else Path(tempfile.mkdtemp(prefix=f"{me}-partners-"))
+    cache = Path(
+        os.environ.get("MOLCRAFTS_PARTNER_CACHE", Path.home() / ".cache/molcrafts/partners")
     )
+    key = hashlib.sha256(repr(sorted(partners(env).items())).encode()).hexdigest()
+    root = cache / f"{me}-{key[:12]}"
     root.mkdir(parents=True, exist_ok=True)
-    try:
-        with open(root / ".lock", "w", encoding="utf-8") as lock:
-            if os.name == "nt":
-                import msvcrt
+    with open(root / ".lock", "a+b") as lock:
+        lock.seek(0)
+        if os.name == "nt":
+            import msvcrt
+            import time
 
-                lock.write("0")
-                lock.flush()
-                lock.seek(0)
-                msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)
-            else:
-                import fcntl
+            while True:
+                try:
+                    msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    time.sleep(0.1)
+        else:
+            import fcntl
 
-                fcntl.flock(lock, fcntl.LOCK_EX)
-            for name, src in found.items():
-                fetch(name, src, root / name.lower())
-            sync(root / me)
-            print(f"partners: running in {root / me}: {' '.join(cmd)}", file=sys.stderr)
-            env_out = dict(ENV, PARTNERS_SOURCE=str(ROOT))
-            return subprocess.run(cmd, check=False, cwd=root / me, env=env_out).returncode
-    finally:
-        if not cache:
-            shutil.rmtree(root, ignore_errors=True)
+            fcntl.flock(lock, fcntl.LOCK_EX)
+        for name, src in found.items():
+            fetch(name, src, root / name.lower())
+        sync(root / me)
+        print(f"partners: running in {root / me}: {' '.join(cmd)}", file=sys.stderr)
+        env_out = dict(ENV, PARTNERS_SOURCE=str(ROOT))
+        return subprocess.run(cmd, check=False, cwd=root / me, env=env_out).returncode
 
 
 def main(argv: list[str]) -> int:
