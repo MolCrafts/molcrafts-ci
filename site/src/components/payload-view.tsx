@@ -11,7 +11,7 @@ import {
 import { MeasureBand, type Measure } from "@/components/meta-strip";
 import { MetricTable, type Metric } from "@/components/metric-table";
 import { BandSkeleton } from "@/components/skeletons";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import { RunLink } from "@/components/run-link";
 import { readCoverage, readScalars, readTests } from "@/lib/payload";
 import type { IndexEntry } from "@/lib/snapshot-data";
@@ -43,7 +43,7 @@ export function PayloadView({
 
   if (payload == null) {
     return settled ? (
-      <EmptyState title="Snapshot body unavailable" density="compact" />
+      <EmptyState title="Snapshot body unavailable" />
     ) : (
       <BandSkeleton height="measure" />
     );
@@ -158,7 +158,7 @@ export function PayloadView({
 
   if (metrics.length === 0) {
     return (
-      <EmptyState title="Nothing readable in this snapshot" density="compact" />
+      <EmptyState title="Nothing readable in this snapshot" />
     );
   }
 

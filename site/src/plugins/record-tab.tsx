@@ -5,7 +5,7 @@ import { HistorySelect } from "@/components/history-select";
 import { WorkSurface } from "@/components/layout/WorkSurface";
 import { PayloadView } from "@/components/payload-view";
 import { RunLink } from "@/components/run-link";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import { useUrlState } from "@/lib/use-url-state";
 import {
   fetchRecordEntries,
@@ -94,7 +94,7 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
     if (!record) {
       return (
         <div className="p-4">
-          <EmptyState title={`No ${opts.label} published`} density="compact" />
+          <EmptyState title={`No ${opts.label} published`} />
         </div>
       );
     }
@@ -102,7 +102,7 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
     if (error) {
       return (
         <div className="p-4">
-          <EmptyState title="Failed to load index" description={error} density="compact" />
+          <EmptyState title="Failed to load index" description={error} />
         </div>
       );
     }
@@ -113,7 +113,7 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
     return (
       <WorkSurface>
         {!hasEntries ? (
-          <EmptyState title={`No ${opts.label} snapshots`} density="compact" />
+          <EmptyState title={`No ${opts.label} snapshots`} />
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border pb-3">
@@ -132,7 +132,7 @@ export function makeRecordTab(opts: RecordDescriptor): RecordTabPlugin {
                   <RunLink repository={active.repository} run={active.workflow_run}>
                     run
                   </RunLink>
-                  {active.profile && <span className="font-mono">{active.profile}</span>}
+                  {active.profile && <span>{active.profile}</span>}
                   {active.producer && <span className="truncate">{active.producer}</span>}
                 </span>
               )}

@@ -6,9 +6,9 @@ import { OperationsDock } from "@/components/operations-dock";
 import { ProfileSelect } from "@/components/profile-select";
 import { ProjectList } from "@/components/project-list";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@molcrafts/design";
+import { Separator } from "@molcrafts/design";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@molcrafts/design";
 import { loadIndexListing, projectsFromListing } from "@/lib/index-data";
 import { ProjectRecordsProvider } from "@/lib/project-records";
 import { useProjectRecords } from "@/lib/project-records";
@@ -111,7 +111,7 @@ function Workbench({
                 <span className="truncate text-body text-muted-foreground">{selected.id}</span>
                 {activeLabel && (
                   <>
-                    <span aria-hidden="true" className="text-border-strong">
+                    <span aria-hidden="true" className="text-input">
                       /
                     </span>
                     <span className="truncate text-body font-medium">{activeLabel}</span>
@@ -137,11 +137,10 @@ function Workbench({
           {projects === null ? (
             <EmptyState title="Loading projects…" density="inline" />
           ) : loadError ? (
-            <EmptyState title="Failed to load index" description={loadError} density="compact" />
+            <EmptyState title="Failed to load index" description={loadError} />
           ) : projects.length === 0 ? (
             <EmptyState
               title="No projects yet"
-              density="compact"
             />
           ) : (
             <ProjectList

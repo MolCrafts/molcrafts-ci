@@ -796,7 +796,7 @@ The Index SHALL NOT contain domain-specific decision logic.
 
 The website is a consumer of published indexes and snapshots.
 
-The product shell lives under `site/` and is built with the **molcrafts-ui**
+The product shell lives under `site/` and consumes **MolCrafts Design** public packages; historical source-copy architecture below is superseded by [design-consumer.md](design-consumer.md). It was built with the **molcrafts-ui**
 shadcn registry (components are copied into the product; there is no shared
 runtime `@molcrafts/ui` dependency).
 
@@ -878,7 +878,7 @@ server authentication
 runtime operational maintenance
 ```
 
-Cloudflare Pages is connected to the repository and builds it: root directory `site`, `npm run build`, output `dist`. No deploy workflow and no API token live here. `sync-ui` finds no sibling molcrafts-ui checkout on the builder and falls back to the vendored sources under `site/src`, which is why they are committed.
+Cloudflare Pages is connected to the repository and builds it: root directory `site`, `npm run build`, output `dist`. No deploy workflow and no API token live here. The current frontend installs fixed compiled Design tarballs from `site/vendor/design`; it no longer uses `sync-ui` or vendored source implementations. See [Design consumer integration](design-consumer.md).
 
 The index is **not** bundled into that build. It lives on the `data` branch, as the diagram below has always said, and the browser reads it at runtime from `raw.githubusercontent.com`, which serves it with `Access-Control-Allow-Origin: *` and a five-minute cache. Two properties follow, and both were faults before:
 

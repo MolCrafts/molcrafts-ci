@@ -1,4 +1,5 @@
-import { History } from "lucide-react";
+import { NativeSelect } from "@molcrafts/design";
+import { HistoryRegular as History } from "@fluentui/react-icons";
 import type { JSX } from "react";
 
 import { relativeTime, shortCommit, type IndexEntry } from "@/lib/snapshot-data";
@@ -56,8 +57,8 @@ export function HistorySelect({
       >
         <History className="size-icon-sm shrink-0" aria-hidden="true" />
         <span className="sr-only">Published generation</span>
-        <select
-          className="h-control-compact min-w-0 rounded-control border border-border bg-surface px-2 font-mono text-label text-foreground"
+        <NativeSelect
+          className="font-mono"
           value={selectedId ?? ""}
           onChange={(e) => onSelect(e.target.value)}
         >
@@ -66,10 +67,10 @@ export function HistorySelect({
               {optionLabel(entry, i)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {hidden > 0 && (
-        <span className="text-micro whitespace-nowrap text-muted-foreground">
+        <span className="text-label whitespace-nowrap text-muted-foreground">
           newest {HISTORY_LIMIT} of {entries.length}
         </span>
       )}

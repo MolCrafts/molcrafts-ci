@@ -4,7 +4,7 @@ import { CommitLink } from "@/components/commit-link";
 import { RunLink } from "@/components/run-link";
 import { RowsSkeleton } from "@/components/skeletons";
 import { StatusMark } from "@/components/snapshot-status";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@molcrafts/design";
 import type { RecordSummary } from "@/lib/record-summary";
 import { relativeTime } from "@/lib/snapshot-data";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ export interface RecordTableProps {
  */
 export function RecordTable({ records, onOpen, emptyTitle }: RecordTableProps): JSX.Element {
   if (records !== null && records.length === 0) {
-    return <EmptyState title={emptyTitle} density="compact" />;
+    return <EmptyState title={emptyTitle} />;
   }
 
   return (
@@ -75,7 +75,7 @@ export function RecordTable({ records, onOpen, emptyTitle }: RecordTableProps): 
                   <button
                     type="button"
                     className={cn(
-                      "max-w-full truncate rounded-hairline text-left font-mono outline-none",
+                      "max-w-full truncate rounded-hairline text-left font-medium outline-none",
                       "focus-visible:ring-2 focus-visible:ring-ring",
                     )}
                     onClick={(e) => {

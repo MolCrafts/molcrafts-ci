@@ -19,7 +19,7 @@ export function ProjectList({
   onSelect: (id: string) => void;
 }) {
   return (
-    <ul className="flex flex-col gap-hairline">
+    <ul className="flex flex-col gap-1">
       {projects.map((project) => {
         const active = project.id === selectedId;
         return (
@@ -28,9 +28,9 @@ export function ProjectList({
               type="button"
               aria-current={active ? "page" : undefined}
               className={cn(
-                "w-full truncate rounded-control px-2 py-row-pad text-left text-body transition-colors",
+                "min-h-11 w-full truncate rounded-control px-3 py-2 text-left text-body-lg transition-colors",
                 active
-                  ? "bg-accent-soft font-medium text-foreground"
+                  ? "bg-primary-muted font-semibold text-primary-muted-foreground"
                   : "text-foreground hover:bg-interactive",
               )}
               onClick={() => onSelect(project.id)}

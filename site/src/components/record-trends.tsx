@@ -2,7 +2,7 @@ import type { JSX } from "react";
 
 import { RowsSkeleton } from "@/components/skeletons";
 import { TrendChart } from "@/components/trend-chart";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import { formatMeasure } from "@/lib/payload";
 import { deltaOf, type RecordSummary } from "@/lib/record-summary";
 import { cn } from "@/lib/utils";
@@ -33,11 +33,11 @@ export function RecordTrends({
 }: RecordTrendsProps): JSX.Element {
   if (records === null) return <RowsSkeleton rows={3} />;
   if (records.length === 0) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} density="compact" />;
+    return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
 
   return (
-    <ul className="grid grid-cols-1 gap-x-10 gap-y-2 xl:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-x-10 gap-y-4 xl:grid-cols-2">
       {records.map((record) => {
         const plotted = record.history.filter((p) => p.measure != null);
         const current = plotted[plotted.length - 1]?.measure ?? null;
@@ -54,16 +54,16 @@ export function RecordTrends({
               )}
             >
               <span className="flex items-baseline gap-3">
-                <span className="font-mono text-body text-foreground">{record.record}</span>
+                <span className="font-medium text-body-lg text-foreground">{record.record}</span>
                 <span className="flex-1" />
-                <span className="font-mono text-display font-semibold tabular-nums text-foreground">
+                <span className="text-heading font-semibold tabular-nums text-foreground">
                   {current ? formatMeasure(current.value, current.unit) : "—"}
                 </span>
                 {change && (
                   <span
                     className={cn(
-                      "font-mono text-label tabular-nums",
-                      change.better ? "text-status-completed" : "text-status-warning",
+                      "text-body tabular-nums",
+                      change.better ? "text-status-completed-foreground" : "text-status-warning-foreground",
                     )}
                   >
                     {change.text}
