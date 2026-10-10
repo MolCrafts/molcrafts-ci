@@ -1,12 +1,12 @@
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDownRegular as ChevronDown, ChevronUpRegular as ChevronUp } from "@fluentui/react-icons";
 import { useState, type JSX } from "react";
 
 import { useDock } from "@/components/layout/WorkbenchShell";
 import { CommitLink } from "@/components/commit-link";
 import { StatusMark } from "@/components/snapshot-status";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@molcrafts/design";
+import { EmptyState } from "@molcrafts/design";
+import { ScrollArea } from "@molcrafts/design";
 import { openRecord } from "@/lib/open-record";
 import { useProjectRecords } from "@/lib/project-records";
 import { useUrlState } from "@/lib/use-url-state";
@@ -181,7 +181,7 @@ const DockTabButton = ({
     className={cn(
       "flex items-center gap-1 border-b-2 px-3 text-label transition-colors",
       active
-        ? "border-accent font-medium text-foreground"
+        ? "border-primary font-medium text-foreground"
         : "border-transparent text-muted-foreground hover:text-foreground",
     )}
     onClick={onClick}
@@ -194,7 +194,7 @@ const DockTabButton = ({
 const DockSkeleton = (): JSX.Element => (
   <div aria-hidden="true" className="flex flex-col gap-1 p-2">
     {[0, 1, 2, 3].map((i) => (
-      <div key={i} className="h-3 animate-pulse rounded-hairline bg-sunken" />
+      <div key={i} className="h-3 animate-pulse rounded-hairline bg-muted" />
     ))}
   </div>
 );

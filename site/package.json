@@ -9,38 +9,26 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "sync-ui": "node scripts/sync-ui.mjs",
     "prepare-data": "node scripts/prepare-data.mjs",
     "seed:mock": "python3 ../scripts/seed_mock_data.py",
-    "dev": "npm run sync-ui && rsbuild dev",
-    "dev:data": "npm run sync-ui && npm run fetch-data && npm run prepare-data && PUBLIC_USE_MOCK=0 rsbuild dev",
-    "build": "npm run sync-ui && npm run clean-public-data && PUBLIC_USE_MOCK=0 PUBLIC_DATA_BASE=https://raw.githubusercontent.com/MolCrafts/molcrafts-ci/data rsbuild build",
+    "dev": "rsbuild dev",
+    "dev:data": "npm run fetch-data && npm run prepare-data && PUBLIC_USE_MOCK=0 rsbuild dev",
+    "build": "npm run clean-public-data && PUBLIC_USE_MOCK=0 PUBLIC_DATA_BASE=https://raw.githubusercontent.com/MolCrafts/molcrafts-ci/data rsbuild build",
     "preview": "rsbuild preview",
     "typecheck": "tsc --noEmit",
     "test": "rstest run",
     "fetch-data": "node scripts/fetch-data.mjs",
-    "clean-public-data": "node scripts/clean-public-data.mjs"
+    "clean-public-data": "node scripts/clean-public-data.mjs",
+    "test:browser": "playwright test",
+    "verify:design": "node scripts/verify-design-artifacts.mjs"
   },
   "dependencies": {
-    "@fontsource/geist-sans": "^5.3.0",
-    "@fontsource/jetbrains-mono": "^5.3.0",
-    "@molcrafts/molplot": "^0.1.7",
-    "@radix-ui/react-context-menu": "^2.2.16",
-    "@radix-ui/react-scroll-area": "^1.2.10",
-    "@radix-ui/react-separator": "^1.1.8",
-    "@radix-ui/react-slot": "^1.2.4",
-    "@radix-ui/react-tabs": "^1.1.13",
-    "@radix-ui/react-tooltip": "^1.2.12",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.544.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-resizable-panels": "^4.11.2",
-    "tailwind-merge": "^3.3.1",
-    "vega": "^6.4.0",
-    "vega-embed": "^7.3.0",
-    "vega-lite": "^6.4.3"
+    "@molcrafts/design": "file:vendor/design/molcrafts-design-0.0.1.tgz",
+    "@molcrafts/design-tokens": "file:vendor/design/molcrafts-design-tokens-0.0.1.tgz",
+    "@molcrafts/design-vega-lite": "file:vendor/design/molcrafts-design-vega-lite-0.0.1.tgz",
+    "@fluentui/react-icons": "2.0.344"
   },
   "devDependencies": {
     "@rsbuild/core": "^2.1.10",
@@ -52,9 +40,15 @@
     "@types/react-dom": "^19.2.0",
     "rspack-plugin-mock": "^2.2.0",
     "tailwindcss": "^4.2.2",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "@playwright/test": "1.64.0",
+    "@axe-core/playwright": "4.13.0"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.3.3"
+  },
+  "overrides": {
+    "@molcrafts/design-tokens": "$@molcrafts/design-tokens",
+    "@molcrafts/design-vega": "file:vendor/design/molcrafts-design-vega-0.0.1.tgz"
   }
 }

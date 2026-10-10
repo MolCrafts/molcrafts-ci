@@ -1,11 +1,11 @@
 import { createContext, useContext, useRef, useState, type JSX, type ReactNode } from "react";
-import type { PanelImperativeHandle } from "react-resizable-panels";
+import type { ResizablePanelHandle as PanelImperativeHandle } from "@molcrafts/design";
 
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable";
+} from "@molcrafts/design";
 import { cn } from "@/lib/utils";
 
 interface DockControls {
@@ -93,11 +93,11 @@ export function WorkbenchShell({
             className="min-h-0"
           >
             <ResizablePanel id="navigator" defaultSize="256px" minSize="180px" maxSize="420px">
-              <Region className="border-r border-border bg-surface">{navigator}</Region>
+              <nav aria-label="Projects" className="h-full"><Region className="border-r border-border bg-surface">{navigator}</Region></nav>
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel id="work" minSize="320px">
-              <Region>{children}</Region>
+              <main aria-label="CI records" className="h-full"><Region>{children}</Region></main>
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>
@@ -118,7 +118,7 @@ export function WorkbenchShell({
           onResize={(size) => setDockCollapsed(size.inPixels <= DOCK_COLLAPSED_PX + 1)}
         >
           <DockContext.Provider value={{ collapsed: dockCollapsed, toggle }}>
-            <Region className="border-t border-border bg-surface">{dock}</Region>
+            <section aria-label="Operations" className="h-full"><Region className="border-t border-border bg-surface">{dock}</Region></section>
           </DockContext.Provider>
         </ResizablePanel>
       </ResizablePanelGroup>

@@ -43,7 +43,7 @@ export const StatusInline = ({ total, segments, className }: StatusInlineProps):
       <span className="text-label text-muted-foreground whitespace-nowrap">{total}</span>
       {sum > 0 && (
         <div
-          className="flex h-1 w-40 overflow-hidden rounded-hairline bg-sunken"
+          className="flex h-1 w-40 overflow-hidden rounded-hairline bg-muted"
           role="img"
           aria-label={shown.map((s) => `${s.count} ${s.label}`).join(", ")}
         >

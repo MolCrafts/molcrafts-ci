@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * "Still loading" must never read as an empty state.
  */
 
-const PULSE = "animate-pulse rounded-hairline bg-sunken";
+const PULSE = "animate-pulse rounded-hairline bg-muted";
 
 export interface BandSkeletonProps {
   /** `strip` mirrors MetaStrip; `measure` adds MeasureBand's bar. */

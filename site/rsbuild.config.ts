@@ -52,7 +52,7 @@ export default defineConfig({
       root: path.resolve(root, "dist"),
     },
     assetPrefix,
-    copy: bundlesData
+    copy: bundlesData && !useMock
       ? [
           {
             from: path.resolve(root, "public/data"),

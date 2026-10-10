@@ -4,7 +4,7 @@ import { CommitLink } from "@/components/commit-link";
 import { RunLink } from "@/components/run-link";
 import { RowsSkeleton } from "@/components/skeletons";
 import { StatusMark } from "@/components/snapshot-status";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@molcrafts/design";
 import type { RecordSummary } from "@/lib/record-summary";
 import { relativeTime } from "@/lib/snapshot-data";
 import { cn } from "@/lib/utils";

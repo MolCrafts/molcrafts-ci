@@ -2,7 +2,7 @@ import type { JSX } from "react";
 
 import { RowsSkeleton } from "@/components/skeletons";
 import { TrendChart } from "@/components/trend-chart";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import { formatMeasure } from "@/lib/payload";
 import { deltaOf, type RecordSummary } from "@/lib/record-summary";
 import { cn } from "@/lib/utils";

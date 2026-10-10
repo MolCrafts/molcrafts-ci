@@ -30,7 +30,7 @@ export function ProjectList({
               className={cn(
                 "w-full truncate rounded-control px-2 py-row-pad text-left text-body transition-colors",
                 active
-                  ? "bg-accent-soft font-medium text-foreground"
+                  ? "bg-primary-muted font-medium text-foreground"
                   : "text-foreground hover:bg-interactive",
               )}
               onClick={() => onSelect(project.id)}

@@ -119,7 +119,13 @@ jobs:
       - uses: ./actions/setup-node
         with:
           working-directory: site
+      - run: npm run verify:design
+        working-directory: site
       - run: npm test
+        working-directory: site
+      - run: npx playwright install --with-deps chromium
+        working-directory: site
+      - run: npm run test:browser
         working-directory: site
 
   # The shared setup actions every MolCrafts repository uses, from this

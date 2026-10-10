@@ -5,7 +5,7 @@ import { HistorySelect } from "@/components/history-select";
 import { WorkSurface } from "@/components/layout/WorkSurface";
 import { PayloadView } from "@/components/payload-view";
 import { RunLink } from "@/components/run-link";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import { useUrlState } from "@/lib/use-url-state";
 import {
   fetchRecordEntries,

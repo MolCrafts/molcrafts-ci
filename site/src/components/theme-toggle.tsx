@@ -1,7 +1,7 @@
-import { Moon, Sun } from "lucide-react";
+import { WeatherMoonRegular as Moon, WeatherSunnyRegular as Sun } from "@fluentui/react-icons";
 import { useEffect, useState, type JSX } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@molcrafts/design";
 
 type Theme = "light" | "dark";
 const STORAGE_KEY = "molci.theme";

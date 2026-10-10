@@ -61,7 +61,7 @@ export interface Measure {
   value: string;
   /** 0–100, drives the bar. Omit when the value is not a percentage. */
   percent?: number;
-  /** Bar colour class, e.g. `bg-status-warning`. Defaults to the accent. */
+  /** Bar colour class, e.g. `bg-status-warning`. Defaults to primary. */
   tone?: string;
 }
 
@@ -96,15 +96,15 @@ export const MeasureBand = ({ measures, className }: MeasureBandProps): JSX.Elem
         <dt className="text-micro text-muted-foreground">{m.label}</dt>
         <dd className="font-mono text-title font-medium tabular-nums text-foreground">
           {m.value}
+          {m.percent != null && (
+            <div className="h-1 w-full overflow-hidden rounded-hairline bg-muted">
+              <div
+                className={cn("h-full", m.tone ?? "bg-primary")}
+                style={{ width: `${Math.max(0, Math.min(100, m.percent))}%` }}
+              />
+            </div>
+          )}
         </dd>
-        {m.percent != null && (
-          <div className="h-1 w-full overflow-hidden rounded-hairline bg-sunken">
-            <div
-              className={cn("h-full", m.tone ?? "bg-accent")}
-              style={{ width: `${Math.max(0, Math.min(100, m.percent))}%` }}
-            />
-          </div>
-        )}
       </div>
     ))}
   </dl>

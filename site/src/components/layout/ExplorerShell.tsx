@@ -5,11 +5,11 @@
  * only shared chrome, accessibility, and layout behavior.
  */
 import type { ComponentType, JSX, ReactNode, SVGProps } from "react";
-import { Button } from "@/components/ui/button";
-import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@molcrafts/design";
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@molcrafts/design";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@molcrafts/design";
+import { ScrollArea } from "@molcrafts/design";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@molcrafts/design";
 import { cn } from "@/lib/utils";
 
 export interface LeftIconRailItem {
@@ -54,7 +54,7 @@ export const LeftIconRail = ({
               "relative size-8 rounded-control text-muted-foreground",
               "after:absolute after:-left-2 after:inset-y-1 after:w-0.5 after:rounded-full after:bg-transparent",
               activeId === item.id &&
-                "bg-background text-foreground after:bg-accent hover:bg-background",
+                "bg-background text-foreground after:bg-primary hover:bg-background",
             )}
             onClick={() => onSelect(item.id)}
           >
@@ -152,7 +152,7 @@ export const LeftExplorer = ({
  * class win for the row divider this group needs.
  */
 const HORIZONTAL_HANDLE =
-  "h-px w-full after:inset-x-0 after:left-0 after:top-1/2 after:bottom-auto after:h-1 after:w-full after:translate-x-0 after:-translate-y-1/2 hover:bg-accent/60";
+  "h-px w-full after:inset-x-0 after:left-0 after:top-1/2 after:bottom-auto after:h-1 after:w-full after:translate-x-0 after:-translate-y-1/2 hover:bg-primary/60";
 
 /** Dock height when nothing is persisted — about six rows plus its header. */
 const DOCK_SIZE = { default: "200px", min: "60px", max: "70%" };

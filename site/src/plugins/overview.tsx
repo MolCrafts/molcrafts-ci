@@ -6,7 +6,7 @@ import { MetaStrip, type MetaFact } from "@/components/meta-strip";
 import { RecordTable } from "@/components/record-table";
 import { RecordTrends } from "@/components/record-trends";
 import { StatusInline, type StatusSegment } from "@/components/status-inline";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import { openRecord } from "@/lib/open-record";
 import { useProjectRecords } from "@/lib/project-records";
 import { relativeTime } from "@/lib/snapshot-data";

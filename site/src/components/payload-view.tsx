@@ -11,7 +11,7 @@ import {
 import { MeasureBand, type Measure } from "@/components/meta-strip";
 import { MetricTable, type Metric } from "@/components/metric-table";
 import { BandSkeleton } from "@/components/skeletons";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@molcrafts/design";
 import { RunLink } from "@/components/run-link";
 import { readCoverage, readScalars, readTests } from "@/lib/payload";
 import type { IndexEntry } from "@/lib/snapshot-data";

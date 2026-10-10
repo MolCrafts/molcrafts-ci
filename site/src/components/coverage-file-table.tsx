@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@molcrafts/design";
 import type { CoverageFile } from "@/lib/payload";
 import { formatPercent } from "@/lib/payload";
 import { cn } from "@/lib/utils";
@@ -80,7 +80,7 @@ export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Ele
             </TableCell>
             <TableCell>
               <span className="flex items-center gap-2">
-                <span className="h-1 w-24 overflow-hidden rounded-hairline bg-sunken">
+                <span className="h-1 w-24 overflow-hidden rounded-hairline bg-muted">
                   <span
                     className={cn("block h-full", coverageTone(file.lines))}
                     style={{ width: `${Math.max(0, Math.min(100, file.lines ?? 0))}%` }}
