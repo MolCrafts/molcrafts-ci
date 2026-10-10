@@ -27,7 +27,7 @@ scheme (Revisions 2-4), the ones a reviewer cannot be trusted to see:
                nightly.yml, whose channel publishes from a branch, on
                `needs.context.outputs.upstream == 'true'`
   concurrency  the workflow-level block is exactly the canonical one
-  pin          MolCrafts/molcrafts-ci/actions/* is used at @master
+  pin          MolCrafts/molcrafts-ci/actions/* uses an immutable SHA (legacy @master is accepted)
   comment      no comment mentions workflow_call unless the workflow has it
   name         every job is named `<file> / <what>`
 
@@ -62,6 +62,18 @@ NEVER_CANCEL = {"nightly", "release", "deploy"}
 
 CONTEXT_USES = "MolCrafts/molcrafts-ci/actions/ci-context@master"
 LOCAL_CONTEXT_USES = "./actions/ci-context"  # molcrafts-ci itself
+
+
+def valid_action_ref(ref: str) -> bool:
+    return ref == "master" or re.fullmatch(r"[0-9a-f]{40}", ref) is not None
+
+
+def valid_context_use(use: str, local_ok: bool) -> bool:
+    if local_ok and use == LOCAL_CONTEXT_USES:
+        return True
+    prefix = "MolCrafts/molcrafts-ci/actions/ci-context@"
+    return use.startswith(prefix) and valid_action_ref(use.removeprefix(prefix))
+
 
 SKIP_PR = "needs.context.outputs.skip-pr != 'true'"
 PUBLISH = "needs.context.outputs.publish == 'true'"
@@ -300,8 +312,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                 "context", "context", f"must be named `{stem} / context`, not `{ctx.get('name')}`"
             )
         steps = [s for s in ctx.get("steps") or [] if s.get("id") == "context"]
-        allowed = {CONTEXT_USES} | ({LOCAL_CONTEXT_USES} if local_ok else set())
-        if not steps or str(steps[0].get("uses")) not in allowed:
+        if not steps or not valid_context_use(str(steps[0].get("uses")), local_ok):
             report("context", "context", f"needs a step `id: context` with `uses: {CONTEXT_USES}`")
         want = {o: f"${{{{ steps.context.outputs.{o} }}}}" for o in context_outputs()}
         got = {str(k): str(v) for k, v in (ctx.get("outputs") or {}).items()}
@@ -399,9 +410,12 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
     has_call = "workflow_call" in events
     for n, raw in enumerate(text.splitlines(), 1):
         for m in SHARED_ACTION.finditer(raw):
-            if m.group("ref") != "master":
+            if not valid_action_ref(m.group("ref")):
                 report(
-                    None, "pin", f"{m.group('path')} is pinned to @{m.group('ref')}, not @master", n
+                    None,
+                    "pin",
+                    f"{m.group('path')}: requires SHA or master; got @{m.group('ref')}",
+                    n,
                 )
         if not has_call and COMMENT_WORKFLOW_CALL.search(raw):
             report(
@@ -429,8 +443,8 @@ def check_actions(root: Path) -> list[Violation]:
         rel = path.relative_to(root).as_posix()
         for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             for m in SHARED_ACTION.finditer(raw):
-                if m.group("ref") != "master":
-                    msg = f"{m.group('path')} is pinned to @{m.group('ref')}, not @master"
+                if not valid_action_ref(m.group("ref")):
+                    msg = f"{m.group('path')}: requires SHA or master; got @{m.group('ref')}"
                     out.append(Violation(rel, n, None, "pin", msg))
     return out
 

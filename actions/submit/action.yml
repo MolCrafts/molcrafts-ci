@@ -146,12 +146,16 @@ runs:
         # the producer's runner has a writable system Python (PEP 668 images
         # refuse it) or a matching toolchain — molrs is a Rust repository.
         venv="$RUNNER_TEMP/molcrafts-ci/venv"
-        python3 -m venv "$venv"
+        python -m venv "$venv"
+        bin="$venv/bin"
+        [ -d "$bin" ] || bin="$venv/Scripts"
         # Installed from the action's own checkout, so the CLI is exactly the
         # version the caller pinned this action to.
-        "$venv/bin/pip" install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/../.."
-        echo "molci=$venv/bin/molci" >> "$GITHUB_OUTPUT"
-        echo "python=$venv/bin/python" >> "$GITHUB_OUTPUT"
+        "$bin/python" -m pip install -q --disable-pip-version-check \
+          -r "$GITHUB_ACTION_PATH/../../requirements-runtime.txt"
+        "$bin/python" -m pip install -q --no-deps --disable-pip-version-check "$GITHUB_ACTION_PATH/../.."
+        echo "molci=$bin/molci" >> "$GITHUB_OUTPUT"
+        echo "python=$bin/python" >> "$GITHUB_OUTPUT"
 
     - name: Validate snapshots
       id: validate

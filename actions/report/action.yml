@@ -73,7 +73,10 @@ runs:
           for candidate in "$venv/bin/python" "$venv/Scripts/python.exe"; do
             [ -x "$candidate" ] && python=$candidate
           done
-          "$python" -m pip install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/../.." \
+          "$python" -m pip install -q --disable-pip-version-check \
+            -r "$GITHUB_ACTION_PATH/../../requirements-runtime.txt" \
+            || warn "could not install locked runtime dependencies"
+          "$python" -m pip install -q --no-deps --disable-pip-version-check "$GITHUB_ACTION_PATH/../.." \
             || warn "could not install molcrafts-ci"
         fi
         args=(report --title "$TITLE" --coverage-format "$COVERAGE_FORMAT")

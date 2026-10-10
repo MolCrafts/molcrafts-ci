@@ -452,10 +452,32 @@ uv run --script path/to/molcrafts-ci/actions/check-workflows/check_workflows.py 
 | `skip-pr` | in a workflow a pull request can run (`pull_request`, `workflow_call`), every job is skipped on an in-fork PR: its `if` requires `skip-pr != 'true'` (or `upstream`/`publish == 'true'`, or an `event_name` test excluding `pull_request`), or it needs a job that is so skipped and its `if` has no `always()`/`cancelled()` |
 | `publish` | a job with an `environment:`, `pypa/gh-action-pypi-publish`, `cargo`/`npm publish` without a literal `--dry-run`, `vsce`/`ovsx publish`, `softprops/action-gh-release` or `gh release create`/`upload` requires `publish == 'true'` in its `if`, and no `if`, `environment` or `env` of it tests `github.event_name`/`github.ref*` (in `nightly.yml`: `upstream == 'true'`) |
 | `concurrency` | the workflow-level block above, exactly |
-| `pin` | `MolCrafts/molcrafts-ci/actions/*` at `@master`, in workflows and `.github/actions/*/action.yml` |
+| `pin` | shared Actions use a full commit SHA; legacy `@master` is accepted during migration |
 | `comment` | no comment mentions `workflow_call` in a workflow without that trigger |
 | `name` | every job (but a reusable-workflow call) is named `<file> / <what>` |
 
 ## Specification
 
 See [docs/specification.md](docs/specification.md).
+
+## Local gates and pinned dependencies
+
+Run `python scripts/bootstrap.py` once to install the locked Python and Node
+packages, checksum-verified actionlint 1.7.12, and both git hook stages.
+`uv run --locked --extra dev scripts/check.py all` runs dependencies, static
+checks, workflow/action validation, Python tests, site types, site tests and
+site build. Pre-push runs every gate without changed-file filters.
+
+Synthetic CI context scenarios run in pytest; one hosted job checks the real
+Action wiring. Native OS behavior still requires the hosted platform matrix.
+The site build uses the vendored, checksum-verified `@molcrafts/design`
+packages under `site/vendor/design` (`npm run verify:design`).
+
+`molcrafts_ci.partners` is the shared dependency resolver, also used by
+setup-partners. Consumers bootstrap it at `CI_REF`, a full commit SHA in
+`.github/partners.env`. Every partner ref is explicit. Resolution never uses
+the caller's branch or an uncommitted sibling; fetching uses the resolved SHA
+and verifies HEAD. Partner layouts and build caches persist across pushes under
+`~/.cache/molcrafts/partners` (override with `MOLCRAFTS_PARTNER_CACHE`). Update a partner SHA in a commit and rerun lock/integration
+gates for coordinated changes. Pin shared Actions to the same immutable CI
+commit; legacy `@master` remains accepted for repositories migrating later.
