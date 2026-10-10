@@ -1,0 +1,27 @@
+{
+  "manifest": {
+    "producer": "cargo-test",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "tests",
+    "schema_version": "1",
+    "source": {
+      "commit": "ed01d4fdec94fe22b1590ceb89f5ad7a26a3a78b",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molrs",
+      "run_attempt": 1,
+      "timestamp": "2026-10-10T09:54:28Z",
+      "workflow_run": 38042910235
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "failed": 0,
+    "passed": 3812,
+    "skipped": 1
+  }
+}
