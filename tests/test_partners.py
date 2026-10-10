@@ -72,6 +72,30 @@ class ResolutionTests(unittest.TestCase):
         ):
             partners.fetch("DEP", source, Path(tmp) / "dep")
 
+    def test_workflows_cannot_use_a_different_resolver_revision(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflows = root / ".github/workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "test.yml").write_text(
+                "uses: MolCrafts/molcrafts-ci/actions/setup-partners@master\n",
+                encoding="utf-8",
+            )
+            with (
+                patch.object(partners, "ROOT", root),
+                patch.object(partners, "resolved", return_value={}),
+                patch.object(partners, "path_deps", return_value=[]),
+                patch.object(partners, "load", return_value={"CI_REF": SHA}),
+            ):
+                self.assertEqual(partners.check(), 1)
+                (workflows / "test.yml").write_text(
+                    f"uses: MolCrafts/molcrafts-ci/actions/setup-partners@{SHA}\n",
+                    encoding="utf-8",
+                )
+                self.assertEqual(partners.check(), 0)
+
     def test_cached_layout_checks_copied_path_dependencies(self):
         import tempfile
 
@@ -87,6 +111,7 @@ class ResolutionTests(unittest.TestCase):
             with (
                 patch.object(partners, "ROOT", cached),
                 patch.object(partners, "resolved", return_value={}),
+                patch.object(partners, "load", return_value={}),
                 patch.dict(partners.os.environ, PARTNERS_SOURCE=str(source)),
             ):
                 self.assertEqual(partners.check(), 1)

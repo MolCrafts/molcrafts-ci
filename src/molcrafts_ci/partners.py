@@ -278,8 +278,15 @@ def check() -> int:
             f"never checks out (partners in .github/partners.env: {sorted(layout) or 'none'})"
         )
 
+    ci_ref = load().get("CI_REF")
     for wf in sorted((ROOT / ".github" / "workflows").glob("*.y*ml")):
         for n, line in enumerate(wf.read_text(encoding="utf-8").splitlines(), 1):
+            action = re.search(r"uses:\s*MolCrafts/molcrafts-ci/actions/[^@\s]+@([^\s#]+)", line)
+            if ci_ref and action and action[1] != ci_ref:
+                failures.append(
+                    f"{wf.relative_to(ROOT)}:{n}: shared Action ref {action[1]} differs "
+                    f"from CI_REF={ci_ref} (local and CI must use the same implementation)"
+                )
             if re.match(r"\s*ref:\s*['\"]?[0-9a-f]{40}\b", line):
                 failures.append(
                     f"{wf.relative_to(ROOT)}:{n}: a literal partner commit; name the partner "
