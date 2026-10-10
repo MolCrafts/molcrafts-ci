@@ -204,7 +204,10 @@ def commit_exists(where: str, commit: str) -> bool:
 
 
 def tracked(basename: str) -> list[Path]:
-    out = git("ls-files", "-z", cwd=ROOT, quiet=True).stdout
+    # Cached consumer layouts omit .git; enumerate their source checkout,
+    # then inspect the corresponding copied manifests against the cached layout.
+    source = Path(os.environ.get("PARTNERS_SOURCE", ROOT))
+    out = git("ls-files", "-z", cwd=source, quiet=True).stdout
     return [
         ROOT / p for p in out.split("\0") if p and Path(p).name == basename and (ROOT / p).is_file()
     ]

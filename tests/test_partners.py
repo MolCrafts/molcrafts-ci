@@ -72,6 +72,25 @@ class ResolutionTests(unittest.TestCase):
         ):
             partners.fetch("DEP", source, Path(tmp) / "dep")
 
+    def test_cached_layout_checks_copied_path_dependencies(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source, cached = Path(tmp) / "source", Path(tmp) / "cached"
+            source.mkdir()
+            cached.mkdir()
+            subprocess.run(["git", "init", "-q", str(source)], check=True)
+            manifest = '[tool.uv.sources]\ndep = {path = "../missing"}\n'
+            (source / "pyproject.toml").write_text(manifest, encoding="utf-8")
+            subprocess.run(["git", "add", "pyproject.toml"], cwd=source, check=True)
+            (cached / "pyproject.toml").write_text(manifest, encoding="utf-8")
+            with (
+                patch.object(partners, "ROOT", cached),
+                patch.object(partners, "resolved", return_value={}),
+                patch.dict(partners.os.environ, PARTNERS_SOURCE=str(source)),
+            ):
+                self.assertEqual(partners.check(), 1)
+
     def test_layout_reuses_build_state_between_runs(self):
         import tempfile
 
