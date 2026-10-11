@@ -43,7 +43,7 @@ inputs:
 outputs:
   tier:
     description: >
-      "full" (every fork run, dev/master/main and tags upstream, pull
+      "full" (every fork run, dev/master and tags upstream, pull
       requests, dispatches, schedules) or "fast" (a feature-branch push to
       MolCrafts)
     value: ${{ steps.context.outputs.tier }}
@@ -51,7 +51,7 @@ outputs:
     description: The repository belongs to MolCrafts (deploy, publish, nightly, org secrets)
     value: ${{ steps.context.outputs.upstream }}
   integration:
-    description: The ref is dev, master, main or a tag
+    description: The ref is dev, master, or a tag
     value: ${{ steps.context.outputs.integration }}
   skip-pr:
     description: >

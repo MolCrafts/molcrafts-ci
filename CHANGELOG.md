@@ -13,6 +13,14 @@ schema version to keep in step.
 
 ## [Unreleased]
 
+### Changed
+
+- Integration refs are `dev`, `master`, and tags. `main` is not a branch in
+  this scheme. The canonical `cancel-in-progress` expression, `ci-context`,
+  and pull-request triggers no longer name it. A repository that bumps
+  `actions/check-workflows` drops `refs/heads/main` from that expression in
+  the same change.
+
 ### Added
 
 - **`actions/ci-context`: the CI rules in one place.** Fork or upstream,

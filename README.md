@@ -339,16 +339,16 @@ and the release move together. See [CHANGELOG.md](CHANGELOG.md).
 ## CI
 
 One file per kind of work. A feature-branch push to MolCrafts gets the fast
-tier; every push to a fork, `dev`/`master`/`main` on MolCrafts, pull requests,
+tier; every push to a fork, `dev`/`master` on MolCrafts, pull requests,
 tags and dispatches get the full tier. Each workflow's first job,
 `<file> / context`, runs `actions/ci-context`, and every other job gates on
 its outputs.
 
 | workflow | jobs | runs |
 | --- | --- | --- |
-| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint), `lint / workflows` (`actions/check-workflows`) | every push, PRs into dev/master/main |
-| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / report (<os>)` (`actions/report` on the fixtures, every OS), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
-| `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master/main; Cloudflare deploys, not CI |
+| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint), `lint / workflows` (`actions/check-workflows`) | every push, PRs into dev/master |
+| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / report (<os>)` (`actions/report` on the fixtures, every OS), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master; the self-snapshot publish is MolCrafts-only |
+| `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master; Cloudflare deploys, not CI |
 | `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload only when `publish` is true |
 
 ## Shared actions
@@ -398,7 +398,7 @@ jobs:
 | output | `"true"` / value when |
 | --- | --- |
 | `upstream` | the owner is MolCrafts |
-| `integration` | the ref is `dev`, `master`, `main` or a tag |
+| `integration` | the ref is `dev`, `master`, or a tag |
 | `tier` | `fast` only for a feature-branch push to MolCrafts; `full` otherwise |
 | `skip-pr` | a pull request inside a fork (its push already ran the full tier) |
 | `publish` | a `v*` tag pushed to MolCrafts: never a fork, a branch or a dispatch |
@@ -416,7 +416,7 @@ canonical copy:
 ```yaml
 concurrency:
   group: <file>-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
+  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
 ```
 
 (`cancel-in-progress: false` in `nightly.yml`, `release.yml` and `deploy.yml`.)

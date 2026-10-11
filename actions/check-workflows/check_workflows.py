@@ -50,11 +50,11 @@ CI_CONTEXT = HERE.parent / "ci-context" / "action.yml"
 
 # The canonical concurrency block, defined once. A workflow-level
 # `concurrency:` cannot read job outputs, so every file inlines it; this is
-# what keeps the copies identical. Only a feature ref (not dev, master, main
-# or a tag) cancels its superseded runs.
+# what keeps the copies identical. Only a feature ref cancels its superseded
+# runs. Pushes to dev, master, and tags do not.
 GROUP = "{stem}-${{{{ github.workflow }}}}-${{{{ github.event_name }}}}-${{{{ github.ref }}}}"
 CANCEL_IN_PROGRESS = (
-    '${{ !contains(fromJSON(\'["refs/heads/dev","refs/heads/master","refs/heads/main"]\'), '
+    '${{ !contains(fromJSON(\'["refs/heads/dev","refs/heads/master"]\'), '
     "github.ref) && !startsWith(github.ref, 'refs/tags/') }}"
 )
 # These never cancel: a schedule, a release or a deploy is not superseded.

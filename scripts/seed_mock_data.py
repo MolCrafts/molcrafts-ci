@@ -69,7 +69,7 @@ def _entry(
             source=mci.Source(
                 repository=project_repo,
                 commit=commit,
-                ref="refs/heads/main",
+                ref="refs/heads/master",
                 workflow_run=workflow_run,
                 timestamp=timestamp,
             ),

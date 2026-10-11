@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import subprocess
 import sys
 import unittest
@@ -16,6 +17,12 @@ partners = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = partners
 SPEC.loader.exec_module(partners)
 SHA = "a" * 40
+
+
+def git(*args: str, cwd: Path) -> None:
+    """Run git in cwd. A hook exports GIT_DIR for the repository being pushed."""
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    subprocess.run(["git", *args], cwd=cwd, check=True, env=env)
 
 
 class ResolutionTests(unittest.TestCase):
@@ -103,10 +110,10 @@ class ResolutionTests(unittest.TestCase):
             source, cached = Path(tmp) / "source", Path(tmp) / "cached"
             source.mkdir()
             cached.mkdir()
-            subprocess.run(["git", "init", "-q", str(source)], check=True)
+            git("init", "-q", cwd=source)
             manifest = '[tool.uv.sources]\ndep = {path = "../missing"}\n'
             (source / "pyproject.toml").write_text(manifest, encoding="utf-8")
-            subprocess.run(["git", "add", "pyproject.toml"], cwd=source, check=True)
+            git("add", "pyproject.toml", cwd=source)
             (cached / "pyproject.toml").write_text(manifest, encoding="utf-8")
             with (
                 patch.object(partners, "ROOT", cached),
@@ -123,7 +130,7 @@ class ResolutionTests(unittest.TestCase):
             home = Path(tmp)
             source = home / "source"
             source.mkdir()
-            subprocess.run(["git", "init", "-q", str(source)], check=True)
+            git("init", "-q", cwd=source)
             with (
                 patch.object(partners, "ROOT", source),
                 patch.object(partners, "load", return_value={"SELF": "example"}),
