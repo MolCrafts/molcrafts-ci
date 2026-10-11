@@ -1,0 +1,27 @@
+{
+  "manifest": {
+    "producer": "playwright",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "tests",
+    "schema_version": "1",
+    "source": {
+      "commit": "0742ea5883924501a0fce39a056849aa60731543",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molcrafts-ui",
+      "run_attempt": 1,
+      "timestamp": "2026-10-11T12:40:17Z",
+      "workflow_run": 38139952388
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "failed": 0,
+    "passed": 19,
+    "skipped": 0
+  }
+}
