@@ -34,8 +34,21 @@ MASTER = "https://github.com/MolCrafts/molcrafts-ci.git"
 OS_USE = re.compile(r"\bstd::os::(?:unix|windows)\b")
 
 
+def scrub_git_env() -> None:
+    """pre-commit exports GIT_DIR for the repository being committed."""
+    listed = subprocess.run(
+        ["git", "rev-parse", "--local-env-vars"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    for key in listed.stdout.split():
+        os.environ.pop(key, None)
+
+
 def ci_root() -> Path:
     """Directory that contains profiles/ and actions/check-workflows/."""
+    scrub_git_env()
     here = Path(__file__).resolve().parent
     local = here.parent
     if (local / "profiles").is_dir() and (local / "actions" / "check-workflows").is_dir():
