@@ -1,17 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { LeftExplorer } from "@/components/layout/ExplorerShell";
-import { WorkbenchShell } from "@/components/layout/WorkbenchShell";
 import { OperationsDock } from "@/components/operations-dock";
 import { ProfileSelect } from "@/components/profile-select";
-import { ProjectList } from "@/components/project-list";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { EmptyState } from "@molcrafts/design";
-import { Separator } from "@molcrafts/design";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@molcrafts/design";
+import {
+  EmptyState,
+  ExplorerPanel,
+  NavList,
+  NavListItem,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  ThemeToggle,
+  WorkbenchHeader,
+  WorkbenchShell,
+} from "@molcrafts/design";
 import { loadIndexListing, projectsFromListing } from "@/lib/index-data";
 import { ProjectRecordsProvider } from "@/lib/project-records";
 import { useProjectRecords } from "@/lib/project-records";
+import { useThemePreference } from "@/lib/theme-preference";
 import { useUrlState, type UrlPatch } from "@/lib/use-url-state";
 import type { UrlState } from "@/lib/url-state";
 import { pluginsFor } from "@/plugins/registry";
@@ -85,6 +92,7 @@ function Workbench({
   setUrl: (patch: UrlPatch) => void;
 }) {
   const { profiles } = useProjectRecords();
+  const [theme, setTheme] = useThemePreference();
 
   const tabs = selected ? pluginsFor(selected) : [];
   // A tab named in the address that this project does not have falls back to
@@ -95,61 +103,53 @@ function Workbench({
 
   return (
     <WorkbenchShell
+      storageKey="molci"
+      labels={{ navigator: "Projects", main: "CI records", dock: "Operations" }}
       header={
-        /* Identity once, then the breadcrumb and nothing else. */
-        <header className="flex h-header shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
-          {/* The product name is the document's only h1. Without it the
-              heading outline started at h2 (sections, navigator) and screen
-              reader heading navigation had no top-level entry point. */}
-          <h1 className="shrink-0 text-title font-semibold tracking-tight">
-            <span className="font-medium text-muted-foreground">MolCrafts</span> CI
-          </h1>
-          {selected && (
+        <WorkbenchHeader
+          /* The product name is the document's only h1. */
+          title={
             <>
-              <Separator orientation="vertical" className="h-5" />
-              <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-body text-muted-foreground">{selected.id}</span>
-                {activeLabel && (
-                  <>
-                    <span aria-hidden="true" className="text-input">
-                      /
-                    </span>
-                    <span className="truncate text-body font-medium">{activeLabel}</span>
-                  </>
-                )}
-              </nav>
+              <span className="font-normal text-muted-foreground">MolCrafts</span> CI
             </>
-          )}
-          {/* Breadcrumb left, the surface's verbs right. Nothing else. */}
-          <span className="flex-1" />
-          <ProfileSelect
-            profiles={profiles}
-            value={selected ? (url.profile ?? profiles[0] ?? null) : null}
-            onChange={(profile) => setUrl({ profile })}
-          />
-          <ThemeToggle />
-        </header>
+          }
+          breadcrumb={selected ? [selected.id, ...(activeLabel ? [activeLabel] : [])] : []}
+          actions={
+            <>
+              <ProfileSelect
+                profiles={profiles}
+                value={selected ? (url.profile ?? profiles[0] ?? null) : null}
+                onChange={(profile) => setUrl({ profile })}
+              />
+              <ThemeToggle theme={theme} onThemeChange={setTheme} />
+            </>
+          }
+        />
       }
       navigator={
-        /* The vendored block defaults to the canvas colour; the navigator
-           is chrome, so it takes the surface step above it. */
-        <LeftExplorer title="Projects" className="bg-surface">
+        <ExplorerPanel title="Projects">
           {projects === null ? (
             <EmptyState title="Loading projects…" density="inline" />
           ) : loadError ? (
             <EmptyState title="Failed to load index" description={loadError} />
           ) : projects.length === 0 ? (
-            <EmptyState
-              title="No projects yet"
-            />
+            <EmptyState title="No projects yet" />
           ) : (
-            <ProjectList
-              projects={projects}
-              selectedId={selected?.id ?? null}
-              onSelect={(project) => setUrl({ project, tab: null })}
-            />
+            /* Flat: the tabs already are the record navigation, and counts or
+               status belong to the surface the selection opens. */
+            <NavList>
+              {projects.map((project) => (
+                <NavListItem
+                  key={project.id}
+                  current={project.id === selected?.id}
+                  onClick={() => setUrl({ project: project.id, tab: null })}
+                >
+                  {project.id}
+                </NavListItem>
+              ))}
+            </NavList>
           )}
-        </LeftExplorer>
+        </ExplorerPanel>
       }
       dock={<OperationsDock />}
     >

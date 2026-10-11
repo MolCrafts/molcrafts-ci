@@ -27,7 +27,7 @@ export function ProfileSelect({ profiles, value, onChange }: ProfileSelectProps)
       className="flex items-center gap-1.5 text-label text-muted-foreground"
       title="Build profile"
     >
-      <Layers className="size-icon-sm" aria-hidden="true" />
+      <Layers className="size-4" aria-hidden="true" />
       <span className="sr-only">Build profile</span>
       <NativeSelect
         value={value ?? ""}

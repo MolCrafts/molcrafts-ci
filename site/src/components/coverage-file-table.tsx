@@ -1,16 +1,17 @@
 import type { JSX } from "react";
 
 import {
+  Meter,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  type MeterTone,
 } from "@molcrafts/design";
 import type { CoverageFile } from "@/lib/payload";
 import { formatPercent } from "@/lib/payload";
-import { cn } from "@/lib/utils";
 
 export { formatPercent };
 
@@ -21,11 +22,11 @@ export { formatPercent };
  * measure; they do not claim a pass or a fail. Adding a real target is a schema
  * change first.
  */
-export function coverageTone(value: number | undefined): string {
-  if (value == null) return "bg-status-draft";
-  if (value >= 85) return "bg-status-completed";
-  if (value >= 70) return "bg-status-warning";
-  return "bg-status-failed";
+export function coverageTone(value: number | undefined): MeterTone {
+  if (value == null) return "draft";
+  if (value >= 85) return "completed";
+  if (value >= 70) return "warning";
+  return "failed";
 }
 
 /** How many files the table shows before deferring to the CI run. */
@@ -80,12 +81,7 @@ export function CoverageFileTable({ files }: { files: CoverageFile[] }): JSX.Ele
             </TableCell>
             <TableCell>
               <span className="flex items-center gap-2">
-                <span className="h-1 w-24 overflow-hidden rounded-hairline bg-muted">
-                  <span
-                    className={cn("block h-full", coverageTone(file.lines))}
-                    style={{ width: `${Math.max(0, Math.min(100, file.lines ?? 0))}%` }}
-                  />
-                </span>
+                <Meter value={file.lines ?? 0} tone={coverageTone(file.lines)} className="w-24" />
                 <span className="tabular-nums">{formatPercent(file.lines)}</span>
               </span>
             </TableCell>

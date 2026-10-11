@@ -55,7 +55,7 @@ export function HistorySelect({
         className="flex min-w-0 items-center gap-1.5 text-label text-muted-foreground"
         title="Published generation"
       >
-        <History className="size-icon-sm shrink-0" aria-hidden="true" />
+        <History className="size-4 shrink-0" aria-hidden="true" />
         <span className="sr-only">Published generation</span>
         <NativeSelect
           className="font-mono"

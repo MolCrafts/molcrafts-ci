@@ -32,8 +32,7 @@ export function CommitLink({ repository, commit, className }: CommitLinkProps): 
       rel="noreferrer"
       title={`${repository}@${commit}`}
       className={cn(
-        "rounded-hairline font-mono underline-offset-4 outline-none",
-        "hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+        "mol-focus rounded-control font-mono underline-offset-4 hover:underline",
         className,
       )}
       onClick={(e) => e.stopPropagation()}

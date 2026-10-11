@@ -1,12 +1,16 @@
 import type { JSX } from "react";
 
-import { ContentSection } from "@/components/blocks/content-section";
-import { WorkSurface } from "@/components/layout/WorkSurface";
-import { MetaStrip, type MetaFact } from "@/components/meta-strip";
 import { RecordTable } from "@/components/record-table";
 import { RecordTrends } from "@/components/record-trends";
-import { StatusInline, type StatusSegment } from "@/components/status-inline";
-import { EmptyState } from "@molcrafts/design";
+import {
+  ContentSection,
+  EmptyState,
+  MetaStrip,
+  StatusInline,
+  WorkSurface,
+  type MetaFact,
+  type StatusSegment,
+} from "@molcrafts/design";
 import { openRecord } from "@/lib/open-record";
 import { useProjectRecords } from "@/lib/project-records";
 import { relativeTime } from "@/lib/snapshot-data";

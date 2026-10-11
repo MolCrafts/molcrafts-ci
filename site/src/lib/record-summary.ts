@@ -5,7 +5,7 @@
  * payload shape differs per record. These are pure functions over an already
  * fetched snapshot so the rules stay readable and testable.
  */
-import type { SnapshotStatus } from "@/components/snapshot-status";
+import type { Status } from "@molcrafts/design";
 import {
   asRecord,
   formatMeasure,
@@ -21,7 +21,7 @@ import {
 import type { IndexEntry, Snapshot } from "@/lib/snapshot-data";
 
 export interface RecordVerdict {
-  status: SnapshotStatus;
+  status: Status;
   /** What the status means for this record, e.g. "passed", "3 failed". */
   statusLabel: string;
 }
@@ -58,7 +58,7 @@ export interface RecordSummary extends RecordVerdict {
  * The overview table, the navigator and the problems tab all sort by this, so
  * a failing record is in the same place wherever the reader looks.
  */
-export const STATUS_ORDER: SnapshotStatus[] = [
+export const STATUS_ORDER: Status[] = [
   "failed",
   "warning",
   "running",
