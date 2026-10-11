@@ -24,7 +24,17 @@ cw = importlib.util.module_from_spec(_spec)
 sys.modules["check_workflows"] = cw
 _spec.loader.exec_module(cw)
 
-RULES = ["context", "needs", "skip-pr", "publish", "concurrency", "pin", "comment", "name"]
+RULES = [
+    "caller",
+    "comment",
+    "concurrency",
+    "context",
+    "name",
+    "needs",
+    "pin",
+    "publish",
+    "skip-pr",
+]
 
 # What each bad fixture must report, as (file, job, rule) -- exactly these.
 EXPECTED_BAD = {
@@ -58,6 +68,10 @@ EXPECTED_BAD = {
         ("release.yml", "guard", "name"),
         ("release.yml", "build", "name"),
         ("release.yml", "test", "name"),
+    },
+    "caller": {
+        ("lint.yml", "ci", "pin"),
+        ("lint.yml", "ci", "profile"),
     },
 }
 

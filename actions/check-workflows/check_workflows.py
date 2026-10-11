@@ -96,6 +96,7 @@ SHARED_ACTION = re.compile(
 )
 COMMENT_WORKFLOW_CALL = re.compile(r"(?:^|\s)#.*\bworkflow_call\b")
 JOB_NAME = re.compile(r"^(?P<area>[a-z0-9][a-z0-9-]*) / \S")
+CALLER_USES = re.compile(r"^MolCrafts/molcrafts-ci/\.github/workflows/ci\.yml@(?P<ref>\S+)$")
 
 PUBLISH_ACTIONS = ("pypa/gh-action-pypi-publish", "softprops/action-gh-release")
 PUBLISH_COMMANDS = (
@@ -282,6 +283,58 @@ def environment_name(job: dict) -> str:
 # --- the rules -----------------------------------------------------------
 
 
+def profile_name(root: Path) -> str:
+    path = root / ".github" / "partners.env"
+    if not path.is_file():
+        return ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line.startswith("CI_PROFILE="):
+            return line.split("=", 1)[1].strip()
+    return ""
+
+
+def is_thin_caller(jobs: dict) -> bool:
+    if not jobs:
+        return False
+    for job in jobs.values():
+        job = job or {}
+        if job.get("steps") or not CALLER_USES.match(str(job.get("uses") or "")):
+            return False
+    return True
+
+
+def check_caller(path: Path, root: Path, spec: dict, text: str) -> list[Violation]:
+    """A workflow that only calls molcrafts-ci's named profile."""
+    rel = path.relative_to(root).as_posix()
+    stem = path.stem
+    _, job_line = job_lines(text)
+    jobs: dict = spec.get("jobs") or {}
+    want = profile_name(root)
+    out: list[Violation] = []
+
+    def report(job: str | None, rule: str, message: str, line: int | None = None) -> None:
+        line = line or (job_line.get(job, 1) if job else 1)
+        out.append(Violation(rel, line, job, rule, message))
+
+    if spec.get("concurrency"):
+        report(None, "concurrency", "a caller leaves concurrency to ci.yml")
+    if not want:
+        report(None, "profile", "CI_PROFILE is not set in .github/partners.env")
+    for job_id, job in jobs.items():
+        job = job or {}
+        ref = CALLER_USES.match(str(job.get("uses"))).group("ref")
+        if ref != "master" and not re.fullmatch(r"[0-9a-f]{40}", ref):
+            report(job_id, "pin", f"call ci.yml@master (or a 40-character SHA); got @{ref}")
+        chosen = str((job.get("with") or {}).get("profile") or "")
+        if want and chosen != want:
+            report(job_id, "profile", f"with.profile is {chosen!r}; CI_PROFILE is {want!r}")
+        area = str((job.get("with") or {}).get("area") or "")
+        if area != stem:
+            report(job_id, "profile", f"with.area is {area!r}; this file is {stem}.yml")
+    return out
+
+
 def check_workflow(path: Path, root: Path) -> list[Violation]:
     rel = path.relative_to(root).as_posix()
     stem = path.stem
@@ -291,6 +344,8 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
         return [Violation(rel, 1, None, "context", "not a workflow (no mapping at the top)")]
     top_line, job_line = job_lines(text)
     jobs: dict = spec.get("jobs") or {}
+    if is_thin_caller(jobs):
+        return check_caller(path, root, spec, text)
     events = triggers(spec)
     out: list[Violation] = []
 
@@ -423,6 +478,11 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             )
 
     # name: `<file> / <what>` (a reusable-workflow call is named by its callee).
+    # molci-reusable names jobs from the caller's area, not this file's stem.
+    if "molci-reusable" not in text:
+        pass
+    else:
+        return out
     for job_id in ids:
         job = jobs[job_id] or {}
         if "uses" in job:

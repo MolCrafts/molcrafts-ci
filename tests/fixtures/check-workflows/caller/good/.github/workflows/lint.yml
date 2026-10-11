@@ -1,0 +1,12 @@
+name: lint
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [dev, master]
+jobs:
+  ci:
+    uses: MolCrafts/molcrafts-ci/.github/workflows/ci.yml@master
+    with:
+      profile: node-python
+      area: lint
