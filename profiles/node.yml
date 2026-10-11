@@ -1,0 +1,19 @@
+# molcrafts-ui. Selected by CI_PROFILE=node.
+# Browser suites stay in the repository workflow; they need Playwright and the
+# dashboard submit, which a local push does not run.
+name: node
+gates:
+  - id: workflows
+    stage: pre-commit
+    workflow: lint
+    run: molci:workflows
+  - id: typecheck
+    stage: pre-commit
+    workflow: lint
+    setup: [pnpm]
+    run: pnpm typecheck
+  - id: packages
+    stage: pre-push
+    workflow: test
+    setup: [pnpm]
+    run: pnpm verify:packages

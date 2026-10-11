@@ -1,0 +1,17 @@
+# molpy and the other uv/pytest packages. Selected by CI_PROFILE=python.
+name: python
+gates:
+  - id: workflows
+    stage: pre-commit
+    workflow: lint
+    run: molci:workflows
+  - id: lint
+    stage: pre-commit
+    workflow: lint
+    setup: [python]
+    run: python3 scripts/check.py lint
+  - id: verify
+    stage: pre-push
+    workflow: test
+    setup: [python, partners]
+    run: python3 scripts/check.py verify

@@ -1,0 +1,259 @@
+name: ci
+
+# molci-reusable
+# One workflow for every profile. The caller passes the profile name and the
+# area (lint, test, docs). Job commands come from profiles/<name>.yml.
+on:
+  workflow_call:
+    inputs:
+      profile:
+        description: Profile name, the CI_PROFILE value
+        required: true
+        type: string
+      area:
+        description: lint, test, or docs
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  context:
+    name: ci / context
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.context.outputs.tier }}
+      upstream: ${{ steps.context.outputs.upstream }}
+      integration: ${{ steps.context.outputs.integration }}
+      skip-pr: ${{ steps.context.outputs.skip-pr }}
+      publish: ${{ steps.context.outputs.publish }}
+    steps:
+      - id: context
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+
+  profile:
+    name: ci / profile
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      gates: ${{ steps.gates.outputs.gates }}
+    steps:
+      - id: gates
+        uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          area: ${{ inputs.area }}
+
+  workflows:
+    name: ${{ inputs.area }} / workflows
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'workflows')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: workflows
+
+  biome:
+    name: ${{ inputs.area }} / biome
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'biome')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: biome
+
+  guards:
+    name: ${{ inputs.area }} / guards
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'guards')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: guards
+
+  typecheck:
+    name: ${{ inputs.area }} / typecheck
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'typecheck')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: typecheck
+
+  test-core:
+    name: ${{ inputs.area }} / test-core
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'test-core')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: test-core
+
+  fmt:
+    name: ${{ inputs.area }} / fmt
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'fmt')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: fmt
+
+  ruff:
+    name: ${{ inputs.area }} / ruff
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'ruff')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: ruff
+
+  os-cfg:
+    name: ${{ inputs.area }} / os-cfg
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'os-cfg')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: os-cfg
+
+  partners:
+    name: ${{ inputs.area }} / partners
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'partners')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: partners
+
+  lint:
+    name: ${{ inputs.area }} / lint
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'lint')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: lint
+
+  verify:
+    name: ${{ inputs.area }} / verify
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'verify')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: verify
+
+  packages:
+    name: ${{ inputs.area }} / packages
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'packages')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: packages
+
+  js:
+    name: ${{ inputs.area }} / js
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'js')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: js
+
+  vsc-ext:
+    name: ${{ inputs.area }} / vsc-ext
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'vsc-ext')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: vsc-ext
+
+  build:
+    name: ${{ inputs.area }} / build
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'build')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: build
+
+  docs:
+    name: ${{ inputs.area }} / docs
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'docs')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: docs
+
+  python:
+    name: ${{ inputs.area }} / python (${{ matrix.os }})
+    needs: [context, profile]
+    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'python')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(needs.context.outputs.tier == 'full' && '["ubuntu-latest","macos-latest","windows-latest"]' || '["ubuntu-latest"]') }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
+        with:
+          profile: ${{ inputs.profile }}
+          gate: python
