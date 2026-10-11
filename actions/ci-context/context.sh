@@ -15,7 +15,7 @@ upstream=false
 
 # Integration ref: what gets merged into and released from.
 case "$CI_REF" in
-    refs/heads/dev | refs/heads/master | refs/heads/main | refs/tags/*) integration=true ;;
+    refs/heads/dev | refs/heads/master | refs/tags/*) integration=true ;;
     *) integration=false ;;
 esac
 
