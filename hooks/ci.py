@@ -53,7 +53,7 @@ def ci_root() -> Path:
     local = here.parent
     if (local / "profiles").is_dir() and (local / "actions" / "check-workflows").is_dir():
         return local
-    dest = Path(tempfile.gettempdir()) / "molcrafts-ci-master"
+    dest = Path(tempfile.gettempdir()) / f"molcrafts-ci-master-{os.getpid()}"
     if not (dest / ".git").is_dir():
         if dest.exists():
             subprocess.run(["rm", "-rf", str(dest)], check=True)
