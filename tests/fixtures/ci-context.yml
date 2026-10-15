@@ -64,18 +64,59 @@
   event: pull_request
   ref: refs/pull/7/merge
   head: Roy-Kid/molrs
+  head_ref: dev
   expect:
     tier: full
     upstream: 'true'
     integration: 'false'
     skip-pr: 'false'
     publish: 'false'
-- case: same-repository pull request upstream
+- case: upstream Dependabot pull request
   owner: MolCrafts
   repository: MolCrafts/molrs
   event: pull_request
   ref: refs/pull/8/merge
   head: MolCrafts/molrs
+  head_ref: dependabot/cargo/serde-1.0.228
+  expect:
+    tier: full
+    upstream: 'true'
+    integration: 'false'
+    skip-pr: 'false'
+    publish: 'false'
+- case: upstream release pull request
+  owner: MolCrafts
+  repository: MolCrafts/molrs
+  event: pull_request
+  ref: refs/pull/140/merge
+  head: MolCrafts/molrs
+  head_ref: dev
+  expect:
+    tier: full
+    upstream: 'true'
+    integration: 'false'
+    skip-pr: 'true'
+    publish: 'false'
+- case: upstream pull request from master
+  owner: MolCrafts
+  repository: MolCrafts/molrs
+  event: pull_request
+  ref: refs/pull/9/merge
+  head: MolCrafts/molrs
+  head_ref: master
+  expect:
+    tier: full
+    upstream: 'true'
+    integration: 'false'
+    skip-pr: 'true'
+    publish: 'false'
+- case: upstream pull request from main
+  owner: MolCrafts
+  repository: MolCrafts/molrs
+  event: pull_request
+  ref: refs/pull/10/merge
+  head: MolCrafts/molrs
+  head_ref: main
   expect:
     tier: full
     upstream: 'true'
@@ -88,6 +129,7 @@
   event: pull_request
   ref: refs/pull/3/merge
   head: Roy-Kid/molrs
+  head_ref: feature
   expect:
     tier: full
     upstream: 'false'
@@ -100,6 +142,7 @@
   event: pull_request
   ref: refs/pull/4/merge
   head: someone/molrs
+  head_ref: dev
   expect:
     tier: full
     upstream: 'false'

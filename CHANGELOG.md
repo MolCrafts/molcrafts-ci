@@ -21,6 +21,16 @@ schema version to keep in step.
   `actions/check-workflows` drops `refs/heads/main` from that expression in
   the same change.
 
+### Fixed
+
+- **`ci-context`: a release pull request no longer runs every job twice.**
+  `skip-pr` is now also true for an upstream same-repository pull request
+  whose head is `dev` or `master` (new input `pr-head-ref`): its push already
+  ran the head commit in full, and required checks are keyed by commit SHA.
+  MolCrafts/molrs#140 and MolCrafts/molpy#114 showed every `test / *` check
+  twice. Upstream feature-branch pull requests (Dependabot), fork → upstream
+  pull requests and pull requests from a deleted fork still run.
+
 ### Added
 
 - **`actions/ci-context`: the CI rules in one place.** Fork or upstream,
@@ -29,7 +39,7 @@ schema version to keep in step.
   `skip-pr`, `publish`). Every MolCrafts workflow starts with a
   `<file> / context` job running it, so changing a rule is one pull request
   here instead of one per repository. `test / context` replaces `test / tier`
-  as a required check. `test / ci-context` runs the action against sixteen
+  as a required check. `test / ci-context` runs the action against nineteen
   synthetic contexts, and `tests/test_ci_context.py` runs the same table
   through its script.
 - **`ci-context` outputs `publish`**: `"true"` only for a `v*` tag pushed to

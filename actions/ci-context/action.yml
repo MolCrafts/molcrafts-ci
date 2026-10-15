@@ -40,6 +40,11 @@ inputs:
   pr-head-repository:
     description: owner/name of a pull request's head repository; empty for other events
     default: ${{ github.event.pull_request.head.repo.full_name }}
+  pr-head-ref:
+    description: >
+      Branch name (no refs/heads/) of a pull request's head; empty for other
+      events
+    default: ${{ github.event.pull_request.head.ref }}
 outputs:
   tier:
     description: >
@@ -55,8 +60,12 @@ outputs:
     value: ${{ steps.context.outputs.integration }}
   skip-pr:
     description: >
-      A pull request inside a fork, whose push already ran the full tier;
-      every job but the context job is skipped
+      A same-repository pull request whose head commit its push already ran
+      in full: every one inside a fork, and upstream one whose head is dev or
+      master (the release PR). Not an upstream feature-branch pull request
+      (Dependabot: its push ran only the fast tier), a fork -> upstream pull
+      request (its push ran in the fork) or one whose head repository is gone.
+      Every job but the context job is skipped
     value: ${{ steps.context.outputs.skip-pr }}
   publish:
     description: >
@@ -75,4 +84,5 @@ runs:
         CI_EVENT: ${{ inputs.event-name }}
         CI_REF: ${{ inputs.ref }}
         CI_PR_HEAD: ${{ inputs.pr-head-repository }}
+        CI_PR_HEAD_REF: ${{ inputs.pr-head-ref }}
       run: bash "$GITHUB_ACTION_PATH/context.sh"

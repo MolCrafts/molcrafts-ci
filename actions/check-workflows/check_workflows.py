@@ -79,7 +79,11 @@ SKIP_PR = "needs.context.outputs.skip-pr != 'true'"
 PUBLISH = "needs.context.outputs.publish == 'true'"
 UPSTREAM = "needs.context.outputs.upstream == 'true'"
 # Conjuncts that already keep a job off an in-fork pull request: skip-pr is
-# only ever true outside MolCrafts, on a pull_request event.
+# only ever true on a pull_request event, and outside MolCrafts for every
+# same-repository one. (Upstream it is also true for a same-repository pull
+# request from dev or master, whose head its push already ran in full; a job
+# gated on `upstream` alone runs that pull request again, which repeats work
+# but is not a fork run.)
 NOT_IN_FORK_PR = (SKIP_PR, UPSTREAM, PUBLISH)
 NOT_A_PULL_REQUEST = re.compile(
     r"^github\.event_name (?:!= 'pull_request'|== '(?!pull_request')[a-z_]+')$"
