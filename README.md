@@ -364,7 +364,7 @@ tested before anyone picks it up.
 | `actions/setup-node` | Node (`.nvmrc`, else `node-version`), npm cache on the lockfile, `npm ci` / `npm install` | `node-version` (22), `working-directory`, `registry-url`, `install` |
 | `actions/setup-rust` | the toolchain `rust-toolchain.toml` pins, extra targets/components, rust-cache | `toolchain-dir`, `targets`, `components`, `cache`, `workspaces` |
 | `actions/setup-partners` | partner repositories: every one `.github/partners.env` names (via `scripts/partners.py`), or one `repository` into `path`; a branch ref follows a same-named branch on the fork, then upstream | `repository`, `ref` (dev), `path` |
-| `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `publish` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository` default to the run's github context |
+| `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `publish` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository`, `pr-head-ref` default to the run's github context |
 | `actions/check-workflows` | checks the calling repository's workflows against the CI scheme (below); fails with `file:line: job: [rule] message` | `path` (`.`) |
 | `actions/submit` | validate, upload and ingest CI snapshots | see below |
 | `actions/report` | the run's passed/failed/skipped counts and line/branch coverage, one markdown table appended to the step summary; report only, never fails the job | `title`, `junit` or `cargo-test`, `coverage`, `coverage-format` (`coverage.py`/`lcov`); output `table` |
@@ -400,7 +400,7 @@ jobs:
 | `upstream` | the owner is MolCrafts |
 | `integration` | the ref is `dev`, `master`, or a tag |
 | `tier` | `fast` only for a feature-branch push to MolCrafts; `full` otherwise |
-| `skip-pr` | a pull request inside a fork (its push already ran the full tier) |
+| `skip-pr` | a same-repository pull request whose head commit its push already ran in full: any inside a fork, and upstream one from `dev` or `master` (the release PR). An upstream feature-branch PR (Dependabot: its push ran only the fast tier), a fork → upstream PR (its push ran in the fork) and a PR whose head repository is gone still run |
 | `publish` | a `v*` tag pushed to MolCrafts: never a fork, a branch or a dispatch |
 
 Every job that uploads to a registry, deploys or creates a GitHub Release has

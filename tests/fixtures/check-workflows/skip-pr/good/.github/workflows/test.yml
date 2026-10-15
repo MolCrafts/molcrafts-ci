@@ -77,7 +77,7 @@ jobs:
   deploy:
     name: test / deploy
     needs: context
-    # Upstream only: skip-pr is never true there.
+    # Upstream only, so never an in-fork pull request.
     if: needs.context.outputs.upstream == 'true' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
