@@ -30,6 +30,12 @@ schema version to keep in step.
   MolCrafts/molrs#140 and MolCrafts/molpy#114 showed every `test / *` check
   twice. Upstream feature-branch pull requests (Dependabot), fork → upstream
   pull requests and pull requests from a deleted fork still run.
+- **`run-gate` / `hooks/ci.py`: a leading `--` no longer fails every gate.**
+  Current uv forwards the `--` of `uv run --script ci.py -- --profile ...`
+  to the script, and argparse rejected everything after it
+  (`unrecognized arguments`), breaking every MolCrafts/molvis run since
+  2026-10-11. `run-gate` and the usage text no longer pass `--`, and
+  `ci.py` drops one leading `--` so older callers keep working.
 
 ### Added
 

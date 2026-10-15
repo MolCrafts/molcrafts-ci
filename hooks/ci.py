@@ -11,10 +11,10 @@ The repository selects the profile by name (`CI_PROFILE` in
 this script. A copy downloaded on its own clones `master` and reads that,
 so consumers never pin a commit SHA.
 
-  uv run --script hooks/ci.py -- --stage pre-commit
-  uv run --script hooks/ci.py -- --profile node-python --area lint --list
-  uv run --script hooks/ci.py -- --profile node-python --describe biome
-  uv run --script hooks/ci.py -- --profile node-python --gate biome
+  uv run --script hooks/ci.py --stage pre-commit
+  uv run --script hooks/ci.py --profile node-python --area lint --list
+  uv run --script hooks/ci.py --profile node-python --describe biome
+  uv run --script hooks/ci.py --profile node-python --gate biome
 """
 
 from __future__ import annotations
@@ -163,6 +163,9 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--describe", metavar="GATE")
     parser.add_argument("--root", default=".")
+    # Some uv versions forward the `--` of `uv run --script ci.py -- ...`; drop one.
+    if argv[:1] == ["--"]:
+        argv = argv[1:]
     args = parser.parse_args(argv)
     cwd = Path(args.root).resolve()
     name = profile_name(cwd, args.profile)

@@ -29,7 +29,7 @@ runs:
         AREA: ${{ inputs.area }}
       run: |
         set -euo pipefail
-        gates=$(uv run --no-project --script "$GITHUB_ACTION_PATH/../../hooks/ci.py" -- --profile "$PROFILE" --area "$AREA" --list)
+        gates=$(uv run --no-project --script "$GITHUB_ACTION_PATH/../../hooks/ci.py" --profile "$PROFILE" --area "$AREA" --list)
         echo "gates=$gates" >> "$GITHUB_OUTPUT"
     - if: inputs.gate != ''
       id: meta
@@ -39,7 +39,7 @@ runs:
         GATE: ${{ inputs.gate }}
       run: |
         set -euo pipefail
-        meta=$(uv run --no-project --script "$GITHUB_ACTION_PATH/../../hooks/ci.py" -- --profile "$PROFILE" --describe "$GATE")
+        meta=$(uv run --no-project --script "$GITHUB_ACTION_PATH/../../hooks/ci.py" --profile "$PROFILE" --describe "$GATE")
         {
           echo "meta<<EOF"
           echo "$meta"
@@ -77,4 +77,4 @@ runs:
         PROFILE: ${{ inputs.profile }}
         GATE: ${{ inputs.gate }}
         MOLVIS_SKIP_UI_BUILD: "1"
-      run: uv run --no-project --script "$GITHUB_ACTION_PATH/../../hooks/ci.py" -- --profile "$PROFILE" --gate "$GATE"
+      run: uv run --no-project --script "$GITHUB_ACTION_PATH/../../hooks/ci.py" --profile "$PROFILE" --gate "$GATE"
