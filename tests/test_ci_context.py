@@ -142,7 +142,13 @@ def test_deploy_is_a_stable_upstream_branch_operation(
 
 
 @pytest.mark.parametrize("on_master", [True, False])
-def test_release_ancestry_gate(tmp_path: Path, on_master: bool) -> None:
+def test_release_ancestry_gate(
+    tmp_path: Path, on_master: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # pre-push exports the parent worktree's Git paths; this fixture owns its repo.
+    for key in list(os.environ):
+        if key.startswith("GIT_"):
+            monkeypatch.delenv(key)
     workflow = yaml.safe_load((ROOT / ".github/workflows/context.yml").read_text())
     script = next(
         step["run"]
