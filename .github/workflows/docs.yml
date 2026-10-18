@@ -23,19 +23,7 @@ jobs:
   # Where this run happens, decided once: ./actions/ci-context.
   context:
     name: docs / context
-    runs-on: ubuntu-latest
-    outputs:
-      tier: ${{ steps.context.outputs.tier }}
-      upstream: ${{ steps.context.outputs.upstream }}
-      integration: ${{ steps.context.outputs.integration }}
-      skip-pr: ${{ steps.context.outputs.skip-pr }}
-      publish: ${{ steps.context.outputs.publish }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout: actions/ci-context
-      - id: context
-        uses: ./actions/ci-context
+    uses: ./.github/workflows/context.yml
 
   build:
     name: docs / build

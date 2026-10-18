@@ -15,6 +15,17 @@ schema version to keep in step.
 
 ### Changed
 
+- **Profiles `node-python` and `node`: every check runs once.** pre-push
+  starts with one `build` gate that builds every artifact; `typecheck` (moved
+  from pre-commit), the test gates and the pack checks read it and rebuild
+  nothing. `node-python` drops `test-core` (`js` already ran the core tests)
+  and the `build:*` steps the `typecheck`, `vsc-ext` and `build` gates each
+  repeated; `python` and `docs` set `MOLVIS_SKIP_UI_BUILD=1`. A gate with
+  `setup: [build]` gets the `build` gate first from `run-gate`, which runs
+  each gate in its own job. Consumers change their scripts in the same step
+  (molvis: root `npm run build`; molcrafts-ui: `pnpm typecheck` no longer
+  builds).
+
 - Integration refs are `dev`, `master`, and tags. `main` is not a branch in
   this scheme. The canonical `cancel-in-progress` expression, `ci-context`,
   and pull-request triggers no longer name it. A repository that bumps

@@ -450,7 +450,7 @@ uv run --script path/to/molcrafts-ci/actions/check-workflows/check_workflows.py 
 | `context` | the first job is `context`, named `<file> / context`, has a step `id: context` running `ci-context@master`, and maps exactly the action's outputs |
 | `needs` | every other job reaches `context` through `needs` |
 | `skip-pr` | in a workflow a pull request can run (`pull_request`, `workflow_call`), every job is skipped on an in-fork PR: its `if` requires `skip-pr != 'true'` (or `upstream`/`publish == 'true'`, or an `event_name` test excluding `pull_request`), or it needs a job that is so skipped and its `if` has no `always()`/`cancelled()` |
-| `publish` | a job with an `environment:`, `pypa/gh-action-pypi-publish`, `cargo`/`npm publish` without a literal `--dry-run`, `vsce`/`ovsx publish`, `softprops/action-gh-release` or `gh release create`/`upload` requires `publish == 'true'` in its `if`, and no `if`, `environment` or `env` of it tests `github.event_name`/`github.ref*` (in `nightly.yml`: `upstream == 'true'`) |
+| `publish` | a job with an `environment:`, `pypa/gh-action-pypi-publish`, `cargo`/`npm publish` without a literal `--dry-run`, `vsce`/`ovsx publish`, `softprops/action-gh-release` or `gh release create`/`upload` requires `publish == 'true'` in its `if`, and no `if`, `environment` or `env` of it tests `github.event_name`/`github.ref*` (in `nightly.yml`: `nightly == 'true'`; stable deployment: `deploy == 'true'`) |
 | `concurrency` | the workflow-level block above, exactly |
 | `pin` | shared Actions use a full commit SHA; legacy `@master` is accepted during migration |
 | `comment` | no comment mentions `workflow_call` in a workflow without that trigger |
@@ -481,3 +481,25 @@ and verifies HEAD. Partner layouts and build caches persist across pushes under
 `~/.cache/molcrafts/partners` (override with `MOLCRAFTS_PARTNER_CACHE`). Update a partner SHA in a commit and rerun lock/integration
 gates for coordinated changes. Pin shared Actions to the same immutable CI
 commit; legacy `@master` remains accepted for repositories migrating later.
+
+
+## Branch lifecycle
+
+`dev` is daily integration; `master` is stable. Feature pushes use the fast
+matrix, while dev/master and tags use the full matrix. Same-repository PRs
+from dev/master reuse their push checks. Feature PRs still run against the
+merge result.
+
+Call `.github/workflows/context.yml` for the shared decisions. A scheduled or
+manual `nightly` workflow resolves dev once to an immutable `source-ref`; every
+nightly job checks out that commit and publishers require `nightly == 'true'`.
+Stable publishers require `publish == 'true'`: an upstream v-tag whose commit
+is an ancestor of master, verified by the context workflow. Stable site/API
+deployments use `deploy == 'true'` on upstream master.
+
+After publishing a CI commit, run `python scripts/partners.py pin-ci <SHA>`
+in each consumer. This updates shared Action/workflow refs, CI_REF and the
+hook URL together. Downloaded hooks read the same CI_REF for their profiles;
+legacy consumers without one continue to follow master. Partner pins remain
+independent. The node profiles build once per local pre-push stage, then
+reuse those artifacts for type checks and tests.

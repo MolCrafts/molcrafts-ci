@@ -10,8 +10,8 @@ is read and every violation printed as `file:line: job: [rule] message`; the
 exit status is 1 when there is any. The rules are the binding ones of the CI
 scheme (Revisions 2-4), the ones a reviewer cannot be trusted to see:
 
-  context      the first job is `context`, named `<file> / context`, runs
-               actions/ci-context and maps exactly its outputs
+  context      the first job is `context`, named `<file> / context`, calls
+               the shared context workflow (legacy Action jobs are accepted)
   needs        every other job reaches `context` through `needs`
   skip-pr      every job that a pull request can run is skipped for an
                in-fork pull request: its own `if` carries
@@ -24,8 +24,8 @@ scheme (Revisions 2-4), the ones a reviewer cannot be trusted to see:
                a GitHub Release) gates on `needs.context.outputs.publish ==
                'true'` and tests no raw github.event_name / github.ref (in
                its if, environment, env or a step's if/env); in
-               nightly.yml, whose channel publishes from a branch, on
-               `needs.context.outputs.upstream == 'true'`
+               nightly.yml on `nightly == 'true'`; stable site/API deployment
+               on `deploy == 'true'`
   concurrency  the workflow-level block is exactly the canonical one
   pin          MolCrafts/molcrafts-ci/actions/* uses an immutable SHA (legacy @master is accepted)
   comment      no comment mentions workflow_call unless the workflow has it
@@ -58,10 +58,12 @@ CANCEL_IN_PROGRESS = (
     "github.ref) && !startsWith(github.ref, 'refs/tags/') }}"
 )
 # These never cancel: a schedule, a release or a deploy is not superseded.
-NEVER_CANCEL = {"nightly", "release", "deploy"}
+NEVER_CANCEL = {"context", "nightly", "release", "deploy"}
 
 CONTEXT_USES = "MolCrafts/molcrafts-ci/actions/ci-context@master"
 LOCAL_CONTEXT_USES = "./actions/ci-context"  # molcrafts-ci itself
+CONTEXT_WORKFLOW = "MolCrafts/molcrafts-ci/.github/workflows/context.yml@master"
+LOCAL_CONTEXT_WORKFLOW = "./.github/workflows/context.yml"
 
 
 def valid_action_ref(ref: str) -> bool:
@@ -78,13 +80,15 @@ def valid_context_use(use: str, local_ok: bool) -> bool:
 SKIP_PR = "needs.context.outputs.skip-pr != 'true'"
 PUBLISH = "needs.context.outputs.publish == 'true'"
 UPSTREAM = "needs.context.outputs.upstream == 'true'"
+NIGHTLY = "needs.context.outputs.nightly == 'true'"
+DEPLOY = "needs.context.outputs.deploy == 'true'"
 # Conjuncts that already keep a job off an in-fork pull request: skip-pr is
 # only ever true on a pull_request event, and outside MolCrafts for every
 # same-repository one. (Upstream it is also true for a same-repository pull
 # request from dev or master, whose head its push already ran in full; a job
 # gated on `upstream` alone runs that pull request again, which repeats work
 # but is not a fork run.)
-NOT_IN_FORK_PR = (SKIP_PR, UPSTREAM, PUBLISH)
+NOT_IN_FORK_PR = (SKIP_PR, UPSTREAM, PUBLISH, NIGHTLY, DEPLOY)
 NOT_A_PULL_REQUEST = re.compile(
     r"^github\.event_name (?:!= 'pull_request'|== '(?!pull_request')[a-z_]+')$"
 )
@@ -103,11 +107,13 @@ JOB_NAME = re.compile(r"^(?P<area>[a-z0-9][a-z0-9-]*) / \S")
 CALLER_USES = re.compile(r"^MolCrafts/molcrafts-ci/\.github/workflows/ci\.yml@(?P<ref>\S+)$")
 
 PUBLISH_ACTIONS = ("pypa/gh-action-pypi-publish", "softprops/action-gh-release")
+DEPLOY_ACTIONS = ("cloudflare/wrangler-action", "cloudflare/pages-action")
 PUBLISH_COMMANDS = (
     (re.compile(r"\bcargo\s+(?:\+\S+\s+)?publish\b"), True),
     (re.compile(r"\b(?:npm|pnpm)\s+publish\b"), True),
     (re.compile(r"\b(?:vsce|ovsx)\s+publish\b"), False),
     (re.compile(r"\bgh\s+release\s+(?:create|upload)\b"), False),
+    (re.compile(r"\bdevcontainer\s+build\b.*--push\b"), False),
 )
 EXPRESSION = re.compile(r"\$\{\{.*?\}\}")
 
@@ -269,6 +275,14 @@ def publish_reasons(job: dict) -> list[str]:
         for action in PUBLISH_ACTIONS:
             if uses.startswith(action):
                 reasons.append(action)
+        if (
+            uses.startswith("devcontainers/action@")
+            and str((step.get("with") or {}).get("publish-features", "false")).lower() == "true"
+        ):
+            reasons.append("devcontainers/action publish-features")
+        for action in DEPLOY_ACTIONS:
+            if uses.startswith(action):
+                reasons.append(action)
         run = str(step.get("run", "")).replace("\\\n", " ")
         for line in run.splitlines():
             literal = EXPRESSION.sub("", line)  # a --dry-run inside ${{ }} is conditional
@@ -370,16 +384,37 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             report(
                 "context", "context", f"must be named `{stem} / context`, not `{ctx.get('name')}`"
             )
+        shared_use = str(ctx.get("uses", ""))
+        shared_prefix = CONTEXT_WORKFLOW.removesuffix("master")
+        shared_context = (
+            shared_use.startswith(shared_prefix)
+            and valid_action_ref(shared_use.removeprefix(shared_prefix))
+        ) or (local_ok and ctx.get("uses") == LOCAL_CONTEXT_WORKFLOW)
         steps = [s for s in ctx.get("steps") or [] if s.get("id") == "context"]
-        if not steps or not valid_context_use(str(steps[0].get("uses")), local_ok):
-            report("context", "context", f"needs a step `id: context` with `uses: {CONTEXT_USES}`")
+        policy_implementation = (
+            local_ok
+            and stem == "context"
+            and steps
+            and (steps[0].get("uses") == "$/actions/ci-context")
+        )
+        if (
+            not shared_context
+            and not policy_implementation
+            and (not steps or not valid_context_use(str(steps[0].get("uses")), local_ok))
+        ):
+            report("context", "context", f"use `{CONTEXT_WORKFLOW}` for the shared context job")
         want = {o: f"${{{{ steps.context.outputs.{o} }}}}" for o in context_outputs()}
         got = {str(k): str(v) for k, v in (ctx.get("outputs") or {}).items()}
-        for name in sorted(want.keys() - got.keys()):
+        # Existing pinned actions expose the original five outputs. New consumers
+        # use the reusable workflow and inherit its complete output contract.
+        required = want.keys() - {"nightly", "source-ref", "deploy"}
+        for name in sorted(required - got.keys()) if not shared_context else []:
             report("context", "context", f"does not map the output `{name}: {want[name]}`")
         for name in sorted(got.keys() - want.keys()):
             report("context", "context", f"maps `{name}`, which ci-context does not output")
-        for name in sorted(want.keys() & got.keys()):
+        for name in sorted(want.keys() & got.keys()) if not shared_context else []:
+            if stem == "context" and name == "source-ref":
+                continue  # The reusable workflow resolves the nightly branch to a commit.
             if _normalize(got[name]) != _normalize(want[name]):
                 report("context", "context", f"output `{name}` must be `{want[name]}`")
 
@@ -429,12 +464,18 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
         if not reasons:
             continue
         what = ", ".join(dict.fromkeys(reasons))
-        if stem == "nightly":
-            if not requires(job.get("if"), UPSTREAM):
-                report(job_id, "publish", f"uploads ({what}); its `if` must require `{UPSTREAM}`")
-            continue
-        if not requires(job.get("if"), PUBLISH):
-            report(job_id, "publish", f"uploads ({what}); its `if` must require `{PUBLISH}`")
+        gate = (
+            NIGHTLY
+            if stem == "nightly"
+            else (
+                DEPLOY
+                if any(action in what for action in DEPLOY_ACTIONS)
+                and not stem.startswith("release")
+                else PUBLISH
+            )
+        )
+        if not requires(job.get("if"), gate):
+            report(job_id, "publish", f"uploads ({what}); its `if` must require `{gate}`")
         tests = [("if", job.get("if")), ("environment", environment_name(job))]
         tests += [(f"env {k}", v) for k, v in (job.get("env") or {}).items()]
         for i, step in enumerate(job.get("steps") or [], 1):
@@ -446,13 +487,33 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                 report(
                     job_id,
                     "publish",
-                    f"{where} tests github.event_name/github.ref; use `{PUBLISH}` instead",
+                    f"{where} tests github.event_name/github.ref; use `{gate}` instead",
                 )
+
+    if stem == "nightly":
+        if spec.get("name") != "nightly" or events - {"schedule", "workflow_dispatch"}:
+            report(None, "publish", "nightly must be named nightly and use schedule/dispatch only")
+        for job_id, job in jobs.items():
+            if job_id == "context":
+                continue
+            for step in (job or {}).get("steps") or []:
+                if str(step.get("uses", "")).startswith("actions/checkout@"):
+                    config = step.get("with") or {}
+                    if not config.get("repository") and config.get("ref") != (
+                        "${{ needs.context.outputs.source-ref }}"
+                    ):
+                        report(job_id, "publish", "nightly checkout must use context's source-ref")
 
     # concurrency: the canonical block.
     conc = spec.get("concurrency")
     line = top_line.get("concurrency", 1)
-    want_cancel = False if stem in NEVER_CANCEL else CANCEL_IN_PROGRESS
+    want_cancel = (
+        False
+        if stem in NEVER_CANCEL
+        or stem.startswith(("release-", "publish-"))
+        or stem.endswith("-deploy")
+        else CANCEL_IN_PROGRESS
+    )
     shown = "false" if want_cancel is False else want_cancel
     if not isinstance(conc, dict):
         report(None, "concurrency", "no workflow-level `concurrency:` block", line)

@@ -87,7 +87,92 @@ def test_case(tmp_path: Path, case: dict) -> None:
         pr_head_ref=case.get("head_ref", ""),
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert outputs(tmp_path) == case["expect"]
+    assert outputs(tmp_path) == {
+        **case["expect"],
+        "nightly": "false",
+        "source-ref": case["ref"],
+        "deploy": "true" if case["case"] == "upstream master push" else "false",
+    }
+
+
+@pytest.mark.parametrize(
+    ("owner", "event", "ref", "workflow", "enabled"),
+    [
+        ("MolCrafts", "schedule", "refs/heads/master", "nightly", True),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/dev", "nightly", True),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/master", "nightly", True),
+        ("Roy-Kid", "schedule", "refs/heads/master", "nightly", False),
+        ("MolCrafts", "push", "refs/heads/nightly", "nightly", False),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/feature", "nightly", False),
+        ("MolCrafts", "workflow_dispatch", "refs/tags/v1.0.0", "nightly", False),
+        ("MolCrafts", "schedule", "refs/heads/master", "test", False),
+    ],
+)
+def test_nightly_selects_dev_only_for_the_nightly_channel(
+    tmp_path: Path, owner: str, event: str, ref: str, workflow: str, enabled: bool
+) -> None:
+    proc = run(
+        tmp_path, owner=owner, repository=f"{owner}/molrs", event=event, ref=ref, workflow=workflow
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    got = outputs(tmp_path)
+    assert got["nightly"] == str(enabled).lower()
+    assert got["source-ref"] == ("refs/heads/dev" if enabled else ref)
+    assert got["publish"] == "false"
+
+
+@pytest.mark.parametrize(
+    ("owner", "event", "ref", "enabled"),
+    [
+        ("MolCrafts", "push", "refs/heads/master", True),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/master", True),
+        ("MolCrafts", "repository_dispatch", "refs/heads/master", True),
+        ("MolCrafts", "push", "refs/heads/dev", False),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/dev", False),
+        ("MolCrafts", "push", "refs/tags/v1.0.0", False),
+        ("Roy-Kid", "push", "refs/heads/master", False),
+    ],
+)
+def test_deploy_is_a_stable_upstream_branch_operation(
+    tmp_path: Path, owner: str, event: str, ref: str, enabled: bool
+) -> None:
+    proc = run(tmp_path, owner=owner, repository=f"{owner}/molrs", event=event, ref=ref)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert outputs(tmp_path)["deploy"] == str(enabled).lower()
+
+
+@pytest.mark.parametrize("on_master", [True, False])
+def test_release_ancestry_gate(tmp_path: Path, on_master: bool) -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/context.yml").read_text())
+    script = next(
+        step["run"]
+        for step in workflow["jobs"]["context"]["steps"]
+        if step.get("name") == "Release tag belongs to master"
+    )
+    for args in (
+        ["init", "-q", "-b", "master"],
+        ["config", "user.name", "test"],
+        ["config", "user.email", "test@example.test"],
+        ["commit", "-q", "--allow-empty", "-m", "stable"],
+        ["update-ref", "refs/remotes/origin/master", "HEAD"],
+    ):
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+    if not on_master:
+        subprocess.run(["git", "checkout", "-q", "-b", "dev"], cwd=tmp_path, check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "--allow-empty", "-m", "unreleased"], cwd=tmp_path, check=True
+        )
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=tmp_path, text=True).strip()
+    result = subprocess.run(
+        ["bash", "-e", "-c", script],
+        cwd=tmp_path,
+        env=dict(os.environ, GITHUB_SHA=commit),
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode == 0) is on_master
+    if not on_master:
+        assert "merge dev into master first" in result.stdout
 
 
 @pytest.mark.parametrize("missing", ["owner", "repository", "event", "ref"])

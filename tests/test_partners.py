@@ -26,6 +26,50 @@ def git(*args: str, cwd: Path) -> None:
 
 
 class ResolutionTests(unittest.TestCase):
+    def test_pin_ci_updates_actions_workflows_and_manifest_together(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflow = root / ".github/workflows/test.yml"
+            workflow.parent.mkdir(parents=True)
+            before = (
+                "uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@master\n"
+                "uses: MolCrafts/molcrafts-ci/actions/setup-python@master\n"
+                "uses: actions/checkout@v7\n"
+            )
+            workflow.write_text(before)
+            hook = root / ".pre-commit-config.yaml"
+            hook.write_text(
+                "entry: https://raw.githubusercontent.com/MolCrafts/molcrafts-ci/master/hooks/ci.py\n"
+            )
+            pins = root / ".github/partners.env"
+            pins.write_text("# preserved\nCI_REF=" + "b" * 40 + "\nMOLRS_REF=dev\n")
+            with (
+                patch.object(partners, "ROOT", root),
+                patch.object(partners, "PINS", pins),
+                patch.object(partners, "commit_exists", return_value=True),
+            ):
+                self.assertEqual(partners.main(["pin-ci", SHA]), 0)
+                self.assertIn("/" + SHA + "/hooks/ci.py", hook.read_text())
+                self.assertEqual(workflow.read_text(), before.replace("@master", "@" + SHA))
+                self.assertEqual(
+                    pins.read_text(), "# preserved\nCI_REF=" + SHA + "\nMOLRS_REF=dev\n"
+                )
+                self.assertEqual(partners.main(["pin-ci", SHA]), 0)
+
+    def test_pin_ci_refuses_an_unpublished_commit_before_writing(self):
+        with (
+            patch.object(partners, "commit_exists", return_value=False),
+            self.assertRaises(SystemExit),
+        ):
+            partners.pin_ci(SHA)
+
+    def test_pin_ci_requires_an_immutable_reference(self):
+        with patch.object(partners, "commit_exists") as lookup, self.assertRaises(SystemExit):
+            partners.pin_ci("master")
+        lookup.assert_not_called()
+
     def test_declared_branch_is_not_overridden_by_master_or_a_sibling(self):
         with patch.object(partners, "ls_remote", return_value=SHA) as remote:
             source = partners.resolve("DEP", "MolCrafts/dep", "dev")

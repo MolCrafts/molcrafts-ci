@@ -57,10 +57,38 @@ if [ "$upstream" = true ] && [ "$CI_EVENT" = push ]; then
     case "$CI_REF" in refs/tags/v*) publish=true ;; esac
 fi
 
+# A nightly channel is built from dev, never from a separate nightly branch.
+# Scheduled workflows execute on the default branch; the shared context
+# workflow resolves dev once and returns its commit to every build job.
+nightly=false
+source_ref=$CI_REF
+if [ "$upstream" = true ] && [ "${CI_WORKFLOW:-}" = nightly ]; then
+    case "$CI_EVENT:$CI_REF" in
+        schedule:refs/heads/master | workflow_dispatch:refs/heads/master | workflow_dispatch:refs/heads/dev)
+            nightly=true
+            source_ref=refs/heads/dev
+            ;;
+    esac
+fi
+
+# Stable application/docs deployments are distinct from registry releases.
+# Manual deployment still has to select the stable branch.
+deploy=false
+if [ "$upstream" = true ]; then
+    case "$CI_EVENT:$CI_REF" in
+        push:refs/heads/master | workflow_dispatch:refs/heads/master | repository_dispatch:refs/heads/master)
+            deploy=true
+            ;;
+    esac
+fi
+
 {
     echo "tier=$tier"
     echo "upstream=$upstream"
     echo "integration=$integration"
     echo "skip-pr=$skip_pr"
     echo "publish=$publish"
+    echo "nightly=$nightly"
+    echo "source-ref=$source_ref"
+    echo "deploy=$deploy"
 } | tee -a "${GITHUB_OUTPUT:-/dev/null}"

@@ -1,0 +1,62 @@
+name: context
+
+on:
+  workflow_call:
+    outputs:
+      tier:
+        value: ${{ jobs.context.outputs.tier }}
+      upstream:
+        value: ${{ jobs.context.outputs.upstream }}
+      integration:
+        value: ${{ jobs.context.outputs.integration }}
+      skip-pr:
+        value: ${{ jobs.context.outputs.skip-pr }}
+      publish:
+        value: ${{ jobs.context.outputs.publish }}
+      nightly:
+        value: ${{ jobs.context.outputs.nightly }}
+      deploy:
+        value: ${{ jobs.context.outputs.deploy }}
+      source-ref:
+        description: Immutable dev commit for nightly; triggering ref otherwise
+        value: ${{ jobs.context.outputs.source-ref }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: context-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  context:
+    name: context / context
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.context.outputs.tier }}
+      upstream: ${{ steps.context.outputs.upstream }}
+      integration: ${{ steps.context.outputs.integration }}
+      skip-pr: ${{ steps.context.outputs.skip-pr }}
+      publish: ${{ steps.context.outputs.publish }}
+      nightly: ${{ steps.context.outputs.nightly }}
+      deploy: ${{ steps.context.outputs.deploy }}
+      source-ref: ${{ steps.source.outputs.sha || steps.context.outputs.source-ref }}
+    steps:
+      - id: context
+        uses: $/actions/ci-context
+      - uses: actions/checkout@v7
+        if: steps.context.outputs.nightly == 'true' || steps.context.outputs.publish == 'true'
+        with:
+          ref: ${{ steps.context.outputs.source-ref }}
+          fetch-depth: ${{ steps.context.outputs.publish == 'true' && '0' || '1' }}
+          persist-credentials: false
+      - name: Release tag belongs to master
+        if: steps.context.outputs.publish == 'true'
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/master || {
+            echo "::error::Release tags must point to commits on master; merge dev into master first."
+            exit 1
+          }
+      - id: source
+        if: steps.context.outputs.nightly == 'true'
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
