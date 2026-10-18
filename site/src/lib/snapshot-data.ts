@@ -93,13 +93,16 @@ export async function fetchRecordEntries(
     throw new Error(`Cannot read ${record} for ${projectId}: ${res.status} ${res.statusText}`);
   }
   const entries: IndexEntry[] = [];
-  for (const line of (await res.text()).split("\n")) {
+  for (const [index, line] of (await res.text()).split("\n").entries()) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     try {
       entries.push(JSON.parse(trimmed) as IndexEntry);
-    } catch {
-      /* a malformed line loses that entry, not the whole index */
+    } catch (cause) {
+      throw new Error(
+        `Cannot read ${record} for ${projectId}: malformed index at line ${index + 1}`,
+        { cause },
+      );
     }
   }
   return entries;
