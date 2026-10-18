@@ -341,7 +341,7 @@ and the release move together. See [CHANGELOG.md](CHANGELOG.md).
 One file per kind of work. A feature-branch push to MolCrafts gets the fast
 tier; every push to a fork, `dev`/`master` on MolCrafts, pull requests,
 tags and dispatches get the full tier. Each workflow's first job,
-`<file> / context`, runs `actions/ci-context`, and every other job gates on
+`<file> / context`, calls the shared context workflow, and every other job gates on
 its outputs.
 
 | workflow | jobs | runs |
@@ -353,18 +353,18 @@ its outputs.
 
 ## Shared actions
 
-Every MolCrafts repository uses these as
-`MolCrafts/molcrafts-ci/actions/<name>@master` (`master` is their dev line);
-this repository uses its own checkout (`./actions/<name>`), so a change is
-tested before anyone picks it up.
+Consumers pin `MolCrafts/molcrafts-ci/actions/<name>@<full-SHA>` and the
+shared context workflow to the same `CI_REF`. Legacy `@master` references
+remain accepted during migration. This repository uses its own checkout
+(`./actions/<name>`), so changes are tested before consumers adopt them.
 
 | action | does | inputs |
 | --- | --- | --- |
 | `actions/setup-python` | Python on PATH, uv with its cache | `python-version` (3.12) |
 | `actions/setup-node` | Node (`.nvmrc`, else `node-version`), npm cache on the lockfile, `npm ci` / `npm install` | `node-version` (22), `working-directory`, `registry-url`, `install` |
 | `actions/setup-rust` | the toolchain `rust-toolchain.toml` pins, extra targets/components, rust-cache | `toolchain-dir`, `targets`, `components`, `cache`, `workspaces` |
-| `actions/setup-partners` | partner repositories: every one `.github/partners.env` names (via `scripts/partners.py`), or one `repository` into `path`; a branch ref follows a same-named branch on the fork, then upstream | `repository`, `ref` (dev), `path` |
-| `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `publish` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository`, `pr-head-ref` default to the run's github context |
+| `actions/setup-partners` | partner repositories: every one `.github/partners.env` names (via `src/molcrafts_ci/partners.py`), or one `repository` into `path`; each ref is resolved exactly as declared | `repository`, `ref` (dev), `path` |
+| `actions/ci-context` | context decisions: `tier`, `upstream`, `integration`, `skip-pr`, `publish`, `nightly`, `source-ref`, `deploy` | none needed; `workflow`, `owner`, `repository`, `event-name`, `ref`, `pr-head-repository`, `pr-head-ref` default to the run's github context |
 | `actions/check-workflows` | checks the calling repository's workflows against the CI scheme (below); fails with `file:line: job: [rule] message` | `path` (`.`) |
 | `actions/submit` | validate, upload and ingest CI snapshots | see below |
 | `actions/report` | the run's passed/failed/skipped counts and line/branch coverage, one markdown table appended to the step summary; report only, never fails the job | `title`, `junit` or `cargo-test`, `coverage`, `coverage-format` (`coverage.py`/`lcov`); output `table` |
@@ -376,20 +376,13 @@ the same job, and the rest of the file reads `needs.context.outputs.*`:
 jobs:
   context:
     name: test / context            # <file> / context
-    runs-on: ubuntu-latest
-    outputs:
-      tier: ${{ steps.context.outputs.tier }}
-      upstream: ${{ steps.context.outputs.upstream }}
-      integration: ${{ steps.context.outputs.integration }}
-      skip-pr: ${{ steps.context.outputs.skip-pr }}
-      publish: ${{ steps.context.outputs.publish }}
-    steps:
-      - id: context
-        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+    permissions:
+      contents: read
+    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@b2c4441faa0743987a82bbc53d7ff9d7c2f974aa
 
   rust:
     needs: context
-    if: needs.context.outputs.skip-pr != 'true'   # deploys: upstream == 'true'
+    if: needs.context.outputs.skip-pr != 'true'   # deployments use deploy == 'true'
     strategy:
       matrix:
         os: ${{ fromJSON(needs.context.outputs.tier == 'full' && '["ubuntu-latest","macos-latest"]' || '["ubuntu-latest"]') }}
@@ -401,13 +394,16 @@ jobs:
 | `integration` | the ref is `dev`, `master`, or a tag |
 | `tier` | `fast` only for a feature-branch push to MolCrafts; `full` otherwise |
 | `skip-pr` | a same-repository pull request whose head commit its push already ran in full: any inside a fork, and upstream one from `dev` or `master` (the release PR). An upstream feature-branch PR (Dependabot: its push ran only the fast tier), a fork → upstream PR (its push ran in the fork) and a PR whose head repository is gone still run |
-| `publish` | a `v*` tag pushed to MolCrafts: never a fork, a branch or a dispatch |
+| `publish` | a `v*` tag pushed to MolCrafts; the shared workflow verifies its commit belongs to master |
+| `nightly` | upstream `nightly` workflow, scheduled on master or manually run on dev/master |
+| `source-ref` | the immutable dev SHA resolved by the nightly context workflow; otherwise the triggering ref |
+| `deploy` | upstream master push, manual run or repository dispatch |
 
-Every job that uploads to a registry, deploys or creates a GitHub Release has
-`if: needs.context.outputs.publish == 'true'` and tests no raw
-`github.event_name` / `github.ref`, so a new trigger on `release.yml` cannot
-publish by accident. (A nightly channel that publishes from a branch, in
-`nightly.yml`, gates on `upstream` instead.)
+Stable registry and GitHub Release publishers require
+`needs.context.outputs.publish == 'true'`; nightly publishers require
+`nightly == 'true'`, and stable site/API deployments require
+`deploy == 'true'`. Publishers test no raw `github.event_name` / `github.ref`,
+so adding a trigger cannot bypass these shared decisions.
 
 The workflow-level `concurrency` block cannot read job outputs, so it stays
 inline, identical in every file; `actions/check-workflows` holds the one
@@ -419,7 +415,7 @@ concurrency:
   cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
 ```
 
-(`cancel-in-progress: false` in `nightly.yml`, `release.yml` and `deploy.yml`.)
+(`cancel-in-progress: false` in `context.yml`, `nightly.yml`, `release.yml` and `deploy.yml`.)
 
 ### Checking the workflows
 
@@ -447,7 +443,7 @@ uv run --script path/to/molcrafts-ci/actions/check-workflows/check_workflows.py 
 
 | rule | checks |
 | --- | --- |
-| `context` | the first job is `context`, named `<file> / context`, has a step `id: context` running `ci-context@master`, and maps exactly the action's outputs |
+| `context` | the first job is `context`, named `<file> / context`, and calls the shared context workflow; legacy Action jobs must map all eight outputs |
 | `needs` | every other job reaches `context` through `needs` |
 | `skip-pr` | in a workflow a pull request can run (`pull_request`, `workflow_call`), every job is skipped on an in-fork PR: its `if` requires `skip-pr != 'true'` (or `upstream`/`publish == 'true'`, or an `event_name` test excluding `pull_request`), or it needs a job that is so skipped and its `if` has no `always()`/`cancelled()` |
 | `publish` | a job with an `environment:`, `pypa/gh-action-pypi-publish`, `cargo`/`npm publish` without a literal `--dry-run`, `vsce`/`ovsx publish`, `softprops/action-gh-release` or `gh release create`/`upload` requires `publish == 'true'` in its `if`, and no `if`, `environment` or `env` of it tests `github.event_name`/`github.ref*` (in `nightly.yml`: `nightly == 'true'`; stable deployment: `deploy == 'true'`) |
@@ -497,8 +493,9 @@ Stable publishers require `publish == 'true'`: an upstream v-tag whose commit
 is an ancestor of master, verified by the context workflow. Stable site/API
 deployments use `deploy == 'true'` on upstream master.
 
-After publishing a CI commit, run `python scripts/partners.py pin-ci <SHA>`
-in each consumer. This updates shared Action/workflow refs, CI_REF and the
+After publishing a CI commit, run
+`python /path/to/molcrafts-ci/src/molcrafts_ci/partners.py pin-ci <SHA>`
+from each consumer checkout. This updates shared Action/workflow refs, CI_REF and the
 hook URL together. Downloaded hooks read the same CI_REF for their profiles;
 legacy consumers without one continue to follow master. Partner pins remain
 independent. The node profiles build once per local pre-push stage, then

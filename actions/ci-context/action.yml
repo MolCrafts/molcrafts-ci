@@ -77,7 +77,7 @@ outputs:
       dispatch)
     value: ${{ steps.context.outputs.publish }}
   nightly:
-    description: Upstream nightly schedule, or manual nightly run on dev/master/main
+    description: Upstream nightly schedule, or manual nightly run on dev/master
     value: ${{ steps.context.outputs.nightly }}
   source-ref:
     description: dev for an enabled nightly run; otherwise the triggering ref
