@@ -11,6 +11,18 @@ from molcrafts_ci.jsonutil import dumps_deterministic, read_json, write_json
 from molcrafts_ci.snapshot import Snapshot
 
 
+def _data_path(root: Path, *parts: str, suffix: str) -> Path:
+    """Keep portable path components and existing symlinks inside the data root."""
+    for part in parts:
+        if part in ("", ".", "..") or any(char in part for char in "/\\:\0"):
+            raise ValueError(f"unsafe path component: {part!r}")
+    path = root.joinpath(*parts)
+    path = path.with_name(path.name + suffix)
+    if not path.resolve().is_relative_to(root.resolve()):
+        raise ValueError(f"path escapes the data root: {path}")
+    return path
+
+
 def snapshot_path(
     root: Path,
     *,
@@ -19,7 +31,9 @@ def snapshot_path(
     generation: int,
     snapshot_id: str,
 ) -> Path:
-    return root / "snapshots" / project / record / str(generation) / f"{snapshot_id}.json"
+    return _data_path(
+        root, "snapshots", project, record, str(generation), snapshot_id, suffix=".json"
+    )
 
 
 IfExists = Literal["fail", "skip"]
@@ -38,7 +52,7 @@ def write_snapshot(
     produces the same path. ``if_exists="fail"`` keeps that collision loud;
     ``if_exists="skip"`` returns the existing path untouched, which is what a
     retried or concurrent ingest needs — the file is immutable, so the one
-    already on disk is the one this call would have written.
+    already on disk remains the authoritative observation, even for a rerun.
     """
     if not snapshot.manifest.tracking.enabled:
         raise ValueError(
@@ -71,7 +85,7 @@ class SnapshotIndex:
         self.root = root
 
     def index_path(self, project: str, record: str) -> Path:
-        return self.root / "index" / project / f"{record}.jsonl"
+        return _data_path(self.root, "index", project, record, suffix=".jsonl")
 
     def append(self, project: str, snapshot: Snapshot, *, relative_path: str) -> Path:
         if not snapshot.manifest.tracking.enabled:
@@ -157,5 +171,5 @@ def ingest_snapshot(
     rel = snap_path.relative_to(data_root).as_posix()
     index = SnapshotIndex(data_root)
     if not index.has(project, snapshot.manifest.record, snapshot.snapshot_id()):
-        index.append(project, snapshot, relative_path=rel)
+        index.append(project, read_snapshot(snap_path), relative_path=rel)
     return snap_path

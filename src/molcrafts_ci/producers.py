@@ -90,6 +90,8 @@ def read_junit(path: Path) -> dict[str, Any]:
     is left once failures, errors and skips are taken out.
     """
     root = ET.parse(path).getroot()
+    if root.tag not in ("testsuite", "testsuites"):
+        raise ValueError(f"not a JUnit report: {path}")
     suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
 
     def total(attr: str) -> int:
@@ -141,7 +143,14 @@ def read_coverage_py(path: Path, *, source_root: Path | None = None) -> dict[str
     (statements + branches), which would report one blend as line coverage.
     """
     data = json.loads(path.read_text(encoding="utf-8"))
-    totals = data.get("totals", {})
+    if (
+        not isinstance(data, dict)
+        or not isinstance(data.get("totals"), dict)
+        or not {"covered_lines", "num_statements"} <= data["totals"].keys()
+        or not isinstance(data.get("files"), dict)
+    ):
+        raise ValueError(f"not a coverage.py report: {path}")
+    totals = data["totals"]
 
     out: dict[str, Any] = {"totals": {}}
     lines = _percent(totals.get("covered_lines", 0), totals.get("num_statements", 0))
@@ -191,6 +200,8 @@ def read_lcov(path: Path, *, source_root: Path | None = None) -> dict[str, Any]:
             continue
         key, value = match.groups()
         if key == "SF":
+            if current is not None:
+                raise ValueError(f"unterminated LCOV record in {path}")
             current = {"path": value, "uncovered": [], "_lf": 0, "_lh": 0}
         elif current is None:
             continue
@@ -204,6 +215,11 @@ def read_lcov(path: Path, *, source_root: Path | None = None) -> dict[str, Any]:
                 current["_lf"] = int(value)
             elif key == "LH":
                 current["_lh"] = int(value)
+
+    if current is not None:
+        raise ValueError(f"unterminated LCOV record in {path}")
+    if not files:
+        raise ValueError(f"no LCOV records in {path}")
 
     out_totals: dict[str, Any] = {}
     for label, (hit, found) in {

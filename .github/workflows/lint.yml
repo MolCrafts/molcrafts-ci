@@ -23,20 +23,8 @@ concurrency:
 jobs:
   # Where this run happens, decided once: ./actions/ci-context.
   context:
-    name: lint / context
-    runs-on: ubuntu-latest
-    outputs:
-      tier: ${{ steps.context.outputs.tier }}
-      upstream: ${{ steps.context.outputs.upstream }}
-      integration: ${{ steps.context.outputs.integration }}
-      skip-pr: ${{ steps.context.outputs.skip-pr }}
-      publish: ${{ steps.context.outputs.publish }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout: actions/ci-context
-      - id: context
-        uses: ./actions/ci-context
+    name: lint
+    uses: ./.github/workflows/context.yml
 
   python:
     name: lint / python

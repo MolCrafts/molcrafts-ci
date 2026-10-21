@@ -293,6 +293,8 @@ jobs:
         ('gh release upload "$TAG" dist/*', True),
         ('gh release view "$TAG"', False),
         ("echo publish", False),
+        ("devcontainer build --workspace-folder images/cpu --push", True),
+        ("devcontainer build --workspace-folder images/cpu", False),
     ],
 )
 def test_publish_commands(run: str, publishes: bool) -> None:
@@ -325,6 +327,12 @@ def test_publish_actions_and_environments() -> None:
     assert cw.publish_reasons({"steps": [{"uses": "pypa/gh-action-pypi-publish@release/v1"}]})
     assert cw.publish_reasons({"steps": [{"uses": "softprops/action-gh-release@v2"}]})
     assert not cw.publish_reasons({"steps": [{"uses": "actions/upload-artifact@v7"}]})
+    assert cw.publish_reasons(
+        {"steps": [{"uses": "devcontainers/action@v1", "with": {"publish-features": "true"}}]}
+    )
+    assert not cw.publish_reasons(
+        {"steps": [{"uses": "devcontainers/action@v1", "with": {"validate-only": "true"}}]}
+    )
 
 
 def test_the_canonical_concurrency_block_is_the_one_molcrafts_ci_uses() -> None:
@@ -337,6 +345,39 @@ def test_the_canonical_concurrency_block_is_the_one_molcrafts_ci_uses() -> None:
 
 def test_molcrafts_ci_follows_its_own_scheme() -> None:
     assert [str(v) for v in cw.check(ROOT)] == []
+
+
+def _check_name(caller: dict, callee: dict) -> str:
+    """The status-check name GitHub gives a job: a reusable-workflow call is
+    `<caller job name> / <called job name>`."""
+    return f"{caller['name']} / {callee['name']}"
+
+
+def test_the_context_check_reads_file_slash_context() -> None:
+    """Branch rules require `<file> / context`; the reusable call must produce
+    exactly that, not `<file> / context / context / context`."""
+    workflows = ROOT / ".github/workflows"
+    callee = yaml.safe_load((workflows / "context.yml").read_text(encoding="utf-8"))
+    callee_job = callee["jobs"]["context"]
+    callers = [
+        p
+        for p in sorted(workflows.glob("*.yml"))
+        if (yaml.safe_load(p.read_text(encoding="utf-8"))["jobs"].get("context") or {}).get("uses")
+    ]
+    assert callers, "no workflow calls the shared context workflow"
+    for path in callers:
+        caller = yaml.safe_load(path.read_text(encoding="utf-8"))["jobs"]["context"]
+        assert _check_name(caller, callee_job) == f"{path.stem} / context", path.name
+
+
+def test_a_shared_context_call_is_named_by_its_file(tmp_path: Path) -> None:
+    spec = yaml.safe_load((FIXTURES / "context/good/.github/workflows/lint.yml").read_text())
+    spec["jobs"]["context"] = {"name": "lint", "uses": cw.CONTEXT_WORKFLOW}
+    assert cw.check(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
+    spec["jobs"]["context"]["name"] = "lint / context"
+    messages = {v.message for v in cw.check(write(tmp_path, "lint.yml", yaml.safe_dump(spec)))}
+    want = "must be named `lint` (its check reads `lint / context`), not `lint / context`"
+    assert want in messages
 
 
 def test_local_ci_context_only_where_it_exists(tmp_path: Path) -> None:
@@ -368,3 +409,30 @@ def test_immutable_shared_action_refs(tmp_path: Path) -> None:
     text = (FIXTURES / "pin/good/.github/workflows/lint.yml").read_text(encoding="utf-8")
     text = text.replace("@master", "@" + "a" * 40)
     assert cw.check(write(tmp_path, "lint.yml", text)) == []
+
+
+@pytest.mark.parametrize("ref", ["master", "a" * 40])
+def test_shared_context_workflow_inherits_its_output_contract(tmp_path: Path, ref: str) -> None:
+    text = (FIXTURES / "context/good/.github/workflows/lint.yml").read_text()
+    spec = yaml.safe_load(text)
+    spec["jobs"]["context"] = {
+        "name": "lint",
+        "uses": cw.CONTEXT_WORKFLOW.removesuffix("master") + ref,
+    }
+    assert cw.check(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
+
+
+def test_nightly_rejects_a_mutable_checkout(tmp_path: Path) -> None:
+    text = (FIXTURES / "publish/good/.github/workflows/nightly.yml").read_text()
+    spec = yaml.safe_load(text)
+    spec["jobs"]["pypi"]["steps"].insert(0, {"uses": "actions/checkout@v7", "with": {"ref": "dev"}})
+    violations = cw.check(write(tmp_path, "nightly.yml", yaml.safe_dump(spec)))
+    assert any("context's source-ref" in violation.message for violation in violations)
+
+
+def test_nightly_rejects_a_separate_publication_branch(tmp_path: Path) -> None:
+    text = (FIXTURES / "publish/good/.github/workflows/nightly.yml").read_text()
+    spec = yaml.safe_load(text)
+    spec[True]["push"] = {"branches": ["nightly"]}
+    violations = cw.check(write(tmp_path, "nightly.yml", yaml.safe_dump(spec)))
+    assert any("schedule/dispatch only" in violation.message for violation in violations)

@@ -24,17 +24,8 @@ concurrency:
 
 jobs:
   context:
-    name: ci / context
-    runs-on: ubuntu-latest
-    outputs:
-      tier: ${{ steps.context.outputs.tier }}
-      upstream: ${{ steps.context.outputs.upstream }}
-      integration: ${{ steps.context.outputs.integration }}
-      skip-pr: ${{ steps.context.outputs.skip-pr }}
-      publish: ${{ steps.context.outputs.publish }}
-    steps:
-      - id: context
-        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+    name: ci
+    uses: ./.github/workflows/context.yml
 
   profile:
     name: ci / profile
@@ -97,18 +88,6 @@ jobs:
         with:
           profile: ${{ inputs.profile }}
           gate: typecheck
-
-  test-core:
-    name: ${{ inputs.area }} / test-core
-    needs: [context, profile]
-    if: needs.context.outputs.skip-pr != 'true' && contains(fromJSON(needs.profile.outputs.gates), 'test-core')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: MolCrafts/molcrafts-ci/actions/run-gate@master
-        with:
-          profile: ${{ inputs.profile }}
-          gate: test-core
 
   fmt:
     name: ${{ inputs.area }} / fmt

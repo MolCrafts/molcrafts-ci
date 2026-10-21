@@ -1,13 +1,36 @@
-import { describe, expect, it } from "@rstest/core";
+import { afterEach, describe, expect, it, rs } from "@rstest/core";
 
 import { projectsFromListing } from "@/lib/index-data";
 import {
   RECORD_ALIASES,
+  fetchRecordEntries,
   newestFirst,
   relativeTime,
   resolveRecord,
   shortCommit,
 } from "@/lib/snapshot-data";
+
+describe("fetchRecordEntries", () => {
+  afterEach(() => rs.restoreAllMocks());
+
+  it("reports a malformed line instead of showing incomplete history", async () => {
+    rs.spyOn(globalThis, "fetch").mockResolvedValue(new Response(
+      '{"snapshot_id":"old"}\n\n{broken\n',
+    ));
+    await expect(fetchRecordEntries("molpy", "tests")).rejects.toThrow(
+      "Cannot read tests for molpy: malformed index at line 3",
+    );
+  });
+
+  it("reads valid entries and ignores blank lines", async () => {
+    rs.spyOn(globalThis, "fetch").mockResolvedValue(new Response(
+      '\n{"snapshot_id":"old"}\n\n{"snapshot_id":"new"}\n',
+    ));
+    await expect(fetchRecordEntries("molpy", "tests")).resolves.toEqual([
+      { snapshot_id: "old" }, { snapshot_id: "new" },
+    ]);
+  });
+});
 
 describe("newestFirst", () => {
   it("orders by timestamp, not by append order", () => {

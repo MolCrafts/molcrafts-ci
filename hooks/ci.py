@@ -8,8 +8,9 @@
 The repository selects the profile by name (`CI_PROFILE` in
 `.github/partners.env`). The profile file lives in this repository
 (`profiles/<name>.yml`). A checkout of molcrafts-ci uses the files beside
-this script. A copy downloaded on its own clones `master` and reads that,
-so consumers never pin a commit SHA.
+this script. A copy downloaded on its own reads `CI_REF` from the caller's
+`.github/partners.env` (or environment), matching its Actions and resolver.
+Legacy consumers without CI_REF follow `master`.
 
   uv run --script hooks/ci.py --stage pre-commit
   uv run --script hooks/ci.py --profile node-python --area lint --list
@@ -46,26 +47,28 @@ def scrub_git_env() -> None:
         os.environ.pop(key, None)
 
 
-def ci_root() -> Path:
+def ci_root(root: Path | None = None) -> Path:
     """Directory that contains profiles/ and actions/check-workflows/."""
     scrub_git_env()
     here = Path(__file__).resolve().parent
     local = here.parent
     if (local / "profiles").is_dir() and (local / "actions" / "check-workflows").is_dir():
         return local
-    dest = Path(tempfile.gettempdir()) / f"molcrafts-ci-master-{os.getpid()}"
+    pins = (root or Path.cwd()) / ".github" / "partners.env"
+    ref = os.environ.get("CI_REF", "").strip()
+    if not ref and pins.is_file():
+        for line in pins.read_text(encoding="utf-8").splitlines():
+            if line.strip().startswith("CI_REF="):
+                ref = line.strip().split("=", 1)[1].strip()
+                break
+    ref = ref or "master"
+    if ref != "master" and not re.fullmatch(r"[0-9a-f]{40}", ref):
+        sys.exit("CI_REF must be a full lowercase commit SHA")
+    dest = Path(tempfile.gettempdir()) / f"molcrafts-ci-{ref}-{os.getpid()}"
     if not (dest / ".git").is_dir():
-        if dest.exists():
-            subprocess.run(["rm", "-rf", str(dest)], check=True)
-        subprocess.run(
-            ["git", "clone", "--depth", "1", "--branch", "master", MASTER, str(dest)],
-            check=True,
-        )
-    else:
-        subprocess.run(
-            ["git", "-C", str(dest), "fetch", "--depth", "1", "origin", "master"], check=True
-        )
-        subprocess.run(["git", "-C", str(dest), "checkout", "--detach", "FETCH_HEAD"], check=True)
+        subprocess.run(["git", "init", "-q", str(dest)], check=True)
+    subprocess.run(["git", "-C", str(dest), "fetch", "--depth", "1", MASTER, ref], check=True)
+    subprocess.run(["git", "-C", str(dest), "checkout", "--detach", "FETCH_HEAD"], check=True)
     return dest
 
 
@@ -84,10 +87,10 @@ def profile_name(cwd: Path, explicit: str | None) -> str:
     sys.exit("CI_PROFILE is not set (.github/partners.env or --profile)")
 
 
-def load_profile(name: str) -> dict:
-    path = ci_root() / "profiles" / f"{name}.yml"
+def load_profile(name: str, root: Path | None = None) -> dict:
+    path = ci_root(root) / "profiles" / f"{name}.yml"
     if not path.is_file():
-        known = sorted(p.stem for p in (ci_root() / "profiles").glob("*.yml"))
+        known = sorted(p.stem for p in (ci_root(root) / "profiles").glob("*.yml"))
         sys.exit(f"unknown CI profile {name!r}; choose one of: {', '.join(known)}")
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or not isinstance(data.get("gates"), list):
@@ -113,7 +116,7 @@ def selected(
 
 
 def run_workflows(cwd: Path) -> int:
-    script = ci_root() / "actions" / "check-workflows" / "check_workflows.py"
+    script = ci_root(cwd) / "actions" / "check-workflows" / "check_workflows.py"
     return subprocess.call([sys.executable, str(script), str(cwd)], cwd=cwd)
 
 
@@ -169,7 +172,7 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     cwd = Path(args.root).resolve()
     name = profile_name(cwd, args.profile)
-    profile = load_profile(name)
+    profile = load_profile(name, cwd)
     workflow = args.workflow or args.area
     if args.list:
         ids = [g["id"] for g in selected(profile, None, workflow, None)]
