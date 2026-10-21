@@ -1,0 +1,27 @@
+{
+  "manifest": {
+    "producer": "pytest",
+    "profile": "linux-x86_64",
+    "provenance": {},
+    "record": "tests",
+    "schema_version": "1",
+    "source": {
+      "commit": "cafa5987cbb2197a54dbf2f0b86701602f3205f5",
+      "producer_version": null,
+      "ref": "refs/heads/master",
+      "repository": "MolCrafts/molcrafts-ci",
+      "run_attempt": 1,
+      "timestamp": "2026-10-21T13:21:01Z",
+      "workflow_run": 39607141572
+    },
+    "tracking": {
+      "enabled": true,
+      "generation": 1
+    }
+  },
+  "payload": {
+    "failed": 0,
+    "passed": 252,
+    "skipped": 0
+  }
+}
