@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   context:
-    name: context / context
+    name: context
     runs-on: ubuntu-latest
     outputs:
       tier: ${{ steps.context.outputs.tier }}

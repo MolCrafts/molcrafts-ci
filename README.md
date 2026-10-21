@@ -341,7 +341,7 @@ and the release move together. See [CHANGELOG.md](CHANGELOG.md).
 One file per kind of work. A feature-branch push to MolCrafts gets the fast
 tier; every push to a fork, `dev`/`master` on MolCrafts, pull requests,
 tags and dispatches get the full tier. Each workflow's first job,
-`<file> / context`, calls the shared context workflow, and every other job gates on
+whose check reads `<file> / context`, calls the shared context workflow, and every other job gates on
 its outputs.
 
 | workflow | jobs | runs |
@@ -375,7 +375,7 @@ the same job, and the rest of the file reads `needs.context.outputs.*`:
 ```yaml
 jobs:
   context:
-    name: test / context            # <file> / context
+    name: test                      # <file>: the check reads `test / context`
     permissions:
       contents: read
     uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@b2c4441faa0743987a82bbc53d7ff9d7c2f974aa
@@ -443,7 +443,7 @@ uv run --script path/to/molcrafts-ci/actions/check-workflows/check_workflows.py 
 
 | rule | checks |
 | --- | --- |
-| `context` | the first job is `context`, named `<file> / context`, and calls the shared context workflow; legacy Action jobs must map all eight outputs |
+| `context` | the first job is `context` and its check reads `<file> / context`: it calls the shared context workflow and is named `<file>` (GitHub appends the called job, `context`); legacy inline Action jobs are named `<file> / context` and must map all eight outputs |
 | `needs` | every other job reaches `context` through `needs` |
 | `skip-pr` | in a workflow a pull request can run (`pull_request`, `workflow_call`), every job is skipped on an in-fork PR: its `if` requires `skip-pr != 'true'` (or `upstream`/`publish == 'true'`, or an `event_name` test excluding `pull_request`), or it needs a job that is so skipped and its `if` has no `always()`/`cancelled()` |
 | `publish` | a job with an `environment:`, `pypa/gh-action-pypi-publish`, `cargo`/`npm publish` without a literal `--dry-run`, `vsce`/`ovsx publish`, `softprops/action-gh-release` or `gh release create`/`upload` requires `publish == 'true'` in its `if`, and no `if`, `environment` or `env` of it tests `github.event_name`/`github.ref*` (in `nightly.yml`: `nightly == 'true'`; stable deployment: `deploy == 'true'`) |

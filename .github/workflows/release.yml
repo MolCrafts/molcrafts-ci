@@ -25,7 +25,7 @@ concurrency:
 jobs:
   # Where this run happens, decided once: ./actions/ci-context.
   context:
-    name: release / context
+    name: release
     uses: ./.github/workflows/context.yml
 
   guard:

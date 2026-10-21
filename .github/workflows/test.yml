@@ -34,7 +34,7 @@ jobs:
   # MolCrafts/molcrafts-ci/actions/ci-context@master; this one runs its own
   # checkout, so a change to the rules is exercised before anyone follows it.
   context:
-    name: test / context
+    name: test
     uses: ./.github/workflows/context.yml
 
   python:

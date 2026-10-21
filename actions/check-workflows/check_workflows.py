@@ -10,8 +10,10 @@ is read and every violation printed as `file:line: job: [rule] message`; the
 exit status is 1 when there is any. The rules are the binding ones of the CI
 scheme (Revisions 2-4), the ones a reviewer cannot be trusted to see:
 
-  context      the first job is `context`, named `<file> / context`, calls
-               the shared context workflow (legacy Action jobs are accepted)
+  context      the first job is `context` and its status check reads
+               `<file> / context`: a call of the shared context workflow is
+               named `<file>` (GitHub appends the called job, `context`); a
+               legacy inline Action job is named `<file> / context`
   needs        every other job reaches `context` through `needs`
   skip-pr      every job that a pull request can run is skipped for an
                in-fork pull request: its own `if` carries
@@ -380,10 +382,6 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
         ctx = jobs["context"] or {}
         if ids[0] != "context":
             report("context", "context", f"is not the first job (the first is `{ids[0]}`)")
-        if ctx.get("name") != f"{stem} / context":
-            report(
-                "context", "context", f"must be named `{stem} / context`, not `{ctx.get('name')}`"
-            )
         shared_use = str(ctx.get("uses", ""))
         shared_prefix = CONTEXT_WORKFLOW.removesuffix("master")
         shared_context = (
@@ -397,6 +395,22 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             and steps
             and (steps[0].get("uses") == "$/actions/ci-context")
         )
+        # The status check must read `<file> / context`. GitHub names a
+        # reusable-workflow call `<caller job name> / <called job name>`, so a
+        # call is named by its file alone and the shared workflow's own job is
+        # `context`; an inline job carries the whole check name itself.
+        if shared_context:
+            want_name, check = stem, f" (its check reads `{stem} / context`)"
+        elif policy_implementation:
+            want_name, check = "context", " (a caller's check reads `<file> / context`)"
+        else:
+            want_name, check = f"{stem} / context", ""
+        if ctx.get("name") != want_name:
+            report(
+                "context",
+                "context",
+                f"must be named `{want_name}`{check}, not `{ctx.get('name')}`",
+            )
         if (
             not shared_context
             and not policy_implementation
@@ -550,8 +564,8 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
         return out
     for job_id in ids:
         job = jobs[job_id] or {}
-        if "uses" in job:
-            continue
+        if "uses" in job or job_id == "context":
+            continue  # a call is named by its caller; `context` by the context rule
         name = job.get("name")
         m = JOB_NAME.match(str(name or ""))
         if not name:

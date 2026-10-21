@@ -13,6 +13,18 @@ schema version to keep in step.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The context check reads `<file> / context` again.** GitHub names a
+  reusable-workflow call `<caller job> / <called job>`; the shared
+  `context.yml` job was `context / context` and callers kept naming their
+  `context` job `<file> / context`, so the check became
+  `test / context / context / context` and never satisfied the branch rules
+  that require `test / context`. The called job is now `context`, a caller
+  names its `context` job `<file>`, and `check-workflows` enforces both
+  (`test_the_context_check_reads_file_slash_context` composes the real names).
+  Consumers rename their `context` jobs in the same step.
+
 ### Changed
 
 - **Profiles `node-python` and `node`: every check runs once.** pre-push

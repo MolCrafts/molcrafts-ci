@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   context:
-    name: ci / context
+    name: ci
     uses: ./.github/workflows/context.yml
 
   profile:

@@ -347,6 +347,39 @@ def test_molcrafts_ci_follows_its_own_scheme() -> None:
     assert [str(v) for v in cw.check(ROOT)] == []
 
 
+def _check_name(caller: dict, callee: dict) -> str:
+    """The status-check name GitHub gives a job: a reusable-workflow call is
+    `<caller job name> / <called job name>`."""
+    return f"{caller['name']} / {callee['name']}"
+
+
+def test_the_context_check_reads_file_slash_context() -> None:
+    """Branch rules require `<file> / context`; the reusable call must produce
+    exactly that, not `<file> / context / context / context`."""
+    workflows = ROOT / ".github/workflows"
+    callee = yaml.safe_load((workflows / "context.yml").read_text(encoding="utf-8"))
+    callee_job = callee["jobs"]["context"]
+    callers = [
+        p
+        for p in sorted(workflows.glob("*.yml"))
+        if (yaml.safe_load(p.read_text(encoding="utf-8"))["jobs"].get("context") or {}).get("uses")
+    ]
+    assert callers, "no workflow calls the shared context workflow"
+    for path in callers:
+        caller = yaml.safe_load(path.read_text(encoding="utf-8"))["jobs"]["context"]
+        assert _check_name(caller, callee_job) == f"{path.stem} / context", path.name
+
+
+def test_a_shared_context_call_is_named_by_its_file(tmp_path: Path) -> None:
+    spec = yaml.safe_load((FIXTURES / "context/good/.github/workflows/lint.yml").read_text())
+    spec["jobs"]["context"] = {"name": "lint", "uses": cw.CONTEXT_WORKFLOW}
+    assert cw.check(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
+    spec["jobs"]["context"]["name"] = "lint / context"
+    messages = {v.message for v in cw.check(write(tmp_path, "lint.yml", yaml.safe_dump(spec)))}
+    want = "must be named `lint` (its check reads `lint / context`), not `lint / context`"
+    assert want in messages
+
+
 def test_local_ci_context_only_where_it_exists(tmp_path: Path) -> None:
     text = (FIXTURES / "context/good/.github/workflows/lint.yml").read_text(encoding="utf-8")
     text = text.replace(cw.CONTEXT_USES, cw.LOCAL_CONTEXT_USES)
@@ -383,7 +416,7 @@ def test_shared_context_workflow_inherits_its_output_contract(tmp_path: Path, re
     text = (FIXTURES / "context/good/.github/workflows/lint.yml").read_text()
     spec = yaml.safe_load(text)
     spec["jobs"]["context"] = {
-        "name": "lint / context",
+        "name": "lint",
         "uses": cw.CONTEXT_WORKFLOW.removesuffix("master") + ref,
     }
     assert cw.check(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
