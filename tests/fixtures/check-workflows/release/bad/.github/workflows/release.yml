@@ -1,0 +1,46 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  context:
+    name: release
+    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@master
+
+  pypi:
+    name: release / pypi
+    needs: context
+    if: needs.context.outputs.publish == 'true'
+    environment: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  npm:
+    name: release / npm
+    needs: context
+    if: needs.context.outputs.publish == 'true'
+    environment: npm
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm publish --provenance
+
+  both:
+    name: release / both
+    needs: context
+    if: needs.context.outputs.publish == 'true'
+    environment: pypi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: softprops/action-gh-release@v2

@@ -32,6 +32,19 @@ scheme (Revisions 2-4), the ones a reviewer cannot be trusted to see:
   pin          MolCrafts/molcrafts-ci/actions/* uses an immutable SHA (legacy @master is accepted)
   comment      no comment mentions workflow_call unless the workflow has it
   name         every job is named `<file> / <what>`
+  files        the workflow files are test.yml (required), release.yml,
+               nightly.yml and deploy.yml; a workflow_call-only file is a
+               library and exempt
+  result       test.yml ends in `result`, named `test / result`: it needs
+               every other job, runs `if: always()` and fails unless each
+               succeeded or was skipped. It is the one check branch rules
+               require (`molci rulesets`)
+  release      every upload goes to a target .github/release.toml declares
+               (molcrafts_ci/release.py: pypi, npm, crates-io,
+               vscode-marketplace, github-release, github-pages,
+               cloudflare-pages, and their -nightly twins), one per job, from
+               the target's file in the target's environment; every declared
+               target is published
 
 Run with `uv run --script check_workflows.py [ROOT]` (PEP 723: uv brings
 Python and PyYAML), or through MolCrafts/molcrafts-ci/actions/check-workflows.
@@ -39,6 +52,7 @@ Python and PyYAML), or through MolCrafts/molcrafts-ci/actions/check-workflows.
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import re
 import sys
@@ -49,6 +63,37 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 CI_CONTEXT = HERE.parent / "ci-context" / "action.yml"
+
+
+def _load_release():
+    """molcrafts_ci/release.py, the publishing contract, loaded by path: the
+    package's __init__ needs pydantic, which this script does not bring."""
+    path = HERE.parents[1] / "src" / "molcrafts_ci" / "release.py"
+    spec = importlib.util.spec_from_file_location("molcrafts_ci_release", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module  # dataclasses resolve their module by name
+    spec.loader.exec_module(module)
+    return module
+
+
+release = _load_release()
+
+# The only workflow files a repository has (a workflow_call-only file is a
+# library another workflow calls, not a run of its own).
+WORKFLOW_FILES = ("test", "release", "nightly", "deploy")
+
+# test.yml's last job: the one status check branch rules require. It runs
+# whatever happened before it and fails unless every job succeeded or was
+# skipped, so renaming or adding a job never strands a pull request.
+RESULT_CHECK = "test / result"
+RESULT_IF = "always()"
+RESULT_STEPS = [
+    {
+        "name": "Every job succeeded or was skipped",
+        "env": {"RESULTS": "${{ toJSON(needs.*.result) }}"},
+        "run": 'echo "$RESULTS" | jq -e \'all(.[]; . == "success" or . == "skipped")\'',
+    }
+]
 
 # The canonical concurrency block, defined once. A workflow-level
 # `concurrency:` cannot read job outputs, so every file inlines it; this is
@@ -295,6 +340,38 @@ def publish_reasons(job: dict) -> list[str]:
     return reasons
 
 
+_TARGET_USES = (
+    ("pypa/gh-action-pypi-publish", "pypi"),
+    ("rust-lang/crates-io-auth-action", "crates-io"),
+    ("HaaLeo/publish-vscode-extension", "vscode-marketplace"),
+    ("softprops/action-gh-release", "github-release"),
+    ("actions/deploy-pages", "github-pages"),
+    ("cloudflare/wrangler-action", "cloudflare-pages"),
+    ("cloudflare/pages-action", "cloudflare-pages"),
+)
+_TARGET_RUNS = (
+    (re.compile(r"\b(?:npm|pnpm)\s+publish\b"), "npm", True),
+    (re.compile(r"\bcargo\s+(?:\+\S+\s+)?publish\b"), "crates-io", True),
+    (re.compile(r"\b(?:vsce|ovsx)\s+publish\b"), "vscode-marketplace", False),
+    (re.compile(r"\bgh\s+release\s+(?:create|upload)\b"), "github-release", False),
+)
+
+
+def published_targets(job: dict, stem: str) -> set[str]:
+    """The release.toml targets a job publishes to (nightly.yml: their twins)."""
+    found: set[str] = set()
+    for step in job.get("steps") or []:
+        uses = str(step.get("uses", ""))
+        found |= {t for action, t in _TARGET_USES if uses.startswith(action)}
+        run = str(step.get("run", "")).replace("\\\n", " ")
+        for line in run.splitlines():
+            literal = EXPRESSION.sub("", line)
+            for pattern, t, has_dry_run in _TARGET_RUNS:
+                if pattern.search(line) and not (has_dry_run and "--dry-run" in literal):
+                    found.add(t)
+    return {f"{t}{release.NIGHTLY}" for t in found} if stem == "nightly" else found
+
+
 def environment_name(job: dict) -> str:
     env = job.get("environment")
     return str(env.get("name", "")) if isinstance(env, dict) else str(env or "")
@@ -462,8 +539,8 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             return result
 
         for job_id in ids:
-            if job_id == "context" or is_gated(job_id):
-                continue
+            if job_id == "context" or is_gated(job_id) or (stem == "test" and job_id == "result"):
+                continue  # test / result must run to report what was skipped
             cond = str((jobs[job_id] or {}).get("if") or "")
             if STATUS_OVERRIDE.search(cond):
                 why = "its `if` uses always()/cancelled(), so a skipped need does not skip it"
@@ -517,6 +594,25 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                         "${{ needs.context.outputs.source-ref }}"
                     ):
                         report(job_id, "publish", "nightly checkout must use context's source-ref")
+
+    # result: test.yml ends in the one check branch rules require.
+    if stem == "test":
+        result = jobs.get("result")
+        if result is None:
+            report(None, "result", f"no `result` job; end the file with `{RESULT_CHECK}`")
+        else:
+            result = result or {}
+            if ids[-1] != "result":
+                report("result", "result", f"is not the last job (the last is `{ids[-1]}`)")
+            if result.get("name") != RESULT_CHECK:
+                report("result", "result", f"must be named `{RESULT_CHECK}`")
+            missing = sorted(set(ids) - {"result"} - set(needs_of(result)))
+            if missing:
+                report("result", "result", f"must need every other job; missing {missing}")
+            if _normalize(_unwrap(str(result.get("if") or ""))) != RESULT_IF:
+                report("result", "result", f"must run `if: {RESULT_IF}`")
+            if result.get("steps") != RESULT_STEPS:
+                report("result", "result", "steps must be the canonical result step")
 
     # concurrency: the canonical block.
     conc = spec.get("concurrency")
@@ -588,10 +684,137 @@ def check_actions(root: Path) -> list[Violation]:
     return out
 
 
-def check(root: Path) -> list[Violation]:
+def _load(path: Path) -> dict:
+    try:
+        spec = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError:
+        return {}
+    return spec if isinstance(spec, dict) else {}
+
+
+def check_files(root: Path, workflows: list[Path]) -> list[Violation]:
+    """files: test.yml, and only the four kinds of run."""
+    out = []
+    stems = set()
+    for path in workflows:
+        rel = path.relative_to(root).as_posix()
+        if triggers(_load(path)) == {"workflow_call"}:
+            continue  # a library another workflow calls
+        stems.add(path.stem)
+        if path.stem not in WORKFLOW_FILES:
+            allowed = ", ".join(f"{s}.yml" for s in WORKFLOW_FILES)
+            out.append(
+                Violation(rel, 1, None, "files", f"not a workflow file of the scheme ({allowed})")
+            )
+    if workflows and "test" not in stems:
+        out.append(Violation(".github/workflows", 1, None, "files", "no test.yml"))
+    return out
+
+
+def check_release(root: Path, workflows: list[Path]) -> list[Violation]:
+    """release: every upload goes to a declared target, from its file and environment."""
+    toml = release.RELEASE_TOML.as_posix()
+    out: list[Violation] = []
+    try:
+        declared = release.read_release(root)
+    except ValueError as exc:
+        return [Violation(toml, 1, None, "release", str(exc))]
+    published: dict[str, list[str]] = {}
+    for path in workflows:
+        rel = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8")
+        _, job_line = job_lines(text)
+        for job_id, job in (_load(path).get("jobs") or {}).items():
+            job = job or {}
+            names = published_targets(job, path.stem)
+            line = job_line.get(job_id, 1)
+            if len(names) > 1:
+                out.append(
+                    Violation(
+                        rel,
+                        line,
+                        job_id,
+                        "release",
+                        f"publishes {sorted(names)}; one target per job",
+                    )
+                )
+            for name in sorted(names):
+                published.setdefault(name, []).append(rel)
+                tgt = release.target(name)
+                if path.stem != tgt.workflow:
+                    out.append(
+                        Violation(
+                            rel,
+                            line,
+                            job_id,
+                            "release",
+                            f"publishes {name}, which belongs in {tgt.workflow_file}",
+                        )
+                    )
+                env = environment_name(job) or None
+                if env != tgt.environment:
+                    want = (
+                        f"environment `{tgt.environment}`" if tgt.environment else "no environment"
+                    )
+                    out.append(
+                        Violation(
+                            rel,
+                            line,
+                            job_id,
+                            "release",
+                            f"publishes {name}; use {want}, not `{env}`",
+                        )
+                    )
+    names = {d.target.name for d in declared or []}
+    if published and declared is None:
+        out.append(
+            Violation(
+                toml, 1, None, "release", f"missing; the workflows publish {sorted(published)}"
+            )
+        )
+    for name in sorted(names - published.keys()):
+        out.append(Violation(toml, 1, None, "release", f"declares {name}, which no job publishes"))
+    for name in sorted(published.keys() - names) if declared is not None else []:
+        files = ", ".join(sorted(set(published[name])))
+        out.append(
+            Violation(toml, 1, None, "release", f"does not declare {name} ({files} publish it)")
+        )
+    return out
+
+
+# The rules that read the repository as a whole, not one workflow alone.
+REPOSITORY_RULES = frozenset({"files", "result", "release"})
+
+
+def pinned_ci_ref(root: Path) -> str:
+    path = root / ".github" / "partners.env"
+    if not path.is_file():
+        return ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip().startswith("CI_REF="):
+            return line.split("=", 1)[1].strip()
+    return ""
+
+
+def adopted(root: Path) -> bool:
+    """The repository rules bind molcrafts-ci and every consumer that pins
+    CI_REF to a commit (`partners.py pin-ci` adopts them); a legacy consumer
+    following @master keeps the per-workflow rules until it migrates."""
+    if (root / "actions/ci-context/action.yml").is_file():
+        return True
+    return re.fullmatch(r"[0-9a-f]{40}", pinned_ci_ref(root)) is not None
+
+
+def check(root: Path, *, whole: bool | None = None) -> list[Violation]:
+    """Every violation under ``root``. ``whole`` forces the repository rules
+    on (True) or off (False, a one-concern fixture); by default they apply
+    when the repository has adopted them (`adopted`)."""
+    whole = adopted(root) if whole is None else whole
     workflows = sorted((root / ".github/workflows").glob("*.yml"))
     out = [v for path in workflows for v in check_workflow(path, root)]
-    return out + check_actions(root)
+    out += check_files(root, workflows) + check_release(root, workflows)
+    out += check_actions(root)
+    return out if whole else [v for v in out if v.rule not in REPOSITORY_RULES]
 
 
 def main(argv: list[str]) -> int:

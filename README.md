@@ -338,18 +338,84 @@ and the release move together. See [CHANGELOG.md](CHANGELOG.md).
 
 ## CI
 
-One file per kind of work. A feature-branch push to MolCrafts gets the fast
-tier; every push to a fork, `dev`/`master` on MolCrafts, pull requests,
-tags and dispatches get the full tier. Each workflow's first job,
-whose check reads `<file> / context`, calls the shared context workflow, and every other job gates on
-its outputs.
+A repository has at most four workflow files, and test.yml is required:
 
-| workflow | jobs | runs |
+| file | runs | publishes |
 | --- | --- | --- |
-| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint), `lint / workflows` (`actions/check-workflows`) | every push, PRs into dev/master |
-| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / report (<os>)` (`actions/report` on the fixtures, every OS), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master; the self-snapshot publish is MolCrafts-only |
-| `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master; Cloudflare deploys, not CI |
-| `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload only when `publish` is true |
+| `test.yml` | every check: lint, types, tests, docs build, `check-workflows`; every push, PRs into dev/master | nothing |
+| `release.yml` | a `v*` tag (a dispatch is the dry run) | the stable targets, when `publish` is true |
+| `nightly.yml` | schedule or dispatch, on the immutable dev SHA | the `-nightly` targets, when `nightly` is true |
+| `deploy.yml` | upstream master, dispatch | sites, when `deploy` is true |
+
+A workflow whose only trigger is `workflow_call` is a library (this
+repository's `context.yml` and `ci.yml`) and is not a file of its own run.
+
+A feature-branch push to MolCrafts gets the fast tier; every push to a fork,
+`dev`/`master` on MolCrafts, pull requests, tags and dispatches get the full
+tier. Each workflow's first job, whose check reads `<file> / context`, calls
+the shared context workflow, and every other job gates on its outputs.
+
+**One required check.** test.yml ends in `test / result`: it needs every
+other job, runs `if: always()` and fails unless each succeeded or was skipped.
+It is the only check branch rules require, so adding, renaming or matrixing a
+job never strands a pull request:
+
+```yaml
+  result:
+    name: test / result
+    needs: [context, lint, python, docs]      # every other job
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job succeeded or was skipped
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: echo "$RESULTS" | jq -e 'all(.[]; . == "success" or . == "skipped")'
+```
+
+**Declared publishing.** `.github/release.toml` lists every target a
+repository publishes to and the packages it uploads; the target fixes the
+file, the GitHub environment and its secrets (`src/molcrafts_ci/release.py`),
+so a registry's trusted publisher always names the same file:
+
+| target | file | environment | secrets |
+| --- | --- | --- | --- |
+| `pypi`, `npm`, `crates-io` | release.yml | same name | none (trusted publishing) |
+| `vscode-marketplace` | release.yml | `vscode-marketplace` | `VSCE_PAT`, `OVSX_PAT` |
+| `github-release` | release.yml | none | none |
+| `github-pages` | deploy.yml | `github-pages` | none |
+| `cloudflare-pages` | deploy.yml | `cloudflare-pages` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
+| `<target>-nightly` | nightly.yml | `<environment>-nightly` | as its stable target |
+
+```toml
+[pypi]
+packages = ["molcrafts-molrs"]
+
+[pypi-nightly]
+packages = ["molcrafts-molrs-nightly"]
+
+[github-release]
+```
+
+One job publishes one target. Publishing tokens live in their target's
+environment, never at the repository level.
+
+**GitHub settings.** `molci audit` holds a repository's environments, their
+secrets, its repository-level secrets and its rulesets to the scheme and its
+release.toml, and prints what each registry's trusted publisher must say (the
+registries do not expose it). `molci rulesets --apply [--prune]` writes the two
+canonical rulesets: `ci` (dev and the default branch: `test / result`) and
+`protect-master` (the default branch: no deletion, no force push, a pull
+request).
+
+```bash
+molci audit --root path/to/molrs          # MolCrafts/<SELF> from partners.env
+molci rulesets --root path/to/molrs --apply --prune
+```
+
+This repository follows the scheme: test.yml (Python, site types and tests,
+shared actions, `check-workflows`, the Cloudflare site build) and release.yml
+(PyPI, GitHub Release). Cloudflare Pages deploys the site from its own webhook.
 
 ## Shared actions
 
@@ -421,17 +487,17 @@ concurrency:
 
 `actions/check-workflows` reads every `.github/workflows/*.yml` of the
 calling repository and fails on each violation of the scheme. Every
-repository runs it in `lint.yml`:
+repository runs it in `test.yml`:
 
 ```yaml
   workflows:
-    name: lint / workflows
+    name: test / workflows
     needs: context
     if: needs.context.outputs.skip-pr != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: MolCrafts/molcrafts-ci/actions/check-workflows@master
+      - uses: MolCrafts/molcrafts-ci/actions/check-workflows@<CI_REF>
 ```
 
 Locally, from the repository root (uv brings Python and PyYAML; the script is
@@ -451,6 +517,14 @@ uv run --script path/to/molcrafts-ci/actions/check-workflows/check_workflows.py 
 | `pin` | shared Actions use a full commit SHA; legacy `@master` is accepted during migration |
 | `comment` | no comment mentions `workflow_call` in a workflow without that trigger |
 | `name` | every job (but a reusable-workflow call) is named `<file> / <what>` |
+| `files` | test.yml exists; the other files are release.yml, nightly.yml, deploy.yml (a `workflow_call`-only library is exempt) |
+| `result` | test.yml ends in `result`, named `test / result`, needing every other job, `if: always()`, with the canonical step |
+| `release` | every upload goes to a target release.toml declares, one per job, from the target's file through its environment; every declared target is published |
+
+`files`, `result` and `release` read the repository as a whole. They bind
+molcrafts-ci and every consumer that pins `CI_REF` to a commit (`pin-ci`
+adopts them); a consumer still following `@master` keeps the per-workflow rules
+until it migrates.
 
 ## Specification
 

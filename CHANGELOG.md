@@ -13,6 +13,28 @@ schema version to keep in step.
 
 ## [Unreleased]
 
+### Changed
+
+- **The scheme covers publishing and branch rules, not workflow text alone.**
+  Breaking for consumers that pin `CI_REF` (they adopt it with `pin-ci`):
+  - **Four files.** test.yml (required, every check: lint, types, tests,
+    docs build, `check-workflows`), release.yml, nightly.yml, deploy.yml;
+    lint.yml / docs.yml / ci.yml-callers / release-*.yml go (`files` rule).
+    This repository's lint.yml and docs.yml moved into test.yml.
+  - **One required check.** test.yml ends in `test / result`, which needs
+    every job and fails unless each succeeded or was skipped (`result` rule).
+    Branch rules require it alone, so a renamed or added job never strands a
+    pull request again.
+  - **Declared publishing.** `.github/release.toml` lists the targets and
+    packages; each target fixes its file, environment and secrets
+    (`molcrafts_ci/release.py`), so trusted publishers always name the same
+    file (`release` rule).
+  - **`molci audit`** holds environments, secrets and rulesets to the scheme and
+    prints what each registry's trusted publisher must say;
+    **`molci rulesets --apply [--prune]`** writes the canonical `ci` and
+    `protect-master` rulesets.
+  - Legacy consumers following `@master` keep the per-workflow rules.
+
 ### Fixed
 
 - **The context check reads `<file> / context` again.** GitHub names a
