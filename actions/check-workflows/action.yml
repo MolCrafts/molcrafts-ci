@@ -6,9 +6,10 @@ description: >
   pull request can run (transitive skipping included), the `publish` gate on
   every upload, the canonical workflow-level `concurrency` block, shared
   actions at @master, no stray workflow_call comment, and `<file> / <what>`
-  job names. Fails with one `file:line: job: [rule] message` per violation.
+  job names, the four workflow files, test.yml's `test / result` and the
+  targets .github/release.toml declares. Fails with one `file:line: job: [rule] message` per violation.
 
-  Run it from every repository's lint.yml, after actions/checkout:
+  Run it from every repository's test.yml, after actions/checkout:
   `uses: MolCrafts/molcrafts-ci/actions/check-workflows@master`. The script
   is a PEP 723 script (Python and PyYAML come through uv, nothing global).
 inputs:

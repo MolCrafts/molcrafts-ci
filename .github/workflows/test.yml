@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 # One group per file, workflow, event and ref. Under workflow_call (release.yml
-# running lint/test) github.workflow and github.event_name are the caller's, so
+# running the tests) github.workflow and github.event_name are the caller's, so
 # a called run never shares, and so never cancels, a direct run's group.
 concurrency:
   group: test-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
@@ -242,3 +242,76 @@ jobs:
           assert got == want, f"got {got}, want {want}"
           print(got)
           PY
+
+  lint:
+    name: test / lint
+    needs: context
+    # A pull request whose head commit its push already ran in full (inside
+    # a fork, or upstream from dev/master) is skipped.
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./actions/setup-python
+      - run: uv sync --locked --extra dev
+      - run: uv run --locked --extra dev scripts/check.py dependencies lint
+
+  typecheck:
+    name: test / typecheck
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./actions/setup-node
+        with:
+          working-directory: site
+      # rsbuild does not type-check, so a clean `docs / build` says nothing
+      # about types. This is the only place tsc runs.
+      - run: npm run typecheck
+        working-directory: site
+
+  # Every workflow through actionlint, and every shared composite action's
+  # action.yml against the action metadata schema: an invalid action.yml
+  # breaks every repository that uses it, at their next run, not here.
+  schemas:
+    name: test / schemas
+    needs: context
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./actions/setup-python
+      - run: uv run --locked --extra dev python -m check_jsonschema --builtin-schema vendor.github-actions actions/*/action.yml
+      - run: uv run --locked --extra dev python -m check_jsonschema --builtin-schema vendor.github-workflows .github/workflows/*.yml
+      - uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+
+  docs:
+    name: test / docs
+    needs: context
+    # A pull request whose head commit its push already ran in full (inside
+    # a fork, or upstream from dev/master) is skipped.
+    if: needs.context.outputs.skip-pr != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./actions/setup-node
+        with:
+          working-directory: site
+      - run: npm run build
+        working-directory: site
+
+  # The one check branch rules require (molci rulesets): it runs whatever
+  # happened before it and fails unless every job succeeded or was skipped.
+  result:
+    name: test / result
+    needs: [context, python, site, actions, report, ci-context, lint, typecheck, schemas, docs]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job succeeded or was skipped
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: echo "$RESULTS" | jq -e 'all(.[]; . == "success" or . == "skipped")'

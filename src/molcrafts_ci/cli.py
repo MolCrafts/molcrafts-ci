@@ -26,6 +26,7 @@ from molcrafts_ci.producers import (
     read_lcov,
 )
 from molcrafts_ci.report import render_report
+from molcrafts_ci.settings import apply_rulesets, audit, repository_of
 from molcrafts_ci.snapshot import Snapshot
 
 
@@ -193,6 +194,32 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_audit(args: argparse.Namespace) -> int:
+    root = Path(args.root)
+    repo = repository_of(root, args.repo)
+    findings, publishers = audit(root, repo)
+    for finding in findings:
+        print(finding)
+    if publishers:
+        print("Registry side (not visible to the GitHub API); each must say:")
+        for line in publishers:
+            print(f"  {line}")
+    print(f"{repo}: {len(findings)} finding(s)")
+    return 1 if findings else 0
+
+
+def _cmd_rulesets(args: argparse.Namespace) -> int:
+    repo = repository_of(Path(args.root), args.repo)
+    if not args.apply:
+        findings = [f for f in audit(Path(args.root), repo)[0] if f.area == "ruleset"]
+        for finding in findings:
+            print(finding)
+        return 1 if findings else 0
+    for line in apply_rulesets(repo, prune=args.prune) or ["already canonical"]:
+        print(f"{repo}: {line}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="molcrafts-ci")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -276,6 +303,25 @@ def main(argv: list[str] | None = None) -> int:
         help="coverage.py JSON (default) or an LCOV tracefile",
     )
     p_rp.set_defaults(func=_cmd_report)
+
+    p_au = sub.add_parser(
+        "audit",
+        help="Hold a repository's environments, secrets and rulesets to the CI "
+        "scheme and its .github/release.toml (reads the GitHub API through gh)",
+    )
+    p_au.add_argument("--root", default=".", help="The repository checkout (default: .)")
+    p_au.add_argument("--repo", help="OWNER/NAME (default: MolCrafts/<SELF> from partners.env)")
+    p_au.set_defaults(func=_cmd_audit)
+
+    p_rs = sub.add_parser(
+        "rulesets",
+        help="Report (or, with --apply, write) the canonical rulesets: ci and protect-master",
+    )
+    p_rs.add_argument("--root", default=".", help="The repository checkout (default: .)")
+    p_rs.add_argument("--repo", help="OWNER/NAME (default: MolCrafts/<SELF> from partners.env)")
+    p_rs.add_argument("--apply", action="store_true", help="Create or replace them")
+    p_rs.add_argument("--prune", action="store_true", help="With --apply: delete other rulesets")
+    p_rs.set_defaults(func=_cmd_rulesets)
 
     args = parser.parse_args(argv)
     try:
