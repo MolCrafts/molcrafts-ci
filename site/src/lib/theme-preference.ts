@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ThemeMode } from "@molcrafts/design";
+import type { ThemeMode } from "@molcrafts/ui";
 
 const STORAGE_KEY = "molci.theme";
 
@@ -17,7 +17,7 @@ function preferred(): ThemeMode {
  * Light or dark, remembered under the product's own key.
  *
  * Defaults to the OS preference rather than to light, so the first paint
- * matches the rest of the desktop. Design's ThemeToggle only renders the switch.
+ * matches the rest of the desktop. The UI package's ThemeToggle only renders the switch.
  */
 export function useThemePreference(): [ThemeMode, (theme: ThemeMode) => void] {
   const [theme, setTheme] = useState<ThemeMode>(preferred);

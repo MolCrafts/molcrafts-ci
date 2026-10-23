@@ -1,4 +1,4 @@
-import { NativeSelect } from "@molcrafts/design";
+import { NativeSelect } from "@molcrafts/ui";
 import { LayerRegular as Layers } from "@fluentui/react-icons";
 import type { JSX } from "react";
 

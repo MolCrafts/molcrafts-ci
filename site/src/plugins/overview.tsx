@@ -10,7 +10,7 @@ import {
   WorkSurface,
   type MetaFact,
   type StatusSegment,
-} from "@molcrafts/design";
+} from "@molcrafts/ui";
 import { openRecord } from "@/lib/open-record";
 import { useProjectRecords } from "@/lib/project-records";
 import { relativeTime } from "@/lib/snapshot-data";

@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@molcrafts/design";
+} from "@molcrafts/ui";
 import type { RecordSummary } from "@/lib/record-summary";
 import { relativeTime } from "@/lib/snapshot-data";
 

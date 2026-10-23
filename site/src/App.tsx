@@ -14,7 +14,7 @@ import {
   ThemeToggle,
   WorkbenchHeader,
   WorkbenchShell,
-} from "@molcrafts/design";
+} from "@molcrafts/ui";
 import { loadIndexListing, projectsFromListing } from "@/lib/index-data";
 import { ProjectRecordsProvider } from "@/lib/project-records";
 import { useProjectRecords } from "@/lib/project-records";

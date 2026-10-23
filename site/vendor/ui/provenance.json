@@ -1,0 +1,31 @@
+{
+  "mode": "unpublished-fixed-package-artifacts",
+  "repository": "https://github.com/MolCrafts/molcrafts-ui",
+  "commit": "2e57da11a455c6ff6431298d47175a5d0aee0f32",
+  "packages": [
+    {
+      "name": "@molcrafts/ui-tokens",
+      "version": "0.1.0-alpha.0",
+      "file": "molcrafts-ui-tokens-0.1.0-alpha.0.tgz",
+      "sha256": "b24b84d5f9fff11668285fa0eb950c067dd53da3ab106c221cf4feaffbb01b36"
+    },
+    {
+      "name": "@molcrafts/ui",
+      "version": "0.1.0-alpha.0",
+      "file": "molcrafts-ui-0.1.0-alpha.0.tgz",
+      "sha256": "e3ed57aa2b0d845a6ee8c65825fe19d873e9ad74d48aed270bf5f520236a10db"
+    },
+    {
+      "name": "@molcrafts/ui-vega",
+      "version": "0.1.0-alpha.0",
+      "file": "molcrafts-ui-vega-0.1.0-alpha.0.tgz",
+      "sha256": "b2613d47f15c69e0fbdf5acfe3b30cb12f7599b6e1640a9c3bf75c5c4fc71afa"
+    },
+    {
+      "name": "@molcrafts/ui-vega-lite",
+      "version": "0.1.0-alpha.0",
+      "file": "molcrafts-ui-vega-lite-0.1.0-alpha.0.tgz",
+      "sha256": "ae5ffcf4d92025edb3e4397ac430bc0eb7748d68c969fc412394200831be7a9c"
+    }
+  ]
+}

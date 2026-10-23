@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 import { TrendChart } from "@/components/trend-chart";
-import { Button, EmptyState, RowsSkeleton } from "@molcrafts/design";
+import { Button, EmptyState, RowsSkeleton } from "@molcrafts/ui";
 import { formatMeasure } from "@/lib/payload";
 import { deltaOf, type RecordSummary } from "@/lib/record-summary";
 import { cn } from "@/lib/utils";

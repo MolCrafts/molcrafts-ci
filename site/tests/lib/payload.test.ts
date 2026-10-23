@@ -64,6 +64,8 @@ describe("readMeasure", () => {
     expect(readMeasure(TESTS)).toMatchObject({ label: "passed", value: 418 });
     expect(readMeasure(COVERAGE)).toMatchObject({ label: "lines", value: 82.3, unit: "%" });
     expect(readMeasure(BENCH_PYTEST)).toMatchObject({ label: "mean", value: 12.5, unit: "ns" });
+    // Charted at full precision, not re-parsed from the display string ("1.2e+7").
+    expect(readMeasure({ throughput: 12345678 })).toMatchObject({ value: 12345678 });
     expect(readMeasure(REGRESSION)).toMatchObject({ label: "max abs error", value: 1.2e-8 });
   });
 
@@ -86,13 +88,13 @@ describe("readMeasure", () => {
 describe("readScalars", () => {
   it("flattens one level so nested metrics still say something", () => {
     expect(readScalars(BENCH_PYTEST)).toEqual([
-      { label: "metrics.mean_ns", value: "12.5", numeric: true },
+      { label: "metrics.mean_ns", value: "12.5", number: 12.5 },
     ]);
   });
 
   it("keeps strings and booleans, marked non-numeric", () => {
     expect(readScalars(MOLREC)).toEqual([
-      { label: "schema_version", value: "0.1.0", numeric: false },
+      { label: "schema_version", value: "0.1.0", number: null },
     ]);
   });
 });
@@ -117,7 +119,7 @@ describe("formatPercent", () => {
 describe("formatMeasure", () => {
   it("routes percentages through formatPercent", () => {
     expect(formatMeasure(88, "%")).toBe("88.0%");
-    expect(formatMeasure(12.5, "ns")).toBe("12.5ns");
+    expect(formatMeasure(12.5, "ns")).toBe("12.5 ns");
     expect(formatMeasure(418)).toBe("418");
   });
 });

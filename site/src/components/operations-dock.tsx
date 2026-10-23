@@ -14,7 +14,7 @@ import {
   TabsList,
   TabsTrigger,
   useWorkbenchDock,
-} from "@molcrafts/design";
+} from "@molcrafts/ui";
 import { openRecord } from "@/lib/open-record";
 import { useProjectRecords } from "@/lib/project-records";
 import { useUrlState } from "@/lib/use-url-state";
@@ -51,7 +51,8 @@ export function OperationsDock(): JSX.Element {
     .flatMap((record) => record.entries.map((entry) => ({ record, entry })))
     .sort((a, b) => (b.entry.timestamp ?? "").localeCompare(a.entry.timestamp ?? ""));
 
-  const problems = (records ?? []).filter((s) => s.status === "failed");
+  // Failed suites, and records whose index could not be read.
+  const problems = (records ?? []).filter((s) => s.status === "failed" || s.status === "warning");
   const problemCount = problems.length + (error ? 1 : 0);
 
   return (
@@ -126,7 +127,7 @@ export function OperationsDock(): JSX.Element {
               {problems.map((record) => (
                 <DockRow
                   key={record.record}
-                  lead={<StatusMark status="failed" className="self-center" />}
+                  lead={<StatusMark status={record.status} className="self-center" />}
                   record={record.record}
                   onOpen={() => open(record.record, record.entry?.snapshot_id)}
                 >

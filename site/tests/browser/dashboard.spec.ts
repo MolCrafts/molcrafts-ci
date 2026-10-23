@@ -49,3 +49,15 @@ test("project switching and unavailable data keep application behavior", async (
   await page.reload();
   await expect(page.getByText("Failed to load index", { exact: true })).toBeVisible();
 });
+
+test("a dock row opens its record tab at that generation, without a reload", async ({ page }) => {
+  await page.goto("/#/molcrafts-ci/overview");
+  const dock = page.getByRole("tabpanel", { name: "Log" });
+  const row = dock.getByRole("button", { name: "coverage", exact: true }).first();
+  // The dock opens short, so its toolbar overlaps the rows; the keyboard reaches them.
+  await row.press("Enter");
+  await expect(page.getByRole("tab", { name: "Coverage", exact: true })).toHaveAttribute("aria-selected", "true");
+  await expect(page).toHaveURL(/#\/molcrafts-ci\/conv\?snapshot=coverage-/);
+  const snapshot = new URL(page.url()).hash.split("snapshot=")[1];
+  await expect(page.getByRole("combobox", { name: "Published generation" })).toHaveValue(decodeURIComponent(snapshot));
+});

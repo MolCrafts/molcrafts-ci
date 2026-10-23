@@ -3,7 +3,7 @@
  *
  * Every surface reads the same two things — a record's index
  * (`index/<project>/<record>.jsonl`) and a snapshot body (`<entry.path>`) — so
- * the fetchers, the alias table, and the "which entry is current" rule live
+ * the fetchers, alias resolution, and the "which entry is current" rule live
  * here rather than once per tab. Both resolve against the data root through
  * `dataUrl`, which is what decides whether that root is bundled or the
  * published `data` branch.
@@ -47,27 +47,6 @@ export interface Snapshot<P = unknown> {
   payload?: P;
 }
 
-/**
- * On-disk record names a tab answers to.
- *
- * `conv` is the short URL for Coverage; the snapshot record on disk is `coverage`.
- */
-export const RECORD_ALIASES: {
-  tests: string[];
-  coverage: string[];
-  benchmark: string[];
-  regression: string[];
-  molrec: string[];
-  conformance: string[];
-} = {
-  tests: ["tests", "test"],
-  coverage: ["coverage", "cov", "conv"],
-  benchmark: ["benchmark"],
-  regression: ["regression", "numerical"],
-  molrec: ["molrec"],
-  conformance: ["conformance"],
-};
-
 /** The project's own spelling of the first alias it publishes, or null. */
 export function resolveRecord(records: string[], aliases: string[]): string | null {
   const lower = new Map(records.map((k) => [k.toLowerCase(), k]));
@@ -93,13 +72,16 @@ export async function fetchRecordEntries(
     throw new Error(`Cannot read ${record} for ${projectId}: ${res.status} ${res.statusText}`);
   }
   const entries: IndexEntry[] = [];
-  for (const line of (await res.text()).split("\n")) {
+  for (const [index, line] of (await res.text()).split("\n").entries()) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     try {
       entries.push(JSON.parse(trimmed) as IndexEntry);
-    } catch {
-      /* a malformed line loses that entry, not the whole index */
+    } catch (cause) {
+      throw new Error(
+        `Cannot read ${record} for ${projectId}: malformed index at line ${index + 1}`,
+        { cause },
+      );
     }
   }
   return entries;

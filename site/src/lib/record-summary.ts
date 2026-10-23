@@ -5,14 +5,9 @@
  * payload shape differs per record. These are pure functions over an already
  * fetched snapshot so the rules stay readable and testable.
  */
-import type { Status } from "@molcrafts/design";
+import type { Status } from "@molcrafts/ui";
 import {
-  asRecord,
   formatMeasure,
-  formatNumber,
-  formatPercent,
-  num,
-  readCoverage,
   readMeasure,
   readScalars,
   readTests,
@@ -100,17 +95,10 @@ export function headlineOf(payload: unknown): string {
     if (tests.skipped > 0) parts.push(`${tests.skipped} skipped`);
     return parts.join(" · ");
   }
-
-  const coverage = readCoverage(payload);
-  if (coverage?.totals.lines != null) return `${formatPercent(coverage.totals.lines)} lines`;
-
-  const p = asRecord(payload);
-  const mean = p ? num(asRecord(p.metrics)?.mean_ns) : null;
-  if (mean != null) return `${formatNumber(mean)} ns mean`;
-
-  const maxAbs = p ? num(p.max_abs_error) : null;
-  if (maxAbs != null) return `${formatNumber(maxAbs)} max abs error`;
-
+  // Every other record headlines the number it charts, so the row and its
+  // sparkline can never be about two different things.
+  const measure = readMeasure(payload);
+  if (measure) return `${formatMeasure(measure.value, measure.unit)} ${measure.label}`;
   const first = readScalars(payload)[0];
   return first ? `${first.label} ${first.value}` : "—";
 }
@@ -155,6 +143,27 @@ export function toHistory(
       measure: snapshot ? readMeasure(snapshot.payload) : null,
       failed: snapshot ? verdictOf(snapshot.payload).status === "failed" : false,
     }));
+}
+
+/**
+ * A record whose index could not be read.
+ *
+ * It costs its own row, not the project: the other records still render,
+ * and the dock lists this one as a problem with the reason.
+ */
+export function unreadable(record: string, reason: string): RecordSummary {
+  return {
+    record,
+    entries: [],
+    entry: null,
+    snapshot: null,
+    profile: null,
+    profiles: [],
+    history: [],
+    headline: reason,
+    status: "warning",
+    statusLabel: "index unreadable",
+  };
 }
 
 /** Every profile a record publishes under, sorted, with unprofiled last. */

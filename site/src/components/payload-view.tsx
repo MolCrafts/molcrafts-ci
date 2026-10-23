@@ -15,7 +15,7 @@ import {
   MetricList,
   type Measure,
   type Metric,
-} from "@molcrafts/design";
+} from "@molcrafts/ui";
 import { RunLink } from "@/components/run-link";
 import { readCoverage, readScalars, readTests } from "@/lib/payload";
 import type { IndexEntry } from "@/lib/snapshot-data";

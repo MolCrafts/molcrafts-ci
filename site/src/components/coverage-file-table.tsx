@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
   type MeterTone,
-} from "@molcrafts/design";
+} from "@molcrafts/ui";
 import type { CoverageFile } from "@/lib/payload";
 import { formatPercent } from "@/lib/payload";
 

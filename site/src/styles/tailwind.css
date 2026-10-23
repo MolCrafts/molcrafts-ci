@@ -1,6 +1,6 @@
 /* Product layout utilities use the published Design token integration. No UI source scan. */
 @import "tailwindcss";
-@import "@molcrafts/design-tokens/tailwind.css";
+@import "@molcrafts/ui-tokens/tailwind.css";
 @import "./brand.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
