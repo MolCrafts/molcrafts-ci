@@ -113,7 +113,7 @@ repos:
 | `[tools] node` | Node version, or the path of an `.nvmrc` | none |
 | `[tools] rust` | Install the `rust-toolchain.toml` of this repository and its partners, and cache cargo | `false` |
 | `[partners] <name>` | `"owner/repo@branch"`: checked out as `../<name>` | none |
-| `[check.<name>] run` | A command, or a list run in order (bash, from the repository root) | required |
+| `[check.<name>] run` | A command, or a list run in order, from the repository root, like a GitHub `shell: bash` step (`-eo pipefail`) | required |
 | `stage` | `pre-commit`, `pre-push` or `release` | `pre-push` |
 | `os` | Any of `linux`, `macos`, `windows` | `["linux"]` |
 | `python`, `node`, `rust` | Override `[tools]` for this check | `[tools]` |

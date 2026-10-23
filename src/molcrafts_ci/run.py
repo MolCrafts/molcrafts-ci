@@ -1,7 +1,9 @@
 """Run the checks `.github/ci.toml` lists: the same commands in git hooks and CI.
 
-Each command runs through bash from the repository root, with `[env]` added
-to the environment. A heavy (pre-push) check is handed to
+Each command runs from the repository root the way a GitHub `shell: bash`
+step does (`bash --noprofile --norc -eo pipefail`), so a multi-line command
+stops at its first error and a pipe fails when any part of it does. `[env]` is
+added to the environment. A heavy (pre-push) check is handed to
 `$MOLCRAFTS_HOOK_RUNNER` when that is set and this is not already a Slurm job,
 so a cluster can run it on a compute node.
 """
@@ -57,7 +59,7 @@ def run_checks(
         log(f"== {check.name}")
         for command in check.run:
             log(f"$ {command}")
-            argv = _wrap(check, [bash, "-c", command])
+            argv = _wrap(check, [bash, "--noprofile", "--norc", "-eo", "pipefail", "-c", command])
             code = subprocess.run(argv, cwd=root, env=env, check=False).returncode
             if code:
                 log(f"molci: check `{check.name}` failed (exit {code}): {command}")

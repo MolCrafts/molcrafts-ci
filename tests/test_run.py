@@ -13,7 +13,9 @@ CONFIG = parse(
         "env": {"GREETING": "hello"},
         "check": {
             "lint": {"run": "echo lint >> log", "stage": "pre-commit"},
-            "test": {"run": ['echo "$GREETING $UV_PYTHON" >> log', "exit 3", "echo never >> log"]},
+            "test": {
+                "run": ['echo "$GREETING $UV_PYTHON" >> log', "false | cat", "echo never >> log"]
+            },
             "published": {"run": "echo published >> log", "stage": "release"},
         },
     },
@@ -32,9 +34,9 @@ def test_select_by_name_stage_or_everything_but_release() -> None:
 def test_runs_commands_in_order_with_env_and_stops_at_a_failure(tmp_path: Path) -> None:
     logs: list[str] = []
     code = run_checks(tmp_path, CONFIG, select(CONFIG, [], None), python="3.13", log=logs.append)
-    assert code == 3
+    assert code == 1  # pipefail: `false | cat` fails
     assert (tmp_path / "log").read_text().splitlines() == ["lint", "hello 3.13"]
-    assert logs[-1] == "molci: check `test` failed (exit 3): exit 3"
+    assert logs[-1] == "molci: check `test` failed (exit 1): false | cat"
 
 
 def test_missing_partner_is_named(tmp_path: Path) -> None:

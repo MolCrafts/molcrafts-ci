@@ -25,9 +25,10 @@
     project = "molpy"
     branch = "dev"                         # pushes to this branch are history
 
-    [nightly]                              # optional: python-nightly.yml
+    [nightly]                              # optional: `molci nightly`
     package = "molcrafts-molpy-nightly"
-    version-file = "src/molpy/version.py"
+    pyproject = "pyproject.toml"           # the package's pyproject (default)
+    version-file = "src/molpy/version.py"  # where the release version is
     rename = { "molcrafts-molrs" = "molcrafts-molrs-nightly" }
 
 Every key is checked; a typo is an error that names the file and the key.
@@ -89,6 +90,7 @@ class Dashboard:
 @dataclass(frozen=True)
 class Nightly:
     package: str
+    pyproject: str = "pyproject.toml"
     version_file: str | None = None
     rename: dict[str, str] = field(default_factory=dict)
 
@@ -283,12 +285,14 @@ class _Reader:
     def nightly(self, spec: Any) -> Nightly | None:
         if spec is None:
             return None
-        self.keys(spec, "nightly", {"package", "version-file", "rename"})
+        self.keys(spec, "nightly", {"package", "pyproject", "version-file", "rename"})
         package = self.optional_str(spec.get("package"), "nightly.package")
         if package is None:
             raise self.fail("nightly.package", "is required")
         return Nightly(
             package=package,
+            pyproject=self.optional_str(spec.get("pyproject"), "nightly.pyproject")
+            or "pyproject.toml",
             version_file=self.optional_str(spec.get("version-file"), "nightly.version-file"),
             rename=self.strings(spec.get("rename", {}), "nightly.rename"),
         )

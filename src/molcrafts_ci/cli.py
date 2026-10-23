@@ -1,7 +1,7 @@
 """`molci`: run a repository's checks, and build, validate and ingest snapshots.
 
-`check`, `partners`, `plan`, `rust`, `wait-for-ci`, `check-version` and
-`nightly` talk to a person; `validate-snapshot`, `ingest` and `snapshot` print
+`check`, `partners`, `plan`, `rust`, `release-ready` and `nightly` talk to
+a person; `validate-snapshot`, `ingest` and `snapshot` print
 one JSON object per line, for actions/submit.
 """
 
@@ -210,23 +210,21 @@ def _cmd_rust(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_wait_for_ci(args: argparse.Namespace) -> int:
-    release.wait_for_ci(
-        os.environ["GITHUB_REPOSITORY"],
-        os.environ["GITHUB_SHA"],
-        os.environ["GITHUB_TOKEN"],
+def _cmd_release_ready(args: argparse.Namespace) -> int:
+    if args.dist:
+        version = release.dist_version(Path(args.dist))
+    elif args.version_file:
+        version = release.file_version(Path(args.version_file))
+    else:
+        version = args.version
+    release.release_ready(
+        version,
+        ref=os.environ.get("GITHUB_REF", ""),
+        repository=os.environ.get("GITHUB_REPOSITORY", ""),
+        sha=os.environ.get("GITHUB_SHA", ""),
+        token=os.environ.get("GITHUB_TOKEN", ""),
         log=workspace.stderr,
     )
-    return 0
-
-
-def _cmd_check_version(args: argparse.Namespace) -> int:
-    version = release.dist_version(Path(args.dist))
-    want = args.tag.removeprefix("refs/tags/").removeprefix("v")
-    if version != want:
-        workspace.stderr(f"the tag says {want}, the built package is {version}")
-        return 1
-    workspace.stderr(f"tag and package agree: {version}")
     return 0
 
 
@@ -235,7 +233,12 @@ def _cmd_nightly(args: argparse.Namespace) -> int:
     config = ci_config.load(root)
     if config.nightly is None:
         raise ci_config.ConfigError(f"{config.path}: no [nightly] table")
-    print(release.stamp_nightly(root, config.nightly))
+    if args.print_version:
+        print(release.nightly_version(root, config.nightly))
+        return 0
+    version = args.version or release.nightly_version(root, config.nightly)
+    release.stamp_nightly(root, config.nightly, version)
+    print(version)
     return 0
 
 
@@ -263,15 +266,19 @@ def main(argv: list[str] | None = None) -> int:
     p_ru.add_argument("--root", default=".")
     p_ru.set_defaults(func=_cmd_rust)
 
-    p_wc = sub.add_parser("wait-for-ci", help="Release: wait until ci passed on GITHUB_SHA")
-    p_wc.set_defaults(func=_cmd_wait_for_ci)
+    p_rr = sub.add_parser(
+        "release-ready",
+        help="Release: on a v* tag, the tag is the version, is on master, and ci passed",
+    )
+    version_of = p_rr.add_mutually_exclusive_group(required=True)
+    version_of.add_argument("--dist", help="Directory of the built wheel and sdist")
+    version_of.add_argument("--version-file", help="A Cargo.toml, pyproject.toml or version file")
+    version_of.add_argument("--version", help="The version itself")
+    p_rr.set_defaults(func=_cmd_release_ready)
 
-    p_cv = sub.add_parser("check-version", help="Release: the built package matches the tag")
-    p_cv.add_argument("dist", help="Directory holding the built wheel and sdist")
-    p_cv.add_argument("--tag", required=True, help="Release tag, e.g. v1.2.3")
-    p_cv.set_defaults(func=_cmd_check_version)
-
-    p_ni = sub.add_parser("nightly", help="Nightly: stamp the [nightly] package name and version")
+    p_ni = sub.add_parser("nightly", help="Nightly: rename the [nightly] package and version it")
+    p_ni.add_argument("--version", help="Use this version (one for every OS of a nightly)")
+    p_ni.add_argument("--print-version", action="store_true", help="Only print the nightly version")
     p_ni.add_argument("--root", default=".")
     p_ni.set_defaults(func=_cmd_nightly)
 
