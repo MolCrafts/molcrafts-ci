@@ -93,29 +93,33 @@ jobs:
 
       # The counts and coverage in the run summary; never changes the verdict.
       - name: Report
-        if: ${{ !cancelled() && (matrix.junit != '' || matrix.coverage != '') }}
+        if: ${{ !cancelled() && (matrix.junit != '' || matrix.cargo-test != '' || matrix.coverage != '') }}
         uses: $/actions/report
         with:
           title: ${{ matrix.name }}
           junit: ${{ matrix.junit }}
+          cargo-test: ${{ matrix.cargo-test }}
           coverage: ${{ matrix.coverage }}
 
-      # A push to the [dashboard] branch on MolCrafts: this run's tests and
-      # coverage become project history on the dashboard.
+      # A push to the [dashboard] branch on MolCrafts: what this check
+      # measured becomes project history on the dashboard.
       - name: Dashboard snapshot
         if: ${{ !cancelled() && matrix.dashboard != '' }}
         env:
           JUNIT: ${{ matrix.junit }}
+          CARGO_TEST: ${{ matrix.cargo-test }}
           COVERAGE: ${{ matrix.coverage }}
+          RECORD: ${{ matrix.record }}
         run: |
-          args=(--out .ci-out/snapshots --track)
+          args=()
           [ -n "$JUNIT" ] && [ -f "$JUNIT" ] && args+=(--junit "$JUNIT")
+          [ -n "$CARGO_TEST" ] && [ -f "$CARGO_TEST" ] && args+=(--cargo-test "$CARGO_TEST")
           [ -n "$COVERAGE" ] && [ -f "$COVERAGE" ] && args+=(--coverage "$COVERAGE")
-          if [ "${#args[@]}" -eq 3 ]; then
-            echo "the check wrote neither $JUNIT nor $COVERAGE; nothing to publish"
+          if [ "${#args[@]}" -eq 0 ]; then
+            echo "the check wrote nothing to publish"
             exit 0
           fi
-          molci snapshot "${args[@]}"
+          molci snapshot --out .ci-out/snapshots --tests-record "$RECORD" --track "${args[@]}"
       - name: Dashboard
         if: ${{ !cancelled() && matrix.dashboard != '' && hashFiles('.ci-out/snapshots/*.json') != '' }}
         uses: $/actions/submit

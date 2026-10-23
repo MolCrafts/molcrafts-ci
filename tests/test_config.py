@@ -28,6 +28,7 @@ os = ["linux", "macos", "windows"]
 python = ["3.12", "3.14"]
 junit = ".ci-out/junit.xml"
 coverage = ".ci-out/coverage.json"
+dashboard = "tests"
 
 [dashboard]
 project = "molpy"
@@ -72,9 +73,17 @@ def test_partners_are_optional(tmp_path: Path) -> None:
         ('[check.test]\nrun = "x"\nstage = "push"\n', "check.test.stage: must be one of"),
         ('[partners]\nmolrs = "molrs"\n[check.t]\nrun = "x"\n', "partners.molrs: must read"),
         ('[partners]\nmolrs = "MolCrafts/molrs@0123abc"\n', "ci.toml: no [check.<name>]"),
+        ('[check.t]\nrun = "x"\n[dashboard]\nproject = "p"\n', "dashboard: no check publishes"),
+        ('[check.t]\nrun = "x"\ndashboard = "tests"\n', "check.t.dashboard: needs `junit`"),
         (
-            '[check.t]\nrun = "x"\n[dashboard]\nproject = "p"\n',
-            "dashboard: needs a check with `junit`",
+            '[check.t]\nrun = "x"\njunit = "j"\ncargo-test = "c"\n',
+            "check.t: name `junit` or `cargo-test`, not both",
+        ),
+        (
+            '[check.a]\nrun = "x"\njunit = "j"\ndashboard = "tests"\n'
+            '[check.b]\nrun = "x"\ncargo-test = "c"\ndashboard = "tests"\n'
+            '[dashboard]\nproject = "p"\n',
+            "dashboard: two checks publish the record 'tests'",
         ),
         ('[check.Test]\nrun = "x"\n', "check.Test: a check name is lower case"),
     ],

@@ -16,9 +16,12 @@
     stage = "pre-push"                     # pre-commit | pre-push | release
     os = ["linux", "macos", "windows"]     # default: linux
     junit = ".ci-out/junit.xml"            # optional: summarised in the run
+    cargo-test = ".ci-out/cargo-test.log"  # optional, instead of junit
     coverage = ".ci-out/coverage.json"     # optional: coverage.py JSON or LCOV
+    dashboard = "tests"                    # optional: publish the counts as this
+                                           # record (and coverage as `coverage`)
 
-    [dashboard]                            # optional: publish tests/coverage
+    [dashboard]                            # where `dashboard` checks publish
     project = "molpy"
     branch = "dev"                         # pushes to this branch are history
 
@@ -72,7 +75,9 @@ class Check:
     node: str | None = None
     rust: bool = False
     junit: str | None = None
+    cargo_test: str | None = None
     coverage: str | None = None
+    dashboard: str | None = None
 
 
 @dataclass(frozen=True)
@@ -211,7 +216,12 @@ class _Reader:
         key = f"check.{name}"
         if not NAME.fullmatch(name):
             raise self.fail(key, "a check name is lower case, digits and dashes")
-        self.keys(spec, key, {"run", "stage", "os", "python", "node", "rust", "junit", "coverage"})
+        self.keys(
+            spec,
+            key,
+            {"run", "stage", "os", "python", "node", "rust", "junit", "cargo-test", "coverage"}
+            | {"dashboard"},
+        )
         run = spec.get("run")
         commands = [run] if isinstance(run, str) else run
         if (
@@ -228,6 +238,14 @@ class _Reader:
         if not isinstance(oses, list) or not oses or any(o not in OSES for o in oses):
             raise self.fail(f"{key}.os", f"must list some of {', '.join(OSES)}")
         python = self.versions(spec.get("python"), f"{key}.python") or defaults["python"]
+        junit = self.optional_str(spec.get("junit"), f"{key}.junit")
+        cargo_test = self.optional_str(spec.get("cargo-test"), f"{key}.cargo-test")
+        if junit and cargo_test:
+            raise self.fail(key, "name `junit` or `cargo-test`, not both")
+        coverage = self.optional_str(spec.get("coverage"), f"{key}.coverage")
+        dashboard = self.optional_str(spec.get("dashboard"), f"{key}.dashboard")
+        if dashboard and not (junit or cargo_test or coverage):
+            raise self.fail(f"{key}.dashboard", "needs `junit`, `cargo-test` or `coverage`")
         return Check(
             name=name,
             run=tuple(commands),
@@ -236,19 +254,29 @@ class _Reader:
             python=python,
             node=self.optional_str(spec.get("node"), f"{key}.node") or defaults["node"],
             rust=self.boolean(spec.get("rust", defaults["rust"]), f"{key}.rust"),
-            junit=self.optional_str(spec.get("junit"), f"{key}.junit"),
-            coverage=self.optional_str(spec.get("coverage"), f"{key}.coverage"),
+            junit=junit,
+            cargo_test=cargo_test,
+            coverage=coverage,
+            dashboard=dashboard,
         )
 
     def dashboard(self, spec: Any, checks: tuple[Check, ...]) -> Dashboard | None:
+        publishers = [c for c in checks if c.dashboard]
         if spec is None:
+            if publishers:
+                raise self.fail(f"check.{publishers[0].name}.dashboard", "needs a [dashboard]")
             return None
         self.keys(spec, "dashboard", {"project", "branch"})
         project = self.optional_str(spec.get("project"), "dashboard.project")
         if project is None:
             raise self.fail("dashboard.project", "is required")
-        if not any(c.junit or c.coverage for c in checks):
-            raise self.fail("dashboard", "needs a check with `junit` or `coverage` to publish")
+        if not publishers:
+            raise self.fail("dashboard", 'no check publishes; give one `dashboard = "tests"`')
+        records = [c.dashboard for c in publishers if c.junit or c.cargo_test]
+        records += ["coverage" for c in publishers if c.coverage]
+        repeated = sorted({r for r in records if records.count(r) > 1})
+        if repeated:
+            raise self.fail("dashboard", f"two checks publish the record {repeated[0]!r}")
         branch = self.optional_str(spec.get("branch"), "dashboard.branch") or "master"
         return Dashboard(project=project, branch=branch)
 

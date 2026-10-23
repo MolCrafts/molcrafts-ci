@@ -117,8 +117,9 @@ repos:
 | `stage` | `pre-commit`, `pre-push` or `release` | `pre-push` |
 | `os` | Any of `linux`, `macos`, `windows` | `["linux"]` |
 | `python`, `node`, `rust` | Override `[tools]` for this check | `[tools]` |
-| `junit`, `coverage` | Files the check writes: summarised in the run | none |
-| `[dashboard] project` | Publish tests and coverage to the dashboard under this name | none |
+| `junit` or `cargo-test`, `coverage` | Files the check writes (JUnit XML or a `cargo test` log; coverage.py JSON or LCOV): summarised in the run | none |
+| `dashboard` | Publish this check's counts as this dashboard record (and its coverage as `coverage`) | none |
+| `[dashboard] project` | The dashboard project the `dashboard` checks publish to | none |
 | `[dashboard] branch` | Pushes to this branch become dashboard history | `master` |
 | `[nightly]` | `package`, `version-file`, `rename`: see python-nightly | none |
 
@@ -196,9 +197,10 @@ nightly packages) for a nightly workflow to upload the same way.
 
 ### Dashboard
 
-With `[dashboard]`, a push to its branch on MolCrafts turns the junit and
-coverage files of the first leg that writes them into `tests` and `coverage`
-snapshots and publishes them with `actions/submit`. The repository needs the
+A push to the `[dashboard]` branch on MolCrafts turns what each check with a
+`dashboard` record measured (its first leg) into snapshots and publishes them
+with `actions/submit`: `dashboard = "tests"` on the test check is the usual
+one, `dashboard = "conformance"` another. The repository needs the
 `MOLCRAFTS_CI_SSH_KEY` secret: the private half of the deploy key that can
 write to `MolCrafts/molcrafts-ci`.
 

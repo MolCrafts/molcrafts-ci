@@ -133,15 +133,11 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
         }
 
     if args.junit:
-        _emit(build("tests", args.tests_producer or "pytest", read_junit(Path(args.junit))))
+        payload = read_junit(Path(args.junit))
+        _emit(build(args.tests_record, args.tests_producer or "pytest", payload))
     if args.cargo_test:
-        _emit(
-            build(
-                "tests",
-                args.tests_producer or "cargo-test",
-                read_cargo_test(Path(args.cargo_test)),
-            )
-        )
+        payload = read_cargo_test(Path(args.cargo_test))
+        _emit(build(args.tests_record, args.tests_producer or "cargo-test", payload))
     if args.coverage:
         root = Path(args.source_root).resolve()
         payload = read_coverage(Path(args.coverage), fmt=args.coverage_format, source_root=root)
@@ -320,6 +316,11 @@ def main(argv: list[str] | None = None) -> int:
     p_sn.add_argument(
         "--tests-producer",
         help="Producer name stored on the tests snapshot (default: pytest or cargo-test)",
+    )
+    p_sn.add_argument(
+        "--tests-record",
+        default="tests",
+        help="Record name of the tests snapshot (default: tests), e.g. conformance",
     )
     p_sn.add_argument("--coverage-producer", default="coverage.py")
     p_sn.add_argument("--profile", help="Override the detected <os>-<arch> profile")

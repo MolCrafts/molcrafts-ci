@@ -28,6 +28,7 @@ python = ["3.12", "3.13"]
 run = "uv run --locked --extra dev pytest -q --junitxml=.ci-out/junit.xml --cov=molcrafts_ci --cov-branch --cov-report=json:.ci-out/coverage.json"
 junit = ".ci-out/junit.xml"
 coverage = ".ci-out/coverage.json"
+dashboard = "tests"
 
 [check.site]
 node = "site/.nvmrc"

@@ -9,8 +9,8 @@ The rules, in full:
   requests, forks, dispatches) runs every leg.
 - Each OS runs the first Python of a check; any further Python runs on the
   first OS only.
-- A push to the `[dashboard]` branch on MolCrafts publishes the tests and
-  coverage of the first leg that writes them.
+- A push to the `[dashboard]` branch on MolCrafts publishes what each check
+  with a `dashboard` record measured, from its first leg.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def legs(config: Config, event: Event, *, stages: tuple[str, ...]) -> list[dict[
     if event.fork_pull_request:
         return []
     rows: list[dict[str, Any]] = []
-    publisher = _dashboard_check(config, event)
+    publishing = _publishing(config, event)
     for check in config.checks:
         if check.stage not in stages:
             continue
@@ -62,9 +62,7 @@ def legs(config: Config, event: Event, *, stages: tuple[str, ...]) -> list[dict[
         if event.feature_push:
             expanded = expanded[:1]
         for i, (os_name, python) in enumerate(expanded):
-            rows.append(
-                _row(config, check, os_name, python, dashboard=publisher is check and i == 0)
-            )
+            rows.append(_row(config, check, os_name, python, dashboard=publishing and i == 0))
     return rows
 
 
@@ -74,13 +72,14 @@ def _expand(check: Check) -> list[tuple[str, str]]:
     return [(os_name, first) for os_name in check.os] + [(check.os[0], p) for p in rest]
 
 
-def _dashboard_check(config: Config, event: Event) -> Check | None:
+def _publishing(config: Config, event: Event) -> bool:
     dashboard = config.dashboard
-    if dashboard is None or not event.upstream or event.name != "push":
-        return None
-    if event.ref != f"refs/heads/{dashboard.branch}":
-        return None
-    return next((c for c in config.checks if c.junit or c.coverage), None)
+    return (
+        dashboard is not None
+        and event.upstream
+        and event.name == "push"
+        and event.ref == f"refs/heads/{dashboard.branch}"
+    )
 
 
 def _row(config: Config, check: Check, os_name: str, python: str, *, dashboard: bool) -> dict:
@@ -104,6 +103,8 @@ def _row(config: Config, check: Check, os_name: str, python: str, *, dashboard: 
         "rust": check.rust,
         "partners": bool(config.partners) and check.stage != "release",
         "junit": check.junit or "",
+        "cargo-test": check.cargo_test or "",
         "coverage": check.coverage or "",
-        "dashboard": config.dashboard.project if dashboard and config.dashboard else "",
+        "dashboard": config.dashboard.project if dashboard and check.dashboard else "",
+        "record": check.dashboard or "",
     }
