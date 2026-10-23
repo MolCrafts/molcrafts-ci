@@ -5,8 +5,6 @@ short name while the distribution remains ``molcrafts-ci``.
 """
 
 from molcrafts_ci import (
-    GateResult,
-    GateStatus,
     Manifest,
     Snapshot,
     SnapshotIndex,
@@ -14,11 +12,9 @@ from molcrafts_ci import (
     Tracking,
     __version__,
 )
-from molcrafts_ci.index import ingest_snapshot, read_snapshot, write_snapshot
+from molcrafts_ci.persist import ingest_snapshot, read_snapshot, write_snapshot
 
 __all__ = [
-    "GateResult",
-    "GateStatus",
     "Manifest",
     "Source",
     "Tracking",

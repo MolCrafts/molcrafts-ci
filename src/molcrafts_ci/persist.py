@@ -127,28 +127,21 @@ def write_index_listing(data_root: Path) -> Path:
     """Publish the set of index files, so a reader needs no directory listing.
 
     The site fetches the index over plain HTTP, where there is nothing to
-    enumerate — it has to be told what exists. This used to be generated at
-    build time, which meant new data only appeared when the site was rebuilt;
-    writing it here puts it next to the data it describes.
-
-    ``published`` is each project's newest index timestamp, so the site can
-    land on whatever ran last without fetching every ``*.jsonl`` over HTTP.
+    enumerate: it has to be told what exists. ``published`` is each project's
+    newest index timestamp, so the site can open on whatever ran last without
+    fetching every ``*.jsonl``. Rewritten from the tree on every ingest, so it
+    stays right when a record is removed or an earlier run half-finished.
     """
-    index_root = data_root / "index"
-    listing = sorted(path.relative_to(data_root).as_posix() for path in index_root.rglob("*.jsonl"))
+    index = SnapshotIndex(data_root)
+    listing: list[str] = []
     published: dict[str, str] = {}
-    for path in index_root.rglob("*.jsonl"):
-        project = path.relative_to(index_root).parts[0]
-        latest = published.get(project)
-        for line in path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            stamp = json.loads(line).get("timestamp")
-            if isinstance(stamp, str) and (latest is None or stamp > latest):
-                latest = stamp
-        if latest is not None:
-            published[project] = latest
+    for path in sorted((data_root / "index").glob("*/*.jsonl")):
+        project, record = path.parent.name, path.stem
+        listing.append(path.relative_to(data_root).as_posix())
+        stamps = [e.get("timestamp") for e in index.entries(project, record)]
+        stamps = [s for s in stamps if isinstance(s, str)]
+        if stamps and max(stamps) > published.get(project, ""):
+            published[project] = max(stamps)
     path = data_root / "index-listing.json"
     write_json(path, {"indexes": listing, "published": published})
     return path
@@ -161,15 +154,16 @@ def ingest_snapshot(
     *,
     if_exists: IfExists = "fail",
 ) -> Path:
-    """Write immutable snapshot and append an index entry (tracking must be on).
+    """Write the immutable snapshot, index it and refresh ``index-listing.json``.
 
-    Idempotent under ``if_exists="skip"``: the index entry is appended only when
-    this snapshot is not indexed yet, so re-running the call converges instead of
-    growing a duplicate history.
+    Tracking must be on. Idempotent under ``if_exists="skip"``: the index entry
+    is appended only when this snapshot is not indexed yet, so re-running the
+    call converges instead of growing a duplicate history.
     """
     snap_path = write_snapshot(data_root, project, snapshot, if_exists=if_exists)
     rel = snap_path.relative_to(data_root).as_posix()
     index = SnapshotIndex(data_root)
     if not index.has(project, snapshot.manifest.record, snapshot.snapshot_id()):
         index.append(project, read_snapshot(snap_path), relative_path=rel)
+    write_index_listing(data_root)
     return snap_path

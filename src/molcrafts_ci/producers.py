@@ -175,6 +175,21 @@ def read_coverage_py(path: Path, *, source_root: Path | None = None) -> dict[str
     return out
 
 
+COVERAGE_FORMATS = ("auto", "coverage.py", "lcov")
+
+
+def read_coverage(
+    path: Path, *, fmt: str = "auto", source_root: Path | None = None
+) -> dict[str, Any]:
+    """A coverage report in either format; `auto` reads `.info`/`.lcov` as LCOV."""
+    if fmt not in COVERAGE_FORMATS:
+        raise ValueError(f"coverage format must be one of {', '.join(COVERAGE_FORMATS)}")
+    if fmt == "auto":
+        fmt = "lcov" if path.suffix in (".info", ".lcov") else "coverage.py"
+    reader = read_lcov if fmt == "lcov" else read_coverage_py
+    return reader(path, source_root=source_root)
+
+
 _LCOV_FIELD = re.compile(r"^(SF|DA|LF|LH|BRF|BRH|FNF|FNH):(.*)$")
 
 

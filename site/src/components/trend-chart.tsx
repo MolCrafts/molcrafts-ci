@@ -1,5 +1,5 @@
 import { useMemo, type JSX } from "react";
-import { VegaLiteView, type VegaLiteSpec, type ChartTheme } from "@molcrafts/design-vega-lite";
+import { VegaLiteView, type VegaLiteSpec, type ChartTheme } from "@molcrafts/ui-vega-lite";
 import { formatMeasure } from "@/lib/payload";
 import type { HistoryPoint } from "@/lib/record-summary";
 import { relativeTime, shortCommit } from "@/lib/snapshot-data";
@@ -108,14 +108,14 @@ function sparklineSpec(
 
 export interface TrendChartProps { points: HistoryPoint[]; height?: number; }
 
-/** CI owns the history mapping; the optional Design adapter owns compilation/rendering. */
+/** CI owns the history mapping; the optional UI adapter owns compilation/rendering. */
 export function TrendChart({ points, height = 72 }: TrendChartProps): JSX.Element {
   const spec = useMemo(() => (theme: ChartTheme) => sparklineSpec(points, {
     line: theme.primary, failed: theme.danger, surface: theme.background,
   }), [points]);
   const plotted = points.filter(point => point.measure != null);
   const summary = plotted.map(point => `${shortCommit(point.entry.commit)}: ${formatMeasure(point.measure!.value, point.measure!.unit)}${point.failed ? " (failed)" : ""}`).join("; ");
-  return <VegaLiteView label="Record measurement history" spec={spec} height={height}
+  return <VegaLiteView label="Record measurement history" labelHidden spec={spec} height={height}
     empty={plotted.length === 0} className="trend-sparkline"
     style={{ overflow: "hidden" }} aria-description={summary || "No measurements"} />;
 }

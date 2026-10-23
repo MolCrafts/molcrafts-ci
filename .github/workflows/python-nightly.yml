@@ -1,0 +1,47 @@
+name: python-nightly
+
+# Build the nightly package of a Python repository, from its nightly.yml:
+#
+#   jobs:
+#     build:
+#       uses: MolCrafts/molcrafts-ci/.github/workflows/python-nightly.yml@master
+#
+# Checks out `branch` (dev by default), renames the package and its partner
+# dependencies to their nightly names (the [nightly] table of .github/ci.toml),
+# versions it `<version>.dev<YYYYmmddHHMM>` and builds it. The `nightly-dist`
+# artifact is the caller's to upload.
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: Branch to build
+        type: string
+        default: dev
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.branch }}
+          persist-credentials: false
+      - uses: $/actions/setup-molci
+      - name: Nightly name and version
+        run: molci nightly
+      - name: Build
+        run: |
+          uv build --no-sources
+          uvx twine check --strict dist/*
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nightly-dist
+          path: dist/
+          if-no-files-found: error

@@ -22,7 +22,14 @@ class Snapshot(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
     def snapshot_id(self) -> str:
-        """Stable filename stem derived from source + record + profile."""
+        """Stable id from record, profile, generation and commit.
+
+        Generation 1 is left out, so ids published before generations were
+        told apart keep their meaning; a later generation of the same commit
+        is a different snapshot (`tests-default-g2-abc123def456`).
+        """
         m = self.manifest
         short = m.source.commit[:12]
-        return f"{m.record}-{m.profile}-{short}"
+        generation = m.tracking.generation
+        tag = "" if generation == 1 else f"g{generation}-"
+        return f"{m.record}-{m.profile}-{tag}{short}"

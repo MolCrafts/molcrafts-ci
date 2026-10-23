@@ -1,6 +1,6 @@
-# Commit hooks are cheap; pre-push runs every local gate, without file filters.
+# The checks of .github/ci.toml, by stage: `pre-commit` ones on every commit,
+# `pre-push` ones before a push. CI runs all of them.
 default_install_hook_types: [pre-commit, pre-push]
-default_stages: [pre-commit]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -17,16 +17,16 @@ repos:
 
   - repo: local
     hooks:
-      - id: lint
-        name: static checks
-        entry: uv run --locked --extra dev scripts/check.py lint
+      - id: molci-pre-commit
+        name: molci check --stage pre-commit
+        entry: uv run --locked --extra dev molci check --stage pre-commit
         language: system
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
-      - id: verify
-        name: complete local CI gates
-        entry: uv run --locked --extra dev scripts/check.py all
+      - id: molci-pre-push
+        name: molci check --stage pre-push
+        entry: uv run --locked --extra dev molci check --stage pre-push
         language: system
         pass_filenames: false
         always_run: true

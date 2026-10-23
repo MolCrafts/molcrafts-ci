@@ -2,13 +2,15 @@ import { afterEach, describe, expect, it, rs } from "@rstest/core";
 
 import { projectsFromListing } from "@/lib/index-data";
 import {
-  RECORD_ALIASES,
   fetchRecordEntries,
   newestFirst,
   relativeTime,
   resolveRecord,
   shortCommit,
 } from "@/lib/snapshot-data";
+import { RECORDS } from "@/plugins/records";
+
+const COVERAGE = RECORDS.find((r) => r.label === "Coverage")!.aliases;
 
 describe("fetchRecordEntries", () => {
   afterEach(() => rs.restoreAllMocks());
@@ -58,15 +60,15 @@ describe("newestFirst", () => {
 
 describe("resolveRecord", () => {
   it("returns the project's own spelling, not the alias asked for", () => {
-    expect(resolveRecord(["Coverage"], RECORD_ALIASES.coverage)).toBe("Coverage");
+    expect(resolveRecord(["Coverage"], COVERAGE)).toBe("Coverage");
   });
 
   it("prefers the first alias that matches", () => {
-    expect(resolveRecord(["conv", "coverage"], RECORD_ALIASES.coverage)).toBe("coverage");
+    expect(resolveRecord(["conv", "coverage"], COVERAGE)).toBe("coverage");
   });
 
   it("returns null when the project publishes none of them", () => {
-    expect(resolveRecord(["tests"], RECORD_ALIASES.coverage)).toBeNull();
+    expect(resolveRecord(["tests"], COVERAGE)).toBeNull();
   });
 });
 

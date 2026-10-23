@@ -119,3 +119,34 @@ class TestSnapshotIndexHas:
         assert index.has("molpy", "benchmark", snap.snapshot_id())
         assert not index.has("molpy", "coverage", snap.snapshot_id())
         assert not index.has("molrs", "benchmark", snap.snapshot_id())
+
+
+class TestGenerations:
+    def test_a_new_generation_of_the_same_commit_is_indexed(self, tmp_path) -> None:
+        """Generation 2 is a separate history, even at the same commit."""
+        first = make_snapshot()
+        second = first.model_copy(
+            update={
+                "manifest": first.manifest.model_copy(
+                    update={"tracking": Tracking(enabled=True, generation=2)}
+                )
+            }
+        )
+        ingest_snapshot(tmp_path, "molpy", first, if_exists="skip")
+        ingest_snapshot(tmp_path, "molpy", second, if_exists="skip")
+
+        entries = list(SnapshotIndex(tmp_path).entries("molpy", "benchmark"))
+        assert [(e["generation"], e["snapshot_id"]) for e in entries] == [
+            (1, "benchmark-linux-x86_64-abc123def456"),
+            (2, "benchmark-linux-x86_64-g2-abc123def456"),
+        ]
+
+
+class TestListing:
+    def test_library_ingest_keeps_the_listing_current(self, tmp_path) -> None:
+        """The site only sees projects index-listing.json names."""
+        import json
+
+        ingest_snapshot(tmp_path, "molpy", make_snapshot())
+        listing = json.loads((tmp_path / "index-listing.json").read_text())
+        assert listing["indexes"] == ["index/molpy/benchmark.jsonl"]

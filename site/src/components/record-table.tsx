@@ -2,20 +2,20 @@ import type { JSX } from "react";
 
 import { CommitLink } from "@/components/commit-link";
 import { RunLink } from "@/components/run-link";
-import { RowsSkeleton } from "@/components/skeletons";
-import { StatusMark } from "@/components/snapshot-status";
-import { EmptyState } from "@molcrafts/design";
 import {
+  Button,
+  EmptyState,
+  RowsSkeleton,
+  StatusMark,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@molcrafts/design";
+} from "@molcrafts/ui";
 import type { RecordSummary } from "@/lib/record-summary";
 import { relativeTime } from "@/lib/snapshot-data";
-import { cn } from "@/lib/utils";
 
 export interface RecordTableProps {
   /** null while the project's indexes are being read. */
@@ -72,19 +72,17 @@ export function RecordTable({ records, onOpen, emptyTitle }: RecordTableProps): 
               <TableCell>
                 <span className="flex items-center gap-2">
                   <StatusMark status={record.status} />
-                  <button
-                    type="button"
-                    className={cn(
-                      "max-w-full truncate rounded-hairline text-left font-medium outline-none",
-                      "focus-visible:ring-2 focus-visible:ring-ring",
-                    )}
+                  <Button
+                    variant="link"
+                    size="content"
+                    className="max-w-full justify-start truncate text-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       onOpen(record);
                     }}
                   >
                     {record.record}
-                  </button>
+                  </Button>
                 </span>
               </TableCell>
               <TableCell className="truncate tabular-nums">{record.headline}</TableCell>

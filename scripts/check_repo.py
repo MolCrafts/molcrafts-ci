@@ -106,25 +106,6 @@ def check_interactive_nesting() -> list[str]:
     return problems
 
 
-def check_no_hardcoded_base() -> list[str]:
-    """
-    The asset prefix belongs to the host, not to the repository.
-
-    `PUBLIC_BASE=/molcrafts-ci/` was correct for GitHub Pages and silently
-    wrong everywhere else: every script, stylesheet and font 404s and the
-    page renders blank.
-    """
-    problems = []
-    for path in sorted((ROOT / ".github/workflows").glob("*.yml")):
-        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            if "PUBLIC_BASE" in line and "/molcrafts-ci/" in line:
-                problems.append(
-                    f"{path.relative_to(ROOT)}:{i}: PUBLIC_BASE pinned to a "
-                    f"GitHub Pages subpath; the site is served at a root"
-                )
-    return problems
-
-
 CROSS_REPO_TOKEN = re.compile(r"github\.token|secrets\.GITHUB_TOKEN")
 
 
@@ -152,7 +133,6 @@ CHECKS = {
     "workflow branch filters": check_workflow_branches,
     "cross-repository credentials": check_action_credentials,
     "interactive nesting": check_interactive_nesting,
-    "hard-coded asset prefix": check_no_hardcoded_base,
 }
 
 

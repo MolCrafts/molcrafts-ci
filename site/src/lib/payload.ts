@@ -30,7 +30,7 @@ export function formatPercent(v: number | null | undefined): string {
 /** Format a measure for tiles, tips and deltas. */
 export function formatMeasure(value: number, unit?: string): string {
   if (unit === "%") return formatPercent(value);
-  return formatNumber(value) + (unit ?? "");
+  return unit ? `${formatNumber(value)} ${unit}` : formatNumber(value);
 }
 
 export interface CoverageTotals {
@@ -109,9 +109,10 @@ export function readTests(payload: unknown): TestsReading | null {
 
 export interface ScalarField {
   label: string;
+  /** For display: one decimal for percentages, scientific notation at the extremes. */
   value: string;
-  /** Set when the value is a quantity, so the view can align it. */
-  numeric: boolean;
+  /** The number as published, when the field is a quantity; never parsed back from `value`. */
+  number: number | null;
 }
 
 function scalar(label: string, v: unknown): ScalarField | null {
@@ -123,11 +124,11 @@ function scalar(label: string, v: unknown): ScalarField | null {
     return {
       label,
       value: percentish ? v.toFixed(1) : formatNumber(v),
-      numeric: true,
+      number: v,
     };
   }
   if (typeof v === "string" || typeof v === "boolean") {
-    return { label, value: String(v), numeric: false };
+    return { label, value: String(v), number: null };
   }
   return null;
 }
@@ -197,7 +198,7 @@ export function readMeasure(payload: unknown): MeasureReading | null {
   const maxAbs = p ? num(p.max_abs_error) : null;
   if (maxAbs != null) return { label: "max abs error", value: maxAbs, higherIsBetter: false };
 
-  const first = readScalars(payload).find((s) => s.numeric);
-  if (!first) return null;
-  return { label: first.label, value: Number(first.value), higherIsBetter: true };
+  const first = readScalars(payload).find((s) => s.number != null);
+  if (!first || first.number == null) return null;
+  return { label: first.label, value: first.number, higherIsBetter: true };
 }

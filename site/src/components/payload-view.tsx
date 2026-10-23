@@ -1,6 +1,5 @@
 import type { JSX } from "react";
 
-import { ContentSection } from "@/components/blocks/content-section";
 import {
   COVERAGE_FILE_LIMIT,
   CoverageFileTable,
@@ -8,10 +7,15 @@ import {
   formatPercent,
   uncoveredCount,
 } from "@/components/coverage-file-table";
-import { MeasureBand, type Measure } from "@/components/meta-strip";
-import { MetricTable, type Metric } from "@/components/metric-table";
-import { BandSkeleton } from "@/components/skeletons";
-import { EmptyState } from "@molcrafts/design";
+import {
+  BandSkeleton,
+  ContentSection,
+  EmptyState,
+  MeasureBand,
+  MetricList,
+  type Measure,
+  type Metric,
+} from "@molcrafts/ui";
 import { RunLink } from "@/components/run-link";
 import { readCoverage, readScalars, readTests } from "@/lib/payload";
 import type { IndexEntry } from "@/lib/snapshot-data";
@@ -39,13 +43,13 @@ export function PayloadView({
   settled = true,
   entry = null,
 }: PayloadViewProps): JSX.Element {
-  if (loading) return <BandSkeleton height="measure" />;
+  if (loading) return <BandSkeleton variant="measures" />;
 
   if (payload == null) {
     return settled ? (
       <EmptyState title="Snapshot body unavailable" />
     ) : (
-      <BandSkeleton height="measure" />
+      <BandSkeleton variant="measures" />
     );
   }
 
@@ -128,19 +132,19 @@ export function PayloadView({
         label: "Passed",
         value: String(tests.passed),
         percent: share(tests.passed),
-        tone: "bg-status-completed",
+        tone: "completed",
       },
       {
         label: "Failed",
         value: String(tests.failed),
         percent: share(tests.failed),
-        tone: "bg-status-failed",
+        tone: "failed",
       },
       {
         label: "Skipped",
         value: String(tests.skipped),
         percent: share(tests.skipped),
-        tone: "bg-status-cancelled",
+        tone: "cancelled",
       },
     ];
 
@@ -151,7 +155,7 @@ export function PayloadView({
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <MeasureBand measures={measures} />
-        {extra.length > 0 && <MetricTable metrics={extra} />}
+        {extra.length > 0 && <MetricList metrics={extra} />}
       </div>
     );
   }
@@ -162,5 +166,5 @@ export function PayloadView({
     );
   }
 
-  return <MetricTable metrics={metrics} />;
+  return <MetricList metrics={metrics} />;
 }

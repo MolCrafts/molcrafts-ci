@@ -34,8 +34,7 @@ export function RunLink({ repository, run, className, children }: RunLinkProps):
       rel="noreferrer"
       title={`${repository} run ${run}`}
       className={cn(
-        "rounded-hairline underline-offset-4 outline-none",
-        "hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+        "mol-focus rounded-control underline-offset-4 hover:underline",
         className,
       )}
       onClick={(e) => e.stopPropagation()}

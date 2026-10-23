@@ -1,0 +1,54 @@
+# What molcrafts-ci checks. The same commands run in the git hooks
+# (`molci check --stage pre-commit|pre-push`) and in .github/workflows/ci.yml,
+# the workflow every MolCrafts repository runs.
+
+[tools]
+python = "3.12"
+
+[check.lint]
+stage = "pre-commit"
+run = [
+  "uv lock --check",
+  "uv export --locked --no-dev --no-hashes --no-emit-project --no-header --no-annotate | diff - requirements-runtime.txt",
+  "uv run --locked --extra dev ruff check src tests scripts actions",
+  "uv run --locked --extra dev ruff format --check src tests scripts actions",
+  "uv run --locked --extra dev python scripts/check_repo.py",
+]
+
+[check.actions]
+stage = "pre-commit"
+run = [
+  "uv run --locked --extra dev check-jsonschema --builtin-schema vendor.github-actions actions/*/action.yml",
+  "uv run --locked --extra dev check-jsonschema --builtin-schema vendor.github-workflows .github/workflows/*.yml",
+  "uv run --locked --extra dev python scripts/actionlint.py -color",
+]
+
+[check.test]
+python = ["3.12", "3.13"]
+run = "uv run --locked --extra dev pytest -q --junitxml=.ci-out/junit.xml --cov=molcrafts_ci --cov-branch --cov-report=json:.ci-out/coverage.json"
+junit = ".ci-out/junit.xml"
+coverage = ".ci-out/coverage.json"
+dashboard = "tests"
+
+[check.site]
+node = "site/.nvmrc"
+run = [
+  "npm --prefix site ci",
+  "npm --prefix site run verify:ui",
+  "npm --prefix site run typecheck",
+  "npm --prefix site test",
+  "npm --prefix site run build",
+]
+
+[check.browser]
+node = "site/.nvmrc"
+run = [
+  "npm --prefix site ci",
+  "cd site && npx playwright install --with-deps chromium",
+  "npm --prefix site run test:browser",
+]
+
+# Pushes to master publish this repository's own tests and coverage.
+[dashboard]
+project = "molcrafts-ci"
+branch = "master"

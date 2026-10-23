@@ -8,7 +8,6 @@ import molci as mci
 def test_molci_alias_exports_core_types() -> None:
     assert mci.Manifest is not None
     assert mci.Snapshot is not None
-    assert mci.GateResult is not None
     assert mci.Tracking is not None
     assert isinstance(mci.__version__, str)
 

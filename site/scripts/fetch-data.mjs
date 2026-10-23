@@ -2,7 +2,7 @@
 /**
  * Fetch the published index from the `data` branch into ../data.
  *
- * The data does not live on `master` — see the specification, §18 — so a fresh
+ * The data does not live on `master` but on the `data` branch, so a fresh
  * checkout has nothing for prepare-data to stage. The branch is a tarball away
  * and the repository is public, so this needs no credential and no second
  * clone.

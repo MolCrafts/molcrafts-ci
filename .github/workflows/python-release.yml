@@ -1,0 +1,57 @@
+name: python-release
+
+# Build a Python package for release, from a repository's release.yml:
+#
+#   jobs:
+#     build:
+#       uses: MolCrafts/molcrafts-ci/.github/workflows/python-release.yml@master
+#       permissions:
+#         contents: read
+#         actions: read
+#
+# Runs the checks with `stage = "release"` from .github/ci.toml (against
+# published dependencies, no partners) and builds the sdist and wheel. On a
+# `v*` tag it then requires the tag to be the built version, on master, with
+# `ci` passed on the tagged commit (its push to master ran it). The `dist` artifact
+# is then the caller's to upload: PyPI trusts the caller's workflow file, not
+# this one. A manual run of release.yml is a dry run of the same steps.
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read  # to read the tagged commit's ci run
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # to see whether the tag is on master
+          persist-credentials: false
+      - uses: $/actions/setup-molci
+
+      - name: Release checks
+        run: molci check --stage release --python 3.12
+
+      - name: Build
+        run: |
+          uv build --no-sources
+          uvx twine check --strict dist/*
+
+      # On a tag: the tag is the built version, is on master, and its commit
+      # passed ci. A manual run is a dry run and skips this.
+      - name: Ready to release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: molci release-ready --dist dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error

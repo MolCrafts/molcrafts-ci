@@ -18,16 +18,15 @@
     "typecheck": "tsc --noEmit",
     "test": "rstest run",
     "fetch-data": "node scripts/fetch-data.mjs",
-    "clean-public-data": "node scripts/clean-public-data.mjs",
     "test:browser": "playwright test",
-    "verify:design": "node scripts/verify-design-artifacts.mjs"
+    "verify:ui": "node scripts/verify-ui-artifacts.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "@molcrafts/design": "file:vendor/design/molcrafts-design-0.0.1.tgz",
-    "@molcrafts/design-tokens": "file:vendor/design/molcrafts-design-tokens-0.0.1.tgz",
-    "@molcrafts/design-vega-lite": "file:vendor/design/molcrafts-design-vega-lite-0.0.1.tgz",
+    "@molcrafts/ui": "file:vendor/ui/molcrafts-ui-0.1.0-alpha.0.tgz",
+    "@molcrafts/ui-tokens": "file:vendor/ui/molcrafts-ui-tokens-0.1.0-alpha.0.tgz",
+    "@molcrafts/ui-vega-lite": "file:vendor/ui/molcrafts-ui-vega-lite-0.1.0-alpha.0.tgz",
     "@fluentui/react-icons": "2.0.344"
   },
   "devDependencies": {
@@ -48,7 +47,7 @@
     "@tailwindcss/oxide-linux-x64-gnu": "^4.3.3"
   },
   "overrides": {
-    "@molcrafts/design-tokens": "$@molcrafts/design-tokens",
-    "@molcrafts/design-vega": "file:vendor/design/molcrafts-design-vega-0.0.1.tgz"
+    "@molcrafts/ui-tokens": "$@molcrafts/ui-tokens",
+    "@molcrafts/ui-vega": "file:vendor/ui/molcrafts-ui-vega-0.1.0-alpha.0.tgz"
   }
 }

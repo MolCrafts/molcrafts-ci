@@ -362,50 +362,16 @@ def _build_seeds() -> list[tuple[str, mci.Snapshot]]:
     return seeds
 
 
-def _published_from_entries(entries: dict[str, list[dict]]) -> dict[str, str]:
-    published: dict[str, str] = {}
-    for key, rows in entries.items():
-        project = key.split("/", 1)[0]
-        for row in rows:
-            stamp = row.get("timestamp")
-            if not isinstance(stamp, str):
-                continue
-            latest = published.get(project)
-            if latest is None or stamp > latest:
-                published[project] = stamp
-    return published
-
-
 def _export_fixtures() -> None:
-    """Rebuild TypeScript fixtures from the JSONL index + snapshot files molci wrote."""
-    index_root = DATA / "index"
-    indexes: list[str] = []
+    """Rebuild TypeScript fixtures from what ``molci`` ingest wrote, unchanged."""
+    listing = json.loads((DATA / "index-listing.json").read_text(encoding="utf-8"))
+    index = mci.SnapshotIndex(DATA)
     entries: dict[str, list[dict]] = {}
-    if index_root.exists():
-        for path in sorted(index_root.rglob("*.jsonl")):
-            rel = path.relative_to(DATA).as_posix()
-            indexes.append(f"data/{rel}")
-            project = path.parent.name
-            record = path.stem
-            key = f"{project}/{record}"
-            rows: list[dict] = []
-            for line in path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line:
-                    rows.append(json.loads(line))
-            entries[key] = rows
-
-    # Prefer the listing molci wrote (includes published); fall back to deriving.
-    listing_path = DATA / "index-listing.json"
-    published: dict[str, str] = {}
-    if listing_path.exists():
-        listing = json.loads(listing_path.read_text(encoding="utf-8"))
-        published = dict(listing.get("published") or {})
-        if listing.get("indexes"):
-            # Keep fixture paths prefixed the way the mock already serves them.
-            indexes = [p if p.startswith("data/") else f"data/{p}" for p in listing["indexes"]]
-    if not published:
-        published = _published_from_entries(entries)
+    for rel in listing["indexes"]:
+        project, record = Path(rel).parent.name, Path(rel).stem
+        entries[f"{project}/{record}"] = list(index.entries(project, record))
+    indexes = listing["indexes"]
+    published = listing["published"]
 
     snapshots: dict[str, dict] = {}
     snap_root = DATA / "snapshots"

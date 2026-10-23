@@ -1,1 +1,1 @@
-export { cn } from "@molcrafts/design";
+export { cn } from "@molcrafts/ui";

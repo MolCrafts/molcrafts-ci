@@ -66,9 +66,9 @@ CI_CONTEXT = HERE.parent / "ci-context" / "action.yml"
 
 
 def _load_release():
-    """molcrafts_ci/release.py, the publishing contract, loaded by path: the
-    package's __init__ needs pydantic, which this script does not bring."""
-    path = HERE.parents[1] / "src" / "molcrafts_ci" / "release.py"
+    """release_contract.py beside this script: the release.toml contract of the
+    previous CI scheme, loaded by path (this PEP 723 script brings only PyYAML)."""
+    path = HERE / "release_contract.py"
     spec = importlib.util.spec_from_file_location("molcrafts_ci_release", path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module  # dataclasses resolve their module by name

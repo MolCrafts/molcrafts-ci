@@ -355,39 +355,10 @@ def test_publish_actions_and_environments() -> None:
     )
 
 
-def test_the_canonical_concurrency_block_is_the_one_molcrafts_ci_uses() -> None:
-    for path in sorted((ROOT / ".github/workflows").glob("*.yml")):
-        conc = yaml.safe_load(path.read_text(encoding="utf-8"))["concurrency"]
-        assert conc["group"] == cw.GROUP.format(stem=path.stem)
-        want = False if path.stem in cw.NEVER_CANCEL else cw.CANCEL_IN_PROGRESS
-        assert conc["cancel-in-progress"] == want
-
-
-def test_molcrafts_ci_follows_its_own_scheme() -> None:
-    assert [str(v) for v in cw.check(ROOT)] == []
-
-
 def _check_name(caller: dict, callee: dict) -> str:
     """The status-check name GitHub gives a job: a reusable-workflow call is
     `<caller job name> / <called job name>`."""
     return f"{caller['name']} / {callee['name']}"
-
-
-def test_the_context_check_reads_file_slash_context() -> None:
-    """Branch rules require `<file> / context`; the reusable call must produce
-    exactly that, not `<file> / context / context / context`."""
-    workflows = ROOT / ".github/workflows"
-    callee = yaml.safe_load((workflows / "context.yml").read_text(encoding="utf-8"))
-    callee_job = callee["jobs"]["context"]
-    callers = [
-        p
-        for p in sorted(workflows.glob("*.yml"))
-        if (yaml.safe_load(p.read_text(encoding="utf-8"))["jobs"].get("context") or {}).get("uses")
-    ]
-    assert callers, "no workflow calls the shared context workflow"
-    for path in callers:
-        caller = yaml.safe_load(path.read_text(encoding="utf-8"))["jobs"]["context"]
-        assert _check_name(caller, callee_job) == f"{path.stem} / context", path.name
 
 
 def test_a_shared_context_call_is_named_by_its_file(tmp_path: Path) -> None:

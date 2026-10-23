@@ -1,7 +1,7 @@
-# actionlint 1.7.12 predates GitHub's self-repository syntax (runner >=2.336.0).
-# Remove this exact-match exception when upstream supports it:
-# https://github.com/rhysd/actionlint/issues/711
+# actionlint 1.7.12 predates GitHub's `$/` self-repository syntax (the Action
+# from the same commit as the workflow; runner >= 2.336.0). Remove this
+# exception when upstream supports it: https://github.com/rhysd/actionlint/issues/711
 paths:
-  .github/workflows/context.yml:
+  .github/workflows/*.yml:
     ignore:
-      - '^specifying action "\$/actions/ci-context" in invalid format because ref is missing\.'
+      - '^specifying action "\$/actions/[a-z-]+" in invalid format because ref is missing\.'

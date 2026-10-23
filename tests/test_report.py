@@ -28,7 +28,7 @@ class TestRenderReport:
         assert out.startswith("### test / python\n")
         # 20 run, 2 failures + 1 error, 3 skipped; 3/4 statements, 5/8 branches.
         assert _row(out) == "| 14 | 3 | 3 | 75.0% | 62.5% |"
-        assert "Read from `pytest.xml`, `coverage-py.json` (coverage.py)." in out
+        assert "Read from `pytest.xml`, `coverage-py.json`." in out
 
     def test_numbers_are_the_dashboards(self) -> None:
         """The table and `molci snapshot` read the same files the same way."""

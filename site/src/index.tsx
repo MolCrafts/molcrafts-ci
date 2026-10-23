@@ -1,10 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-
 import { App } from "./App";
+import { UrlStateProvider } from "./lib/use-url-state";
 import "./plugins/builtins";
-import "@molcrafts/design/styles.css";
+import "@molcrafts/ui/styles.css";
 import "./styles/tailwind.css";
 
 const root = document.getElementById("root");
@@ -14,6 +14,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <UrlStateProvider>
+      <App />
+    </UrlStateProvider>
   </StrictMode>,
 );

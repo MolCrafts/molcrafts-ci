@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from molcrafts_ci.gate import GateResult, GateStatus
 from molcrafts_ci.jsonutil import dumps_deterministic
 from molcrafts_ci.manifest import Manifest, Source, Tracking
 from molcrafts_ci.persist import SnapshotIndex, ingest_snapshot, write_snapshot
@@ -65,14 +64,3 @@ def test_immutable_snapshot_no_overwrite(tmp_path: Path) -> None:
     write_snapshot(tmp_path, "molpy", snap)
     with pytest.raises(FileExistsError):
         write_snapshot(tmp_path, "molpy", snap)
-
-
-def test_gate_result_status() -> None:
-    result = GateResult(
-        status=GateStatus.FAIL,
-        gate="performance-regression",
-        summary="mean_ns exceeded policy",
-        details={"delta": 0.2},
-        references=["snapshot:abcdef123456"],
-    )
-    assert result.model_dump(mode="json")["status"] == "fail"
