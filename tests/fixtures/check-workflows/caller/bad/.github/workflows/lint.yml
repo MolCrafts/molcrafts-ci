@@ -1,0 +1,10 @@
+name: lint
+on:
+  push:
+    branches: ["**"]
+jobs:
+  ci:
+    uses: MolCrafts/molcrafts-ci/.github/workflows/ci.yml@dev
+    with:
+      profile: python
+      area: test

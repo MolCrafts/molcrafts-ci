@@ -1,0 +1,5 @@
+[pypi]
+packages = ["x"]
+
+[crates-io]
+packages = ["x"]

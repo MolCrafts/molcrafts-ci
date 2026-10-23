@@ -24,7 +24,20 @@ cw = importlib.util.module_from_spec(_spec)
 sys.modules["check_workflows"] = cw
 _spec.loader.exec_module(cw)
 
-RULES = ["context", "needs", "skip-pr", "publish", "concurrency", "pin", "comment", "name"]
+# Rules a one-concern fixture exercises; checked with whole=False.
+RULES = [
+    "caller",
+    "comment",
+    "concurrency",
+    "context",
+    "name",
+    "needs",
+    "pin",
+    "publish",
+    "skip-pr",
+]
+# Rules that read a whole repository; their fixtures are complete repositories.
+REPOSITORY_RULES = ["files", "result", "release"]
 
 # What each bad fixture must report, as (file, job, rule) -- exactly these.
 EXPECTED_BAD = {
@@ -59,6 +72,18 @@ EXPECTED_BAD = {
         ("release.yml", "build", "name"),
         ("release.yml", "test", "name"),
     },
+    "caller": {
+        ("lint.yml", "ci", "pin"),
+        ("lint.yml", "ci", "profile"),
+    },
+    "files": {("lint.yml", None, "files")},
+    "result": {("test.yml", "result", "result")},
+    "release": {
+        ("release.yml", "pypi", "release"),  # environment `release`, not `pypi`
+        ("release.yml", "both", "release"),  # two targets in one job
+        ("nightly.yml", "pypi", "release"),  # pypi-nightly in environment `pypi`
+        ("release.toml", None, "release"),  # crates-io unpublished; npm, pypi-nightly undeclared
+    },
 }
 
 
@@ -66,27 +91,36 @@ def summary(violations: list) -> set[tuple[str, str | None, str]]:
     return {(Path(v.file).name, v.job, v.rule) for v in violations}
 
 
+def one(root: Path) -> list:
+    """The per-workflow rules: what a one-concern fixture can satisfy."""
+    return cw.check(root, whole=False)
+
+
+def check(rule: str, root: Path) -> list:
+    return cw.check(root, whole=rule in REPOSITORY_RULES)
+
+
 def test_every_rule_has_a_good_and_a_bad_fixture() -> None:
-    assert sorted(p.name for p in FIXTURES.iterdir()) == sorted(RULES)
-    assert set(EXPECTED_BAD) == set(RULES)
-    for rule in RULES:
+    assert sorted(p.name for p in FIXTURES.iterdir()) == sorted(RULES + REPOSITORY_RULES)
+    assert set(EXPECTED_BAD) == set(RULES + REPOSITORY_RULES)
+    for rule in RULES + REPOSITORY_RULES:
         assert (FIXTURES / rule / "good/.github/workflows").is_dir()
         assert (FIXTURES / rule / "bad/.github/workflows").is_dir()
 
 
-@pytest.mark.parametrize("rule", RULES)
+@pytest.mark.parametrize("rule", RULES + REPOSITORY_RULES)
 def test_good_fixture_passes(rule: str) -> None:
-    assert [str(v) for v in cw.check(FIXTURES / rule / "good")] == []
+    assert [str(v) for v in check(rule, FIXTURES / rule / "good")] == []
 
 
-@pytest.mark.parametrize("rule", RULES)
+@pytest.mark.parametrize("rule", RULES + REPOSITORY_RULES)
 def test_bad_fixture_fails_on_its_rule_only(rule: str) -> None:
-    violations = cw.check(FIXTURES / rule / "bad")
+    violations = check(rule, FIXTURES / rule / "bad")
     assert summary(violations) == EXPECTED_BAD[rule], "\n".join(map(str, violations))
 
 
 def test_context_job_messages() -> None:
-    messages = {v.message for v in cw.check(FIXTURES / "context/bad")}
+    messages = {v.message for v in one(FIXTURES / "context/bad")}
     assert "is not the first job (the first is `python`)" in messages
     assert "must be named `lint / context`, not `lint / ctx`" in messages
     assert "maps `cancel`, which ci-context does not output" in messages
@@ -100,7 +134,7 @@ def test_context_outputs_follow_the_action() -> None:
 
 
 def test_violation_format_names_file_line_job_and_rule() -> None:
-    v = cw.check(FIXTURES / "needs/bad")[0]
+    v = one(FIXTURES / "needs/bad")[0]
     assert re.fullmatch(r"\.github/workflows/test\.yml:\d+: job build: \[needs\] .+", str(v))
 
 
@@ -204,7 +238,7 @@ def test_transitive_skip_through_a_chain(tmp_path: Path) -> None:
 """,
         ),
     )
-    assert [str(v) for v in cw.check(root)] == []
+    assert [str(v) for v in one(root)] == []
 
 
 def test_a_need_on_context_alone_does_not_gate(tmp_path: Path) -> None:
@@ -222,7 +256,7 @@ def test_a_need_on_context_alone_does_not_gate(tmp_path: Path) -> None:
 """,
         ),
     )
-    assert summary(cw.check(root)) == {("test.yml", "a", "skip-pr")}
+    assert summary(one(root)) == {("test.yml", "a", "skip-pr")}
 
 
 def test_a_workflow_no_pull_request_reaches_needs_no_skip_pr_gate(tmp_path: Path) -> None:
@@ -258,7 +292,7 @@ jobs:
     steps: [{run: "true"}]
 """,
     )
-    assert [str(v) for v in cw.check(root)] == []
+    assert [str(v) for v in one(root)] == []
 
 
 @pytest.mark.parametrize(
@@ -300,7 +334,7 @@ def test_raw_tests_in_a_publishing_jobs_env(tmp_path: Path) -> None:
         "      - run: npx @vscode/vsce publish\n"
         "        env:\n          TAG: ${{ github.ref_type }}\n",
     )
-    violations = cw.check(write(tmp_path, "release.yml", text))
+    violations = one(write(tmp_path, "release.yml", text))
     assert {(v.job, v.message.split(" tests ")[0]) for v in violations} == {
         ("pypi", "env PUBLISH"),
         ("crate", "step `#2` env TAG"),
@@ -321,18 +355,34 @@ def test_publish_actions_and_environments() -> None:
     )
 
 
+def _check_name(caller: dict, callee: dict) -> str:
+    """The status-check name GitHub gives a job: a reusable-workflow call is
+    `<caller job name> / <called job name>`."""
+    return f"{caller['name']} / {callee['name']}"
+
+
+def test_a_shared_context_call_is_named_by_its_file(tmp_path: Path) -> None:
+    spec = yaml.safe_load((FIXTURES / "context/good/.github/workflows/lint.yml").read_text())
+    spec["jobs"]["context"] = {"name": "lint", "uses": cw.CONTEXT_WORKFLOW}
+    assert one(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
+    spec["jobs"]["context"]["name"] = "lint / context"
+    messages = {v.message for v in one(write(tmp_path, "lint.yml", yaml.safe_dump(spec)))}
+    want = "must be named `lint` (its check reads `lint / context`), not `lint / context`"
+    assert want in messages
+
+
 def test_local_ci_context_only_where_it_exists(tmp_path: Path) -> None:
     text = (FIXTURES / "context/good/.github/workflows/lint.yml").read_text(encoding="utf-8")
     text = text.replace(cw.CONTEXT_USES, cw.LOCAL_CONTEXT_USES)
     root = write(tmp_path, "lint.yml", text)
-    assert summary(cw.check(root)) == {("lint.yml", "context", "context")}
+    assert summary(one(root)) == {("lint.yml", "context", "context")}
     (tmp_path / "actions/ci-context").mkdir(parents=True)
     (tmp_path / "actions/ci-context/action.yml").write_text("name: x\n", encoding="utf-8")
-    assert cw.check(root) == []
+    assert one(root) == []
 
 
 @pytest.mark.skipif(shutil.which("uv") is None, reason="uv runs the PEP 723 script")
-@pytest.mark.parametrize(("rule", "status"), [("pin", 0), ("comment", 1)])
+@pytest.mark.parametrize(("rule", "status"), [("release", 0), ("files", 1)])
 def test_script_exit_status(rule: str, status: int) -> None:
     fixture = FIXTURES / rule / ("good" if status == 0 else "bad")
     proc = subprocess.run(
@@ -343,13 +393,13 @@ def test_script_exit_status(rule: str, status: int) -> None:
     )
     assert proc.returncode == status, proc.stdout + proc.stderr
     if status:
-        assert "[comment]" in proc.stdout and "1 violation(s)" in proc.stdout
+        assert "[files]" in proc.stdout and "1 violation(s)" in proc.stdout
 
 
 def test_immutable_shared_action_refs(tmp_path: Path) -> None:
     text = (FIXTURES / "pin/good/.github/workflows/lint.yml").read_text(encoding="utf-8")
     text = text.replace("@master", "@" + "a" * 40)
-    assert cw.check(write(tmp_path, "lint.yml", text)) == []
+    assert one(write(tmp_path, "lint.yml", text)) == []
 
 
 @pytest.mark.parametrize("ref", ["master", "a" * 40])
@@ -357,17 +407,17 @@ def test_shared_context_workflow_inherits_its_output_contract(tmp_path: Path, re
     text = (FIXTURES / "context/good/.github/workflows/lint.yml").read_text()
     spec = yaml.safe_load(text)
     spec["jobs"]["context"] = {
-        "name": "lint / context",
+        "name": "lint",
         "uses": cw.CONTEXT_WORKFLOW.removesuffix("master") + ref,
     }
-    assert cw.check(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
+    assert one(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
 
 
 def test_nightly_rejects_a_mutable_checkout(tmp_path: Path) -> None:
     text = (FIXTURES / "publish/good/.github/workflows/nightly.yml").read_text()
     spec = yaml.safe_load(text)
     spec["jobs"]["pypi"]["steps"].insert(0, {"uses": "actions/checkout@v7", "with": {"ref": "dev"}})
-    violations = cw.check(write(tmp_path, "nightly.yml", yaml.safe_dump(spec)))
+    violations = one(write(tmp_path, "nightly.yml", yaml.safe_dump(spec)))
     assert any("context's source-ref" in violation.message for violation in violations)
 
 
@@ -375,5 +425,15 @@ def test_nightly_rejects_a_separate_publication_branch(tmp_path: Path) -> None:
     text = (FIXTURES / "publish/good/.github/workflows/nightly.yml").read_text()
     spec = yaml.safe_load(text)
     spec[True]["push"] = {"branches": ["nightly"]}
-    violations = cw.check(write(tmp_path, "nightly.yml", yaml.safe_dump(spec)))
+    violations = one(write(tmp_path, "nightly.yml", yaml.safe_dump(spec)))
     assert any("schedule/dispatch only" in violation.message for violation in violations)
+
+
+def test_repository_rules_bind_a_repository_that_pins_ci(tmp_path: Path) -> None:
+    """A legacy consumer on @master keeps the per-workflow rules; pinning CI_REF
+    (pin-ci) adopts files / result / release."""
+    text = (FIXTURES / "files/bad/.github/workflows/lint.yml").read_text(encoding="utf-8")
+    root = write(tmp_path, "lint.yml", text)
+    assert cw.check(root) == []
+    (tmp_path / ".github/partners.env").write_text("CI_REF=" + "a" * 40 + "\n", encoding="utf-8")
+    assert {v.rule for v in cw.check(root)} == {"files"}

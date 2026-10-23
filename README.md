@@ -302,8 +302,13 @@ The history is git.
 ## Previous scheme (until every repository has moved)
 
 Repositories not yet on `.github/ci.toml` still call these at `@master`;
-they stay working and are removed when the last caller has moved:
-`actions/ci-context`, `actions/check-workflows`, `actions/setup-partners`
-(with `src/molcrafts_ci/partners.py` and `.github/partners.env`),
-`actions/setup-python`, `actions/setup-node`, `actions/setup-rust`.
-`actions/setup-python` is also used by `ci.yml` itself.
+they keep working and are deleted when the last caller has moved:
+
+- `.github/workflows/context.yml` and `actions/ci-context`
+- `actions/check-workflows` (with its `release_contract.py`, the
+  `.github/release.toml` rules)
+- `hooks/ci.py` and `profiles/` (git hooks by `CI_PROFILE`)
+- `actions/setup-partners` with `src/molcrafts_ci/partners.py` and
+  `.github/partners.env`
+- `actions/setup-python`, `actions/setup-node`, `actions/setup-rust`
+  (`setup-python` is also used by `ci.yml`)

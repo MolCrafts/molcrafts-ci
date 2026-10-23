@@ -1,0 +1,62 @@
+# molvis. Selected by CI_PROFILE=node-python. No commit SHA.
+#
+# Every check runs once. pre-commit runs the static checks that read only
+# the sources. pre-push builds every artifact once (`build`: the packages in
+# dependency order, the viewers, the page and its Python copy, the VS Code
+# extension), then each later gate reads those artifacts and builds nothing.
+# `setup: [build]` marks such a gate: on its own (a separate CI job, or
+# `--gate` by hand) it needs the `build` gate run first.
+name: node-python
+gates:
+  - id: workflows
+    stage: pre-commit
+    workflow: lint
+    run: molci:workflows
+  - id: biome
+    stage: pre-commit
+    workflow: lint
+    setup: [node]
+    run: npx biome check
+  - id: guards
+    stage: pre-commit
+    workflow: lint
+    setup: [node-no-install, python, partners]
+    run: |
+      npm run check:molrs-gateway
+      npm run check:versions
+      uv lock --check --project python
+  - id: build
+    stage: pre-push
+    workflow: test
+    setup: [node]
+    run: |
+      npm run build
+      npm run check:pack
+      npm run check:page-public-path
+  - id: typecheck
+    stage: pre-push
+    workflow: lint
+    setup: [node, build]
+    run: npm run typecheck
+  - id: js
+    stage: pre-push
+    workflow: test
+    setup: [node, build]
+    run: npm run test:js
+  - id: vsc-ext
+    stage: pre-push
+    workflow: test
+    setup: [node, build]
+    run: npm run test:vsc-ext
+  # MOLVIS_SKIP_UI_BUILD: installing the package must not rebuild the page;
+  # the tests and the site import the package, not the bundle.
+  - id: python
+    stage: pre-push
+    workflow: test
+    setup: [python, partners, rust-molrs]
+    run: MOLVIS_SKIP_UI_BUILD=1 uv run --project python --extra dev python -m pytest python/tests
+  - id: docs
+    stage: pre-push
+    workflow: docs
+    setup: [python, partners]
+    run: MOLVIS_SKIP_UI_BUILD=1 uv run --project python --extra docs zensical build --strict

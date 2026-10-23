@@ -18,7 +18,7 @@ def _snap(*, tracking: bool = True, generation: int = 1) -> Snapshot:
             source=Source(
                 repository="MolCrafts/molpy",
                 commit="abcdef1234567890",
-                ref="refs/heads/main",
+                ref="refs/heads/master",
                 workflow_run=42,
                 timestamp="2026-09-20T12:00:00Z",
             ),

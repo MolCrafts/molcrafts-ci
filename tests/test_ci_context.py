@@ -37,6 +37,10 @@ def test_table_covers_every_kind_of_run() -> None:
     assert [c["case"] for c in CASES if c["expect"]["publish"] == "true"] == ["upstream tag"]
     names = {c["case"] for c in CASES}
     assert {"fork tag", "upstream master push", "upstream dispatch on a tag"} <= names
+    # skip-pr: inside a fork, and upstream only for an integration-branch head.
+    skipped = {c["case"] for c in CASES if c["expect"]["skip-pr"] == "true"}
+    assert {"in-fork pull request", "upstream release pull request"} <= skipped
+    assert not {"upstream Dependabot pull request", "pull request from a fork"} & skipped
 
 
 @pytest.mark.parametrize(
@@ -80,6 +84,7 @@ def test_case(tmp_path: Path, case: dict) -> None:
         event=case["event"],
         ref=case["ref"],
         pr_head=case["head"],
+        pr_head_ref=case.get("head_ref", ""),
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert outputs(tmp_path) == {
@@ -136,6 +141,46 @@ def test_deploy_is_a_stable_upstream_branch_operation(
     assert outputs(tmp_path)["deploy"] == str(enabled).lower()
 
 
+@pytest.mark.parametrize("on_master", [True, False])
+def test_release_ancestry_gate(
+    tmp_path: Path, on_master: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # pre-push exports the parent worktree's Git paths; this fixture owns its repo.
+    for key in list(os.environ):
+        if key.startswith("GIT_"):
+            monkeypatch.delenv(key)
+    workflow = yaml.safe_load((ROOT / ".github/workflows/context.yml").read_text())
+    script = next(
+        step["run"]
+        for step in workflow["jobs"]["context"]["steps"]
+        if step.get("name") == "Release tag belongs to master"
+    )
+    for args in (
+        ["init", "-q", "-b", "master"],
+        ["config", "user.name", "test"],
+        ["config", "user.email", "test@example.test"],
+        ["commit", "-q", "--allow-empty", "-m", "stable"],
+        ["update-ref", "refs/remotes/origin/master", "HEAD"],
+    ):
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+    if not on_master:
+        subprocess.run(["git", "checkout", "-q", "-b", "dev"], cwd=tmp_path, check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "--allow-empty", "-m", "unreleased"], cwd=tmp_path, check=True
+        )
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=tmp_path, text=True).strip()
+    result = subprocess.run(
+        ["bash", "-e", "-c", script],
+        cwd=tmp_path,
+        env=dict(os.environ, GITHUB_SHA=commit),
+        capture_output=True,
+        text=True,
+    )
+    assert (result.returncode == 0) is on_master
+    if not on_master:
+        assert "merge dev into master first" in result.stdout
+
+
 @pytest.mark.parametrize("missing", ["owner", "repository", "event", "ref"])
 def test_missing_context_fails(tmp_path: Path, missing: str) -> None:
     ctx = dict(owner="MolCrafts", repository="MolCrafts/molrs", event="push", ref="refs/heads/dev")
@@ -156,4 +201,48 @@ def test_pull_request_from_a_deleted_fork_runs(tmp_path: Path) -> None:
         pr_head="",
     )
     assert proc.returncode == 0
+    assert outputs(tmp_path)["skip-pr"] == "false"
+
+
+@pytest.mark.parametrize(
+    ("owner", "head", "head_ref", "skip"),
+    [
+        ("MolCrafts", "MolCrafts/molpy", "dev", "true"),  # release PR: dev ran in full
+        ("MolCrafts", "MolCrafts/molpy", "master", "true"),
+        ("MolCrafts", "MolCrafts/molpy", "dependabot/pip/numpy-2.3.4", "false"),  # fast push
+        ("MolCrafts", "MolCrafts/molpy", "feature", "false"),
+        ("MolCrafts", "MolCrafts/molpy", "main", "false"),  # not an integration branch
+        ("MolCrafts", "MolCrafts/molpy", "", "false"),  # no head ref given
+        ("MolCrafts", "Roy-Kid/molpy", "dev", "false"),  # fork -> upstream: ran in the fork
+        ("MolCrafts", "", "dev", "false"),  # head repository deleted
+        ("Roy-Kid", "Roy-Kid/molpy", "feature", "true"),  # inside a fork
+        ("Roy-Kid", "Roy-Kid/molpy", "dev", "true"),
+    ],
+)
+def test_skip_pr(tmp_path: Path, owner: str, head: str, head_ref: str, skip: str) -> None:
+    proc = run(
+        tmp_path,
+        owner=owner,
+        repository=f"{owner}/molpy",
+        event="pull_request",
+        ref="refs/pull/114/merge",
+        pr_head=head,
+        pr_head_ref=head_ref,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert outputs(tmp_path)["skip-pr"] == skip
+
+
+def test_a_push_of_an_integration_branch_is_never_skipped(tmp_path: Path) -> None:
+    # A head ref and repository alone, without pull_request, skip nothing.
+    proc = run(
+        tmp_path,
+        owner="MolCrafts",
+        repository="MolCrafts/molpy",
+        event="push",
+        ref="refs/heads/dev",
+        pr_head="MolCrafts/molpy",
+        pr_head_ref="dev",
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
     assert outputs(tmp_path)["skip-pr"] == "false"

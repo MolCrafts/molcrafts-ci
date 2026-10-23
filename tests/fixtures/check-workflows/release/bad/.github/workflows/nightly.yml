@@ -1,0 +1,27 @@
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  context:
+    name: nightly
+    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@master
+
+  pypi:
+    name: nightly / pypi
+    needs: context
+    if: needs.context.outputs.nightly == 'true'
+    environment: pypi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pypa/gh-action-pypi-publish@release/v1

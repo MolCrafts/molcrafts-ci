@@ -227,9 +227,15 @@ def pin_ci(commit: str) -> int:
         die(f"molcrafts-ci@{commit} is not published; publish the infrastructure first")
     paths = sorted((ROOT / ".github/workflows").glob("*.y*ml"))
     paths += sorted((ROOT / ".github/actions").glob("**/action.y*ml"))
+    paths += [p for p in [ROOT / ".pre-commit-config.yaml"] if p.is_file()]
     for path in paths:
         before = path.read_text(encoding="utf-8")
         after = CI_USE.sub(lambda match: match["prefix"] + commit, before)
+        after = re.sub(
+            r"(https://raw\.githubusercontent\.com/MolCrafts/molcrafts-ci/)[^/]+(/hooks/ci\.py)",
+            lambda match: match[1] + commit + match[2],
+            after,
+        )
         if after != before:
             path.write_text(after, encoding="utf-8")
             print(path.relative_to(ROOT))

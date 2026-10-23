@@ -1,0 +1,31 @@
+# molrs. Selected by CI_PROFILE=rust-python.
+name: rust-python
+gates:
+  - id: workflows
+    stage: pre-commit
+    workflow: lint
+    run: molci:workflows
+  - id: fmt
+    stage: pre-commit
+    workflow: lint
+    setup: [rust, python]
+    run: scripts/check.sh fmt
+  - id: ruff
+    stage: pre-commit
+    workflow: lint
+    setup: [python]
+    run: scripts/check.sh ruff
+  - id: os-cfg
+    stage: pre-commit
+    workflow: lint
+    run: molci:os-cfg
+  - id: partners
+    stage: pre-commit
+    workflow: lint
+    setup: [python]
+    run: scripts/check.sh partners
+  - id: verify
+    stage: pre-push
+    workflow: test
+    setup: [rust, python]
+    run: scripts/check.sh verify

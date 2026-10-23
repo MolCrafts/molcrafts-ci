@@ -1,0 +1,28 @@
+# molcrafts-ui. Selected by CI_PROFILE=node.
+# Browser suites stay in the repository workflow; they need Playwright and the
+# dashboard submit, which a local push does not run.
+#
+# Every check runs once. pre-push builds the packages once (`build`); the
+# typecheck and the package checks read that build and rebuild nothing.
+# `setup: [build]` marks such a gate: on its own it needs `build` first.
+name: node
+gates:
+  - id: workflows
+    stage: pre-commit
+    workflow: lint
+    run: molci:workflows
+  - id: build
+    stage: pre-push
+    workflow: test
+    setup: [pnpm]
+    run: pnpm build:packages
+  - id: typecheck
+    stage: pre-push
+    workflow: lint
+    setup: [pnpm, build]
+    run: pnpm typecheck
+  - id: packages
+    stage: pre-push
+    workflow: test
+    setup: [pnpm, build]
+    run: pnpm verify:packages
