@@ -1,29 +1,31 @@
-"""CLI for validating and persisting CI snapshots."""
+"""`molci`: run a repository's checks, and build, validate and ingest snapshots.
+
+`check`, `partners`, `plan`, `rust`, `wait-for-ci`, `check-version` and
+`nightly` talk to a person; `validate-snapshot`, `ingest` and `snapshot` print
+one JSON object per line, for actions/submit.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from molcrafts_ci.gate import GateResult
+from molcrafts_ci import config as ci_config
+from molcrafts_ci import plan, release, run, workspace
 from molcrafts_ci.manifest import Manifest, Tracking
-from molcrafts_ci.persist import (
-    ingest_snapshot,
-    read_snapshot,
-    snapshot_path,
-    write_index_listing,
-)
+from molcrafts_ci.persist import SnapshotIndex, ingest_snapshot, read_snapshot
 from molcrafts_ci.producers import (
+    COVERAGE_FORMATS,
     detect_profile,
     github_source,
     read_cargo_test,
-    read_coverage_py,
+    read_coverage,
     read_junit,
-    read_lcov,
 )
 from molcrafts_ci.report import render_report
 from molcrafts_ci.snapshot import Snapshot
@@ -73,14 +75,9 @@ def _cmd_validate_snapshot(args: argparse.Namespace) -> int:
     return _each(args.path, handle)
 
 
-def _cmd_validate_gate(args: argparse.Namespace) -> int:
-    result = GateResult.model_validate_json(Path(args.path).read_text(encoding="utf-8"))
-    _emit({"ok": True, "status": result.status, "gate": result.gate})
-    return 0 if result.status != "fail" else 1
-
-
 def _cmd_ingest(args: argparse.Namespace) -> int:
     data_root = Path(args.data_root)
+    index = SnapshotIndex(data_root)
 
     def handle(path: Path) -> dict[str, Any]:
         snap = read_snapshot(path)
@@ -94,48 +91,20 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
             # Not an error: an untracked snapshot is a deliberate transient,
             # and its producer still wants the rest of the run to go green.
             return {**common, "status": "untracked"}
-        target = snapshot_path(
-            data_root,
-            project=args.project,
-            record=snap.manifest.record,
-            generation=snap.manifest.tracking.generation,
-            snapshot_id=snap.snapshot_id(),
-        )
-        existed = target.exists()
+        # The index is the published history, so "already there" means indexed,
+        # not merely a file on disk.
+        indexed = index.has(args.project, snap.manifest.record, snap.snapshot_id())
         out = ingest_snapshot(data_root, args.project, snap, if_exists=args.if_exists)
-        return {**common, "status": "skipped" if existed else "ingested", "stored": str(out)}
+        return {**common, "status": "skipped" if indexed else "ingested", "stored": str(out)}
 
-    code = _each(args.path, handle)
-    if (data_root / "index").exists():
-        # Rewritten from the tree rather than appended to, so it stays correct
-        # even when a record is removed or an earlier run half-finished.
-        _emit({"ok": True, "status": "listed", "path": str(write_index_listing(data_root))})
-    return code
+    return _each(args.path, handle)
 
 
 def _cmd_snapshot(args: argparse.Namespace) -> int:
     if args.junit and args.cargo_test:
-        print(
-            json.dumps(
-                {
-                    "ok": False,
-                    "error": "pass one tests report, not both --junit and --cargo-test",
-                }
-            ),
-            file=sys.stderr,
-        )
-        return 2
+        raise ValueError("pass one tests report, not both --junit and --cargo-test")
     if not args.junit and not args.cargo_test and not args.coverage:
-        print(
-            json.dumps(
-                {
-                    "ok": False,
-                    "error": "nothing to build: pass --junit, --cargo-test, and/or --coverage",
-                }
-            ),
-            file=sys.stderr,
-        )
-        return 2
+        raise ValueError("nothing to build: pass --junit, --cargo-test, and/or --coverage")
 
     source = github_source(require_commit=args.track)
     profile = args.profile or detect_profile()
@@ -174,9 +143,8 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
             )
         )
     if args.coverage:
-        read = read_lcov if args.coverage_format == "lcov" else read_coverage_py
         root = Path(args.source_root).resolve()
-        payload = read(Path(args.coverage), source_root=root)
+        payload = read_coverage(Path(args.coverage), fmt=args.coverage_format, source_root=root)
         _emit(build("coverage", args.coverage_producer, payload))
     return 0
 
@@ -193,17 +161,127 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_check(args: argparse.Namespace) -> int:
+    root = Path(args.root)
+    config = ci_config.load(root)
+    checks = run.select(config, args.name, args.stage)
+    return run.run_checks(root, config, checks, python=args.python or None)
+
+
+def _cmd_plan(args: argparse.Namespace) -> int:
+    config = ci_config.load(Path(args.root))
+    stages = ("release",) if args.release else ("pre-commit", "pre-push")
+    rows = plan.legs(config, _github_event(), stages=stages)
+    print(f"checks={json.dumps(rows)}")
+    for row in rows:
+        print(f"  {row['name']} on {row['runs-on']}", file=sys.stderr)
+    return 0
+
+
+def _github_event() -> plan.Event:
+    env = os.environ
+    pr_head = ""
+    event_path = env.get("GITHUB_EVENT_PATH")
+    if event_path and Path(event_path).is_file():
+        payload = json.loads(Path(event_path).read_text(encoding="utf-8"))
+        head = (payload.get("pull_request") or {}).get("head") or {}
+        pr_head = ((head.get("repo") or {}).get("full_name")) or ""
+    return plan.Event(
+        owner=env.get("GITHUB_REPOSITORY_OWNER", ""),
+        repository=env.get("GITHUB_REPOSITORY", ""),
+        name=env.get("GITHUB_EVENT_NAME", ""),
+        ref=env.get("GITHUB_REF", ""),
+        pr_head=pr_head,
+    )
+
+
+def _cmd_partners(args: argparse.Namespace) -> int:
+    root = Path(args.root)
+    config = ci_config.load(root)
+    if not config.partners:
+        workspace.stderr("no [partners] in .github/ci.toml; dependencies resolve normally")
+        return 0
+    workspace.fetch(root, config, log=workspace.stderr)
+    return 0
+
+
+def _cmd_rust(args: argparse.Namespace) -> int:
+    root = Path(args.root)
+    workspaces = workspace.rust_toolchains(root, ci_config.load(root), log=workspace.stderr)
+    print("workspaces<<EOF")
+    print("\n".join(workspaces))
+    print("EOF")
+    return 0
+
+
+def _cmd_wait_for_ci(args: argparse.Namespace) -> int:
+    release.wait_for_ci(
+        os.environ["GITHUB_REPOSITORY"],
+        os.environ["GITHUB_SHA"],
+        os.environ["GITHUB_TOKEN"],
+        log=workspace.stderr,
+    )
+    return 0
+
+
+def _cmd_check_version(args: argparse.Namespace) -> int:
+    version = release.dist_version(Path(args.dist))
+    want = args.tag.removeprefix("refs/tags/").removeprefix("v")
+    if version != want:
+        workspace.stderr(f"the tag says {want}, the built package is {version}")
+        return 1
+    workspace.stderr(f"tag and package agree: {version}")
+    return 0
+
+
+def _cmd_nightly(args: argparse.Namespace) -> int:
+    root = Path(args.root)
+    config = ci_config.load(root)
+    if config.nightly is None:
+        raise ci_config.ConfigError(f"{config.path}: no [nightly] table")
+    print(release.stamp_nightly(root, config.nightly))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="molcrafts-ci")
+    parser = argparse.ArgumentParser(prog="molci")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_ck = sub.add_parser("check", help="Run checks from .github/ci.toml")
+    p_ck.add_argument("name", nargs="*", help="Checks to run (default: all but release)")
+    p_ck.add_argument("--stage", choices=ci_config.STAGES, help="Run every check of a stage")
+    p_ck.add_argument("--python", help="Python for uv to use (sets UV_PYTHON)")
+    p_ck.add_argument("--root", default=".", help="Repository root (default: .)")
+    p_ck.set_defaults(func=_cmd_check)
+
+    p_pl = sub.add_parser("plan", help="CI: the jobs of this run, as a GitHub output line")
+    p_pl.add_argument("--release", action="store_true", help="Plan the release-stage checks")
+    p_pl.add_argument("--root", default=".")
+    p_pl.set_defaults(func=_cmd_plan)
+
+    p_pa = sub.add_parser("partners", help="Clone missing [partners] next to this repository")
+    p_pa.add_argument("--root", default=".")
+    p_pa.set_defaults(func=_cmd_partners)
+
+    p_ru = sub.add_parser("rust", help="CI: install pinned Rust toolchains, list cargo workspaces")
+    p_ru.add_argument("--root", default=".")
+    p_ru.set_defaults(func=_cmd_rust)
+
+    p_wc = sub.add_parser("wait-for-ci", help="Release: wait until ci passed on GITHUB_SHA")
+    p_wc.set_defaults(func=_cmd_wait_for_ci)
+
+    p_cv = sub.add_parser("check-version", help="Release: the built package matches the tag")
+    p_cv.add_argument("dist", help="Directory holding the built wheel and sdist")
+    p_cv.add_argument("--tag", required=True, help="Release tag, e.g. v1.2.3")
+    p_cv.set_defaults(func=_cmd_check_version)
+
+    p_ni = sub.add_parser("nightly", help="Nightly: stamp the [nightly] package name and version")
+    p_ni.add_argument("--root", default=".")
+    p_ni.set_defaults(func=_cmd_nightly)
 
     p_vs = sub.add_parser("validate-snapshot", help="Validate one or more Snapshot JSON files")
     p_vs.add_argument("path", nargs="+")
     p_vs.set_defaults(func=_cmd_validate_snapshot)
-
-    p_vg = sub.add_parser("validate-gate", help="Validate a GateResult JSON file")
-    p_vg.add_argument("path")
-    p_vg.set_defaults(func=_cmd_validate_gate)
 
     p_in = sub.add_parser("ingest", help="Persist snapshot + append index (tracking must be on)")
     p_in.add_argument("path", nargs="+", help="Path to Snapshot JSON")
@@ -235,9 +313,9 @@ def main(argv: list[str] | None = None) -> int:
     p_sn.add_argument("--coverage", help="Coverage report; see --coverage-format")
     p_sn.add_argument(
         "--coverage-format",
-        choices=["coverage.py", "lcov"],
-        default="coverage.py",
-        help="coverage.py JSON (default) or an LCOV tracefile (llvm-cov export -format=lcov)",
+        choices=COVERAGE_FORMATS,
+        default="auto",
+        help="coverage.py JSON or an LCOV tracefile (default: LCOV for .info/.lcov)",
     )
     p_sn.add_argument(
         "--tests-producer",
@@ -271,9 +349,9 @@ def main(argv: list[str] | None = None) -> int:
     p_rp.add_argument("--coverage", help="Coverage report; see --coverage-format")
     p_rp.add_argument(
         "--coverage-format",
-        choices=["coverage.py", "lcov"],
-        default="coverage.py",
-        help="coverage.py JSON (default) or an LCOV tracefile",
+        choices=COVERAGE_FORMATS,
+        default="auto",
+        help="coverage.py JSON or an LCOV tracefile (default: LCOV for .info/.lcov)",
     )
     p_rp.set_defaults(func=_cmd_report)
 
@@ -281,8 +359,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return args.func(args)
     except Exception as exc:  # noqa: BLE001 — CLI boundary
-        print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
+        if args.command in JSON_COMMANDS:
+            print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
+        else:
+            print(f"molci {args.command}: {exc}", file=sys.stderr)
         return 2
+
+
+JSON_COMMANDS = {"validate-snapshot", "ingest", "snapshot"}
 
 
 if __name__ == "__main__":

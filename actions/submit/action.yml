@@ -32,7 +32,7 @@ inputs:
   app-id:
     description: >
       MolCrafts GitHub App id. With private-key, mints a short-lived
-      installation token for this run — the authentication the specification
+      installation token for this run — the authentication MolCrafts
       prefers over a long-lived token. Takes precedence over `token`.
     required: false
     default: ""
@@ -142,20 +142,13 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        # A venv, not a bare `pip install`: the CLI must not depend on whether
-        # the producer's runner has a writable system Python (PEP 668 images
-        # refuse it) or a matching toolchain — molrs is a Rust repository.
-        venv="$RUNNER_TEMP/molcrafts-ci/venv"
-        python -m venv "$venv"
-        bin="$venv/bin"
-        [ -d "$bin" ] || bin="$venv/Scripts"
-        # Installed from the action's own checkout, so the CLI is exactly the
-        # version the caller pinned this action to.
-        "$bin/python" -m pip install -q --disable-pip-version-check \
-          -r "$GITHUB_ACTION_PATH/../../requirements-runtime.txt"
-        "$bin/python" -m pip install -q --no-deps --disable-pip-version-check "$GITHUB_ACTION_PATH/../.."
+        # The CLI of exactly the ref the caller pinned this Action to, in its
+        # own venv: independent of the runner's Python and of PEP 668 images.
+        bin=$(bash "$GITHUB_ACTION_PATH/../setup-molci/install.sh" "$RUNNER_TEMP/molci")
+        python="$bin/python"
+        [ -x "$python" ] || python="$bin/python.exe"
         echo "molci=$bin/molci" >> "$GITHUB_OUTPUT"
-        echo "python=$bin/python" >> "$GITHUB_OUTPUT"
+        echo "python=$python" >> "$GITHUB_OUTPUT"
 
     - name: Validate snapshots
       id: validate

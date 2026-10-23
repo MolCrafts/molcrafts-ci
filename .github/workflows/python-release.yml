@@ -1,0 +1,66 @@
+name: python-release
+
+# Build a Python package for release, from a repository's release.yml:
+#
+#   jobs:
+#     build:
+#       uses: MolCrafts/molcrafts-ci/.github/workflows/python-release.yml@master
+#       permissions:
+#         contents: read
+#         actions: read
+#
+# On a `v*` tag: check the tag is on master, wait for `ci` to have passed on the tagged commit (its push
+# to master ran it), run the checks with `stage = "release"` from
+# .github/ci.toml (against published dependencies, no partners), build the
+# sdist and wheel, and check their version is the tag's. The `dist` artifact
+# is then the caller's to upload: PyPI trusts the caller's workflow file, not
+# this one. A manual run of release.yml is a dry run of the same steps.
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read  # to read the tagged commit's ci run
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # to see whether the tag is on master
+          persist-credentials: false
+      - uses: $/actions/setup-molci
+
+      - name: The tag is on master
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          git merge-base --is-ancestor HEAD origin/master || {
+            echo "::error::Release tags must point to commits on master; merge dev into master first."
+            exit 1
+          }
+      - name: The commit passed ci
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: molci wait-for-ci
+
+      - name: Release checks
+        run: molci check --stage release --python 3.12
+
+      - name: Build
+        run: |
+          uv build --no-sources
+          uvx twine check --strict dist/*
+      - name: The package version is the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: molci check-version dist --tag "$GITHUB_REF_NAME"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error

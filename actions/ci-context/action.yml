@@ -9,14 +9,14 @@ description: >
 
   Outputs are the strings "true"/"false", and `tier` is "full" or "fast".
 
-  `publish` is the one gate for anything that leaves the repository: every
+  `publish` is the gate for stable registry releases: every
   job that uploads to a registry (PyPI, crates.io, npm, the VS Code
-  marketplace), deploys, or creates a GitHub Release has
+  marketplace), or creates a GitHub Release has
   `if: needs.context.outputs.publish == 'true'` and tests no raw
   `github.event_name` / `github.ref`, so adding a trigger to release.yml can
   never publish by accident. A tag-only docs or site deploy may gate on it
-  too. (nightly.yml publishes its nightly channel from a branch and gates on
-  `upstream` instead.) actions/check-workflows enforces this.
+  too. Nightly publication gates on `nightly` and builds dev; stable site/API
+  deployment gates on `deploy`. actions/check-workflows enforces this.
 
   Workflow-level `concurrency:` cannot read job outputs, so it stays inline;
   actions/check-workflows holds the one canonical expression and checks every
@@ -25,6 +25,9 @@ description: >
   The inputs default to the run's own github context; they exist so that the
   rules can be tested against synthetic contexts.
 inputs:
+  workflow:
+    description: Workflow name; nightly is the scheduled dev channel
+    default: ${{ github.workflow }}
   owner:
     description: Repository owner (github.repository_owner)
     default: ${{ github.repository_owner }}
@@ -64,12 +67,22 @@ outputs:
       registry or creates a GitHub Release (never a fork, a branch or a
       dispatch)
     value: ${{ steps.context.outputs.publish }}
+  nightly:
+    description: Upstream nightly schedule, or manual nightly run on dev/master/main
+    value: ${{ steps.context.outputs.nightly }}
+  source-ref:
+    description: dev for an enabled nightly run; otherwise the triggering ref
+    value: ${{ steps.context.outputs.source-ref }}
+  deploy:
+    description: Upstream stable-branch push or manual/event-driven deployment
+    value: ${{ steps.context.outputs.deploy }}
 runs:
   using: composite
   steps:
     - id: context
       shell: bash
       env:
+        CI_WORKFLOW: ${{ inputs.workflow }}
         CI_OWNER: ${{ inputs.owner }}
         CI_REPOSITORY: ${{ inputs.repository }}
         CI_EVENT: ${{ inputs.event-name }}

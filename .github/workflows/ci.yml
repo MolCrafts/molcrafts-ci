@@ -1,0 +1,141 @@
+name: ci
+
+# The one CI workflow of every MolCrafts repository. What to check lives in
+# the repository's own .github/ci.toml; this file only runs it. Another
+# repository calls it from its .github/workflows/ci.yml:
+#
+#   jobs:
+#     ci:
+#       uses: MolCrafts/molcrafts-ci/.github/workflows/ci.yml@master
+#       secrets: inherit
+#
+# molcrafts-ci runs the same file on its own pushes. `$/actions/...` is the
+# Action from the same commit as this workflow, whoever calls it.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [dev, master]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# A newer push to the same feature branch replaces the older run.
+concurrency:
+  group: ci-${{ github.repository }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      checks: ${{ steps.plan.outputs.checks }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: .github
+      - uses: $/actions/setup-molci
+      - id: plan
+        run: molci plan >> "$GITHUB_OUTPUT"
+
+  check:
+    name: ${{ matrix.name }}
+    needs: plan
+    if: needs.plan.outputs.checks != '[]'
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.checks) }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: $/actions/setup-molci
+
+      - name: Partners
+        if: matrix.partners
+        run: molci partners
+
+      - name: Rust
+        id: rust
+        if: matrix.rust
+        run: molci rust >> "$GITHUB_OUTPUT"
+      - if: matrix.rust && steps.rust.outputs.workspaces != ''
+        uses: Swatinem/rust-cache@v2
+        with:
+          # Shared by every check on one OS: lint, test and docs build the same crates.
+          shared-key: ${{ runner.os }}
+          workspaces: ${{ steps.rust.outputs.workspaces }}
+
+      - if: matrix.python != ''
+        uses: $/actions/setup-python
+        with:
+          python-version: ${{ matrix.python }}
+
+      - if: matrix.node-version != '' || matrix.node-version-file != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          node-version-file: ${{ matrix.node-version-file }}
+          cache: ${{ hashFiles(matrix.node-lockfile) != '' && 'npm' || '' }}
+          cache-dependency-path: ${{ matrix.node-lockfile }}
+
+      - name: ${{ matrix.check }}
+        run: molci check "${{ matrix.check }}" --python "${{ matrix.python }}"
+
+      # The counts and coverage in the run summary; never changes the verdict.
+      - name: Report
+        if: ${{ !cancelled() && (matrix.junit != '' || matrix.coverage != '') }}
+        uses: $/actions/report
+        with:
+          title: ${{ matrix.name }}
+          junit: ${{ matrix.junit }}
+          coverage: ${{ matrix.coverage }}
+
+      # A push to the [dashboard] branch on MolCrafts: this run's tests and
+      # coverage become project history on the dashboard.
+      - name: Dashboard snapshot
+        if: ${{ !cancelled() && matrix.dashboard != '' }}
+        env:
+          JUNIT: ${{ matrix.junit }}
+          COVERAGE: ${{ matrix.coverage }}
+        run: |
+          args=(--out .ci-out/snapshots --track)
+          [ -n "$JUNIT" ] && [ -f "$JUNIT" ] && args+=(--junit "$JUNIT")
+          [ -n "$COVERAGE" ] && [ -f "$COVERAGE" ] && args+=(--coverage "$COVERAGE")
+          if [ "${#args[@]}" -eq 3 ]; then
+            echo "the check wrote neither $JUNIT nor $COVERAGE; nothing to publish"
+            exit 0
+          fi
+          molci snapshot "${args[@]}"
+      - name: Dashboard
+        if: ${{ !cancelled() && matrix.dashboard != '' && hashFiles('.ci-out/snapshots/*.json') != '' }}
+        uses: $/actions/submit
+        with:
+          snapshot-path: .ci-out/snapshots/*.json
+          project: ${{ matrix.dashboard }}
+          upload-artifact: "false"
+          ssh-key: ${{ secrets.MOLCRAFTS_CI_SSH_KEY }}
+
+  # The one check branch rules require: `ci / result` passes when every check
+  # passed (or none had to run, as on a pull request inside a fork).
+  result:
+    needs: [plan, check]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every check passed
+        env:
+          PLAN: ${{ needs.plan.result }}
+          CHECKS: ${{ needs.check.result }}
+        run: |
+          echo "plan: $PLAN, checks: $CHECKS"
+          [ "$PLAN" = success ] && { [ "$CHECKS" = success ] || [ "$CHECKS" = skipped ]; }

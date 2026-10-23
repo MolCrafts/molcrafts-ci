@@ -1,39 +1,233 @@
 # molcrafts-ci
 
-Shared GitHub-native engineering infrastructure for MolCrafts:
-collect, validate, track, publish, and present developer-facing CI data.
+Shared CI for MolCrafts repositories, and the dashboard of their test and
+coverage history.
 
-**GitHub:** [`MolCrafts/molcrafts-ci`](https://github.com/MolCrafts/molcrafts-ci)
-
-**Domain peers:**
-- [`molcrafts-bench`](https://github.com/MolCrafts/molcrafts-bench)
-- [`molcrafts-molrec`](https://github.com/MolCrafts/molcrafts-molrec)
-
-These are standalone developer-facing repositories (MolCrafts is not a monorepo).
-
-## What it is
+**GitHub:** [`MolCrafts/molcrafts-ci`](https://github.com/MolCrafts/molcrafts-ci) ·
+**Domain peers:** [`molcrafts-bench`](https://github.com/MolCrafts/molcrafts-bench),
+[`molcrafts-molrec`](https://github.com/MolCrafts/molcrafts-molrec)
 
 | Piece | Role |
 | --- | --- |
-| Python package `molcrafts_ci` (`import molci`) | Snapshot model, validate, ingest, `molci snapshot` adapters |
-| `actions/submit` | One producer step: validate → artifact → ingest → push `data` branch |
-| `data` branch | Published indexes and immutable snapshot bodies |
-| `site/` | Cloudflare Pages browser over that branch |
+| `.github/workflows/ci.yml` | The one CI workflow every repository calls |
+| `.github/workflows/python-release.yml`, `python-nightly.yml` | Build a Python release or nightly package |
+| `molci` (Python package `molcrafts-ci`, `import molci`) | Runs the checks of `.github/ci.toml`; builds, validates and ingests snapshots |
+| `actions/submit` | Publishes snapshots to the `data` branch |
+| `site/` | The dashboard over the `data` branch (Cloudflare Pages) |
 
-A **snapshot** is infrastructure metadata (`Manifest`) plus a record-specific
-payload. This repository owns the `tests` and `coverage` payload shapes; a
-benchmark or domain record is built by its own producer and only *submitted*
-here.
+## A repository's CI
 
-## Install (Python)
+A repository describes what it checks in **one file, `.github/ci.toml`**.
+The same commands run in its git hooks and in CI; there is no `scripts/`
+folder, no commit SHA and nothing to keep in step by hand.
 
-```bash
-pip install molcrafts-ci
-# or editable:
-pip install -e ".[dev]"
+```toml
+# .github/ci.toml  (molpy)
+
+[env]
+PYTHONWARNDEFAULTENCODING = "1"
+
+[tools]
+python = "3.12"
+rust = true            # molrs is built from source
+
+# Optional. Without it, dependencies resolve normally (PyPI, crates.io).
+[partners]
+molrs = "MolCrafts/molrs@dev"
+
+[check.lint]
+stage = "pre-commit"
+run = ["uvx ruff check src tests", "uvx ty check src/molpy"]
+
+[check.test]
+run = "uv run --locked --extra dev pytest tests -n auto"
+os = ["linux", "macos", "windows"]
+
+[check.docs]
+run = "uv run --locked --extra doc zensical build --strict"
 ```
 
-Downstream code should use the short import:
+Its workflow is one call:
+
+```yaml
+# .github/workflows/ci.yml
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [dev, master]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    uses: MolCrafts/molcrafts-ci/.github/workflows/ci.yml@master
+    secrets: inherit
+```
+
+A push shows up on the Actions page, and in a failure email, as one run
+named `ci` with one line per check:
+
+```text
+ci · fix the parser (dev)
+  ci / plan            ✓
+  ci / lint            ✓
+  ci / test (linux)    ✓
+  ci / test (macos)    ✗
+  ci / test (windows)  ✓
+  ci / docs            ✓
+  ci / result          ✗   ← the one check branch rules require
+```
+
+The git hooks run the same checks:
+
+```yaml
+# .pre-commit-config.yaml
+default_install_hook_types: [pre-commit, pre-push]
+repos:
+  - repo: local
+    hooks:
+      - id: molci-pre-commit
+        name: molci check --stage pre-commit
+        entry: uvx --from git+https://github.com/MolCrafts/molcrafts-ci@master molci check --stage pre-commit
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      - id: molci-pre-push
+        name: molci check --stage pre-push
+        entry: uvx --from git+https://github.com/MolCrafts/molcrafts-ci@master molci check --stage pre-push
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+```
+
+### `.github/ci.toml`
+
+| Table / key | Meaning | Default |
+| --- | --- | --- |
+| `[env]` | Environment for every check | none |
+| `[tools] python` | Python for every check; a list adds versions | none |
+| `[tools] node` | Node version, or the path of an `.nvmrc` | none |
+| `[tools] rust` | Install the `rust-toolchain.toml` of this repository and its partners, and cache cargo | `false` |
+| `[partners] <name>` | `"owner/repo@branch"`: checked out as `../<name>` | none |
+| `[check.<name>] run` | A command, or a list run in order (bash, from the repository root) | required |
+| `stage` | `pre-commit`, `pre-push` or `release` | `pre-push` |
+| `os` | Any of `linux`, `macos`, `windows` | `["linux"]` |
+| `python`, `node`, `rust` | Override `[tools]` for this check | `[tools]` |
+| `junit`, `coverage` | Files the check writes: summarised in the run | none |
+| `[dashboard] project` | Publish tests and coverage to the dashboard under this name | none |
+| `[dashboard] branch` | Pushes to this branch become dashboard history | `master` |
+| `[nightly]` | `package`, `version-file`, `rename`: see python-nightly | none |
+
+A misspelt key is an error that names the file and the key.
+
+### What a run does
+
+The full rules live in `src/molcrafts_ci/plan.py`:
+
+- A push to a **feature branch** of MolCrafts runs the first leg of each
+  check (linux, the first Python). Pushes to `dev` and `master`, pull
+  requests, forks and manual runs run every leg.
+- Each OS runs the first Python of a check; further Pythons run on the first OS only.
+- A **pull request inside a fork** runs nothing: the push to the fork
+  already ran everything.
+- A newer push to the same feature branch cancels the older run.
+- Checks with `stage = "release"` run only in `python-release.yml`.
+
+### Partners
+
+A partner is a MolCrafts repository built from source next to this one,
+for changes that span both. CI clones it at the named branch into
+`../<name>`. Locally, `molci check` uses the sibling checkout you have and
+prints its branch and commit, so a difference from CI is visible:
+
+```text
+molrs: ../molrs is dev @ 1a2b3c4 (CI uses dev)
+```
+
+`molci partners` clones a missing sibling. Remove the `[partners]` entry (and
+the matching path source) to build against the published package instead.
+
+### Release
+
+```yaml
+# .github/workflows/release.yml
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:   # a dry run: build and check, publish nothing
+
+jobs:
+  build:
+    uses: MolCrafts/molcrafts-ci/.github/workflows/python-release.yml@master
+    permissions:
+      contents: read
+      actions: read
+
+  pypi:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') && github.repository_owner == 'MolCrafts'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+```
+
+`python-release.yml` checks the tag is on master, waits for `ci` to have
+passed on the tagged commit, runs the `release` checks (against published
+dependencies, no partners), builds, and checks the package version is the
+tag's. The PyPI upload stays in the caller because PyPI trusts the caller's
+workflow file.
+
+`python-nightly.yml` builds `dev` as the `[nightly]` package
+(`<version>.dev<YYYYmmddHHMM>`, partner dependencies renamed to their
+nightly packages) for a nightly workflow to upload the same way.
+
+### Dashboard
+
+With `[dashboard]`, a push to its branch on MolCrafts turns the junit and
+coverage files of the first leg that writes them into `tests` and `coverage`
+snapshots and publishes them with `actions/submit`. The repository needs the
+`MOLCRAFTS_CI_SSH_KEY` secret: the private half of the deploy key that can
+write to `MolCrafts/molcrafts-ci`.
+
+## `molci`
+
+```bash
+molci check                     # every check but release ones
+molci check lint test           # these checks
+molci check --stage pre-commit  # one stage
+molci partners                  # clone missing partners into ../
+```
+
+Snapshots, for producers that build their own records:
+
+```bash
+molci snapshot --out out/ --junit junit.xml --coverage coverage.json --track
+molci validate-snapshot out/*.json
+molci ingest out/*.json --project molpy --data-root data
+molci report --title "test" --junit junit.xml --coverage coverage.json
+```
+
+A **snapshot** is a `Manifest` (record, source commit and run, producer,
+profile, tracking) plus a payload. This repository owns the `tests` and
+`coverage` payloads; a benchmark or domain record is built by its own
+producer and only submitted here. `tracking.enabled` decides whether a
+snapshot becomes history; `tracking.generation` starts a new history when a
+record's shape changes incompatibly (generation 2 of a commit is its own
+snapshot, `<record>-<profile>-g2-<commit>`). A stored snapshot is never
+rewritten.
 
 ```python
 from pathlib import Path
@@ -48,92 +242,10 @@ snap = mci.Snapshot(
     ),
     payload={"metrics": {"mean_ns": 12.5}},
 )
-mci.ingest_snapshot(Path("data"), "molpy", snap)
+mci.ingest_snapshot(Path("data"), "molpy", snap)  # also refreshes index-listing.json
 ```
 
-(`molcrafts_ci` remains the canonical package path; `molci` is the public alias.)
-
-## CLI
-
-```bash
-molci validate-snapshot path/to/snapshot.json
-molci ingest path/to/snapshot.json --project molpy --data-root data
-molci snapshot --out out/ --junit junit.xml --coverage coverage.json
-molci report --title "test / python" --junit junit.xml --coverage coverage.json
-```
-
-`molci report` (and `actions/report`, which runs it into `$GITHUB_STEP_SUMMARY`)
-reads the same inputs through the same readers as `molci snapshot`, so a pull
-request's summary and the dashboard show the same numbers for the same run. It
-only reports: no thresholds, and it exits 0 whatever the counts; an input that
-is missing or unreadable is named under the table.
-
-### `molci snapshot`
-
-Turns a test run's native output into `tests` and `coverage` snapshots, so a
-producer repository does not carry its own adapter:
-
-```bash
-# Python: pytest --junitxml=junit.xml --cov-report=json:coverage.json
-molci snapshot --out out/ --junit junit.xml --coverage coverage.json --track
-
-# Rust: RUSTFLAGS="-C instrument-coverage" cargo test --lib | tee cargo-test.log
-#       llvm-profdata merge … && llvm-cov export -format=lcov …
-molci snapshot --out out/ \
-  --cargo-test cargo-test.log \
-  --coverage lcov.info --coverage-format lcov \
-  --coverage-producer llvm-cov --track
-```
-
-| Input | Meaning |
-| --- | --- |
-| `--junit` | JUnit XML from pytest `--junitxml` |
-| `--cargo-test` | Log whose `test result:` lines are the totals (`ignored` → skipped) |
-| `--coverage` | coverage.py JSON (default) or LCOV (`--coverage-format lcov`) |
-
-`--junit` and `--cargo-test` are mutually exclusive. Provenance comes from the
-`GITHUB_*` environment; `--track` refuses to run without a real `GITHUB_SHA`,
-so a placeholder commit can never enter published history.
-
-These two payload shapes are infrastructure, not domain semantics: the frontend
-already reads them without being told which record it is looking at. A
-benchmark payload is **not** built here — that belongs to its domain.
-
-## Submitting data from another repository
-
-A producer repository (`molpy`, `molrs`, `molcrafts-molrec`, …) writes Snapshot
-JSON during its own CI and hands it to one Action. That Action validates it,
-ingests it into this repository's `data` branch, and pushes — and that push is
-what makes Cloudflare Pages rebuild the site. There is nothing to trigger
-afterwards.
-
-### End-to-end (tests + coverage)
-
-```yaml
-# .github/workflows/ci.yml in the producer repository
-permissions:
-  contents: read
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install molcrafts-ci pytest pytest-cov
-      - run: pytest --junitxml=junit.xml --cov --cov-report=json:coverage.json
-      - run: molci snapshot --out .ci-out --junit junit.xml --coverage coverage.json --track
-      - uses: MolCrafts/molcrafts-ci/actions/submit@master
-        with:
-          snapshot-path: .ci-out/*.json
-          project: molpy
-          ssh-key: ${{ secrets.MOLCRAFTS_CI_SSH_KEY }}
-```
-
-A domain producer that already builds its own Snapshot JSON skips `molci
-snapshot` and only calls `submit`:
+### Submitting from another producer
 
 ```yaml
 - uses: MolCrafts/molcrafts-ci/actions/submit@master
@@ -143,341 +255,55 @@ snapshot` and only calls `submit`:
     ssh-key: ${{ secrets.MOLCRAFTS_CI_SSH_KEY }}
 ```
 
-`snapshot-path` takes a path, a glob, or a newline-separated list, so one run
-can submit its benchmark, coverage and test records together. Pin `@master` to a
-release tag once one exists.
+`manifest.tracking.enabled` in each snapshot decides whether it is
+published (`true`) or only validated and uploaded as an artifact (`false`).
+Snapshots go to the orphan **`data` branch** (`index/`, `snapshots/`,
+`index-listing.json`), which the dashboard reads at runtime from
+`raw.githubusercontent.com`. The ingest is idempotent: a re-run pushes
+nothing, and a push race re-runs the ingest on the moved branch (up to five
+attempts). Credentials: a deploy key (`ssh-key`), a GitHub App (`app-id` +
+`private-key`), or a fine-grained PAT (`token`).
 
-### This repository is its own first producer
+## Dashboard site (`site/`)
 
-`molcrafts-ci` publishes its own `tests` and `coverage` records through the same
-Action, in `.github/workflows/test.yml`:
-
-```yaml
-- uses: ./actions/submit
-  with:
-    snapshot-path: .ci-out/snapshots/*.json
-    project: molcrafts-ci
-    token: ${{ github.token }}   # same repository — see below
-```
-
-So the publish path runs on every push to master, not only when a downstream
-repository adopts it. It runs on MolCrafts only, never in a fork.
-
-Two things make the self-hosted case different from a downstream one:
-
-- **`GITHUB_TOKEN` is enough**, because the push goes to the repository the
-  workflow already runs in. No App and no PAT are involved.
-- **There is no ingest loop.** GitHub does not start a workflow from a push made
-  with `GITHUB_TOKEN`, so the ingest commit cannot trigger another CI run that
-  would ingest again. Cloudflare Pages builds from its own webhook, which is not
-  subject to that rule, so the site still redeploys.
-
-A pull request builds the same two snapshots with `tracking.enabled` false, so
-they are validated and uploaded as an artifact but never published. Only the
-Python suite is published; the `site` job's tests are not.
-
-The measuring steps run even when a gate above them failed — a run whose tests
-went red is exactly the run whose `tests` record is worth keeping.
-
-### What decides whether anything is published
-
-`manifest.tracking.enabled`, in the snapshot itself — not an Action input:
-
-| `tracking.enabled` | What `submit` does |
-| --- | --- |
-| `false` | validates, uploads the workflow artifact, pushes nothing |
-| `true` | also ingests into the `data` branch and pushes, which deploys the site |
-
-So a pull-request run and a merge run can use the identical step; only the
-snapshot the producer wrote differs.
-
-### Where the data goes
-
-Snapshots are ingested into the **`data` branch**, not `master`. That branch is
-orphaned, its root is the data root (`index/`, `snapshots/`,
-`index-listing.json`), and nothing but this Action writes to it. Keeping it off
-`master` is what keeps ingest commits out of the code history and keeps a clone
-of the source from carrying every snapshot ever published.
-
-`index-listing.json` lists every `index/<project>/<record>.jsonl` path and each
-project's newest timestamp (`published`), so the site can open on whatever ran
-last without fetching every index over HTTP.
-
-The site reads that branch at runtime from `raw.githubusercontent.com`, so a
-published snapshot appears within the CDN's five-minute cache with no rebuild,
-and the deployment does not grow with history.
-
-### Credentials
-
-Pushing into this repository is a cross-repository write, and a workflow's
-`GITHUB_TOKEN` is scoped to the repository it runs in — it cannot do this. Use
-one of:
-
-- **a deploy key** (what the MolCrafts producers use): pass the private half as
-  `ssh-key`. It is the narrowest credential that works — it reaches exactly one
-  repository and can only push git, unlike a PAT that carries the whole `repo`
-  scope.
-- **a MolCrafts GitHub App**: pass `app-id` and `private-key`; the Action mints
-  a token that expires with the run. The best posture, but a GitHub App cannot
-  be created from the API, so it takes a trip to the browser.
-- **a fine-grained PAT** with `contents: write` on `molcrafts-ci`, as `token:`.
-
-The Action fails with an explicit message when a tracked snapshot arrives
-without a credential, rather than going green having published nothing.
-
-The Actions it calls run on Node 24, so a **self-hosted** runner must be at
-least Actions Runner 2.327.1; GitHub-hosted runners already are. Behind an HTTP
-proxy, `create-github-app-token` v3 needs `NODE_USE_ENV_PROXY=1` on the step.
-
-If the index branch is protected, the App or PAT identity needs to be allowed to
-bypass the rule — otherwise every ingest is rejected five times and the
-producer's job fails.
-
-### Re-runs, retries and two producers at once
-
-The ingest is idempotent. A snapshot id is derived from its source, the stored
-file is immutable, and an index entry is appended only when that id is not
-already indexed, so:
-
-- re-running a job that already published is a no-op — it pushes nothing;
-- if another repository pushes first, `submit` re-runs the ingest on the updated
-  branch and pushes again (up to five attempts), so neither side's data is lost.
-
-### Other inputs
-
-| Input | Default | Purpose |
-| --- | --- | --- |
-| `index-repository` | `MolCrafts/molcrafts-ci` | repository holding the index |
-| `index-branch` | `data` | branch to ingest into |
-| `data-root` | `.` | data root within that branch |
-| `artifact-name` | `molcrafts-ci-snapshot` | uploaded artifact name |
-| `upload-artifact` | `true` | upload the snapshots as a run artifact |
-| `dry-run` | `false` | validate and ingest into a scratch clone, never push |
-
-Outputs: `count`, `tracked`, `ingested`, `skipped`, `pushed`, `commit`. The run
-also gets a job summary naming every snapshot and the commit it landed in.
-
-### Ingesting by hand
-
-No Action required — the CLI is the same code path:
+Built with the vendored `@molcrafts/ui` packages under `site/vendor/ui`
+(see [docs/ui-packages.md](docs/ui-packages.md)).
 
 ```bash
-molci ingest path/to/snapshot.json --project molpy --data-root data --if-exists skip
-git add data && git commit -m "ingest: molpy" && git push
+npm --prefix site ci
+npm --prefix site run seed:mock   # regenerate mock fixtures through molci
+npm --prefix site run dev         # mock data
+npm --prefix site run dev:data    # the real data branch, fetched locally
+npm --prefix site run build       # production: reads the data branch at runtime
 ```
 
-(For the published site, push to the `data` branch with that branch's root as
-the data root — the same layout `actions/submit` uses.)
+The browser: **Navigator** (projects, newest publish first), **Overview**
+(facts, verdicts, record table, history), **Record tab** (one generation,
+with its commit, run, profile and producer) and **Dock** (publish log and
+problems; a row opens that record at that generation). A link is
+`#/<project>/<tab>?profile=&snapshot=`. Register another tab with
+`registerPlugin` from `@/plugins/registry`.
 
-## Frontend (`site/`)
-
-Built with **MolCrafts Design** public packages and compiled CSS. Basic controls use
-`@molcrafts/design`; charts use the optional `@molcrafts/design-vega-lite` compiler
-and its shared Vega View runtime, without MolPlot or vega-embed. Dev mocks use
-**`rspack-plugin-mock`** (Rsbuild-native) — not hand-served static files.
+## Working on molcrafts-ci
 
 ```bash
-# regenerate fixtures via molci, then install + run
-python3 -m pip install -e ".[dev]"
-npm --prefix site run seed:mock   # or: python3 scripts/seed_mock_data.py
-cd site && npm install && npm run dev
+uv sync --locked --extra dev
+uvx pre-commit install
+uv run --locked --extra dev molci check     # what CI runs
 ```
 
-- `npm run dev` — intercepts `/data/**` with `site/mock/*.mock.ts`
-- `npm run seed:mock` — `import molci as mci` ingest → `.mock-data/` (gitignored) + refreshes `site/mock/fixtures.ts`. These snapshots carry invented commit SHAs, so they are kept out of the tracked `data/` tree.
-- `npm run dev:data` — skip mock plugin; fetch the `data` branch and serve it locally
-- `npm run build` — reads the `data` branch at runtime; bundles no data at all
+molcrafts-ci checks itself with its own `.github/ci.toml` and `ci.yml`.
+Inside the shared workflows, `$/actions/...` is the Action from the same
+commit as the workflow, so a change is tested by the pull request that makes
+it (runner 2.336.0 or newer). Versioning: while `0.x`, the minor is the
+breaking-change axis, and `manifest.schema_version` is that minor.
+The history is git.
 
-### How the browser is organised
+## Previous scheme (until every repository has moved)
 
-- **Navigator** — projects, ordered by newest publish first (from
-  `index-listing.json`'s `published` map).
-- **Overview** — situation above (facts, verdict distribution, record table),
-  history below (one reading + delta + sparkline per record).
-- **Record tab** — one generation at a time: header carries commit, CI run,
-  profile and producer; body is `PayloadView` (tests and coverage both use a
-  `MeasureBand`).
-- **Dock** — publish log and problems; a row opens that record tab at that
-  generation via the URL.
-
-There is no side inspector. A shared link is `?project=&tab=&snapshot=&profile=`.
-
-Register an extra tab without editing the shell:
-
-```ts
-import { registerPlugin } from "@/plugins/registry";
-
-registerPlugin({
-  id: "api",
-  label: "API",
-  order: 60,
-  available: (ctx) => ctx.records.includes("api"),
-  Component: ({ project }) => <div>{project.id}</div>,
-});
-```
-
-Import the module from `src/index.tsx` (side-effect registration).
-
-Design packages are unpublished. Four fixed compiled tarballs under
-`site/vendor/design/` make npm installation independent of sibling checkouts and
-producer CI workflows. `npm run verify:design` checks producer provenance, hashes,
-exports and licenses. See [Design consumer integration](docs/design-consumer.md).
-No UI source copying or compatibility aliases remain.
-
-## Publish package
-
-```bash
-pip install build twine
-python -m build
-# twine upload dist/*   # when ready for PyPI
-```
-
-Versioning: while the project is `0.x`, the **minor** is the breaking-change
-axis. `manifest.schema_version` is taken from that minor, so the snapshot shape
-and the release move together. See [CHANGELOG.md](CHANGELOG.md).
-
-## CI
-
-One file per kind of work. A feature-branch push to MolCrafts gets the fast
-tier; every push to a fork, `dev`/`master`/`main` on MolCrafts, pull requests,
-tags and dispatches get the full tier. Each workflow's first job,
-`<file> / context`, runs `actions/ci-context`, and every other job gates on
-its outputs.
-
-| workflow | jobs | runs |
-| --- | --- | --- |
-| `lint.yml` | `lint / python` (ruff, `scripts/check_repo.py`), `lint / site` (tsc), `lint / actions` (action.yml schema, actionlint), `lint / workflows` (`actions/check-workflows`) | every push, PRs into dev/master/main |
-| `test.yml` | `test / context`, `test / python (3.12)` (+ `3.13` on the full tier), `test / site`, `test / actions` (each shared setup action run once), `test / report (<os>)` (`actions/report` on the fixtures, every OS), `test / ci-context (<case>)` (`actions/ci-context` against synthetic contexts) | every push, PRs into dev/master/main; the self-snapshot publish is MolCrafts-only |
-| `docs.yml` | `docs / build` (the Cloudflare Pages build) | every push, PRs into dev/master/main; Cloudflare deploys, not CI |
-| `release.yml` | guard, lint + test, build, PyPI, GitHub Release | `v*` tags; `workflow_dispatch` is a dry run; upload only when `publish` is true |
-
-## Shared actions
-
-Every MolCrafts repository uses these as
-`MolCrafts/molcrafts-ci/actions/<name>@master` (`master` is their dev line);
-this repository uses its own checkout (`./actions/<name>`), so a change is
-tested before anyone picks it up.
-
-| action | does | inputs |
-| --- | --- | --- |
-| `actions/setup-python` | Python on PATH, uv with its cache | `python-version` (3.12) |
-| `actions/setup-node` | Node (`.nvmrc`, else `node-version`), npm cache on the lockfile, `npm ci` / `npm install` | `node-version` (22), `working-directory`, `registry-url`, `install` |
-| `actions/setup-rust` | the toolchain `rust-toolchain.toml` pins, extra targets/components, rust-cache | `toolchain-dir`, `targets`, `components`, `cache`, `workspaces` |
-| `actions/setup-partners` | partner repositories: every one `.github/partners.env` names (via `scripts/partners.py`), or one `repository` into `path`; a branch ref follows a same-named branch on the fork, then upstream | `repository`, `ref` (dev), `path` |
-| `actions/ci-context` | where this run happens, as outputs: `tier` (`full`/`fast`), `upstream`, `integration`, `skip-pr`, `publish` (`"true"`/`"false"`) | none needed; `owner`, `repository`, `event-name`, `ref`, `pr-head-repository` default to the run's github context |
-| `actions/check-workflows` | checks the calling repository's workflows against the CI scheme (below); fails with `file:line: job: [rule] message` | `path` (`.`) |
-| `actions/submit` | validate, upload and ingest CI snapshots | see below |
-| `actions/report` | the run's passed/failed/skipped counts and line/branch coverage, one markdown table appended to the step summary; report only, never fails the job | `title`, `junit` or `cargo-test`, `coverage`, `coverage-format` (`coverage.py`/`lcov`); output `table` |
-
-`ci-context` is the one place the CI rules live. Every workflow starts with
-the same job, and the rest of the file reads `needs.context.outputs.*`:
-
-```yaml
-jobs:
-  context:
-    name: test / context            # <file> / context
-    runs-on: ubuntu-latest
-    outputs:
-      tier: ${{ steps.context.outputs.tier }}
-      upstream: ${{ steps.context.outputs.upstream }}
-      integration: ${{ steps.context.outputs.integration }}
-      skip-pr: ${{ steps.context.outputs.skip-pr }}
-      publish: ${{ steps.context.outputs.publish }}
-    steps:
-      - id: context
-        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
-
-  rust:
-    needs: context
-    if: needs.context.outputs.skip-pr != 'true'   # deploys: upstream == 'true'
-    strategy:
-      matrix:
-        os: ${{ fromJSON(needs.context.outputs.tier == 'full' && '["ubuntu-latest","macos-latest"]' || '["ubuntu-latest"]') }}
-```
-
-| output | `"true"` / value when |
-| --- | --- |
-| `upstream` | the owner is MolCrafts |
-| `integration` | the ref is `dev`, `master`, `main` or a tag |
-| `tier` | `fast` only for a feature-branch push to MolCrafts; `full` otherwise |
-| `skip-pr` | a pull request inside a fork (its push already ran the full tier) |
-| `publish` | a `v*` tag pushed to MolCrafts: never a fork, a branch or a dispatch |
-
-Every job that uploads to a registry, deploys or creates a GitHub Release has
-`if: needs.context.outputs.publish == 'true'` and tests no raw
-`github.event_name` / `github.ref`, so a new trigger on `release.yml` cannot
-publish by accident. (A nightly channel that publishes from a branch, in
-`nightly.yml`, gates on `upstream` instead.)
-
-The workflow-level `concurrency` block cannot read job outputs, so it stays
-inline, identical in every file; `actions/check-workflows` holds the one
-canonical copy:
-
-```yaml
-concurrency:
-  group: <file>-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ !contains(fromJSON('["refs/heads/dev","refs/heads/master","refs/heads/main"]'), github.ref) && !startsWith(github.ref, 'refs/tags/') }}
-```
-
-(`cancel-in-progress: false` in `nightly.yml`, `release.yml` and `deploy.yml`.)
-
-### Checking the workflows
-
-`actions/check-workflows` reads every `.github/workflows/*.yml` of the
-calling repository and fails on each violation of the scheme. Every
-repository runs it in `lint.yml`:
-
-```yaml
-  workflows:
-    name: lint / workflows
-    needs: context
-    if: needs.context.outputs.skip-pr != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: MolCrafts/molcrafts-ci/actions/check-workflows@master
-```
-
-Locally, from the repository root (uv brings Python and PyYAML; the script is
-PEP 723):
-
-```bash
-uv run --script path/to/molcrafts-ci/actions/check-workflows/check_workflows.py .
-```
-
-| rule | checks |
-| --- | --- |
-| `context` | the first job is `context`, named `<file> / context`, has a step `id: context` running `ci-context@master`, and maps exactly the action's outputs |
-| `needs` | every other job reaches `context` through `needs` |
-| `skip-pr` | in a workflow a pull request can run (`pull_request`, `workflow_call`), every job is skipped on an in-fork PR: its `if` requires `skip-pr != 'true'` (or `upstream`/`publish == 'true'`, or an `event_name` test excluding `pull_request`), or it needs a job that is so skipped and its `if` has no `always()`/`cancelled()` |
-| `publish` | a job with an `environment:`, `pypa/gh-action-pypi-publish`, `cargo`/`npm publish` without a literal `--dry-run`, `vsce`/`ovsx publish`, `softprops/action-gh-release` or `gh release create`/`upload` requires `publish == 'true'` in its `if`, and no `if`, `environment` or `env` of it tests `github.event_name`/`github.ref*` (in `nightly.yml`: `upstream == 'true'`) |
-| `concurrency` | the workflow-level block above, exactly |
-| `pin` | shared Actions use a full commit SHA; legacy `@master` is accepted during migration |
-| `comment` | no comment mentions `workflow_call` in a workflow without that trigger |
-| `name` | every job (but a reusable-workflow call) is named `<file> / <what>` |
-
-## Specification
-
-See [docs/specification.md](docs/specification.md).
-
-## Local gates and pinned dependencies
-
-Run `python scripts/bootstrap.py` once to install the locked Python and Node
-packages, checksum-verified actionlint 1.7.12, and both git hook stages.
-`uv run --locked --extra dev scripts/check.py all` runs dependencies, static
-checks, workflow/action validation, Python tests, site types, site tests and
-site build. Pre-push runs every gate without changed-file filters.
-
-Synthetic CI context scenarios run in pytest; one hosted job checks the real
-Action wiring. Native OS behavior still requires the hosted platform matrix.
-The site build uses the vendored, checksum-verified `@molcrafts/design`
-packages under `site/vendor/design` (`npm run verify:design`).
-
-`molcrafts_ci.partners` is the shared dependency resolver, also used by
-setup-partners. Consumers bootstrap it at `CI_REF`, a full commit SHA in
-`.github/partners.env`. Every partner ref is explicit. Resolution never uses
-the caller's branch or an uncommitted sibling; fetching uses the resolved SHA
-and verifies HEAD. Partner layouts and build caches persist across pushes under
-`~/.cache/molcrafts/partners` (override with `MOLCRAFTS_PARTNER_CACHE`). Update a partner SHA in a commit and rerun lock/integration
-gates for coordinated changes. Pin shared Actions to the same immutable CI
-commit; legacy `@master` remains accepted for repositories migrating later.
+Repositories not yet on `.github/ci.toml` still call these at `@master`;
+they stay working and are removed when the last caller has moved:
+`actions/ci-context`, `actions/check-workflows`, `actions/setup-partners`
+(with `src/molcrafts_ci/partners.py` and `.github/partners.env`),
+`actions/setup-python`, `actions/setup-node`, `actions/setup-rust`.
+`actions/setup-python` is also used by `ci.yml` itself.

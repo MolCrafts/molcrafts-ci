@@ -11,6 +11,18 @@ from molcrafts_ci.jsonutil import dumps_deterministic, read_json, write_json
 from molcrafts_ci.snapshot import Snapshot
 
 
+def _data_path(root: Path, *parts: str, suffix: str) -> Path:
+    """Keep portable path components and existing symlinks inside the data root."""
+    for part in parts:
+        if part in ("", ".", "..") or any(char in part for char in "/\\:\0"):
+            raise ValueError(f"unsafe path component: {part!r}")
+    path = root.joinpath(*parts)
+    path = path.with_name(path.name + suffix)
+    if not path.resolve().is_relative_to(root.resolve()):
+        raise ValueError(f"path escapes the data root: {path}")
+    return path
+
+
 def snapshot_path(
     root: Path,
     *,
@@ -19,7 +31,9 @@ def snapshot_path(
     generation: int,
     snapshot_id: str,
 ) -> Path:
-    return root / "snapshots" / project / record / str(generation) / f"{snapshot_id}.json"
+    return _data_path(
+        root, "snapshots", project, record, str(generation), snapshot_id, suffix=".json"
+    )
 
 
 IfExists = Literal["fail", "skip"]
@@ -38,7 +52,7 @@ def write_snapshot(
     produces the same path. ``if_exists="fail"`` keeps that collision loud;
     ``if_exists="skip"`` returns the existing path untouched, which is what a
     retried or concurrent ingest needs — the file is immutable, so the one
-    already on disk is the one this call would have written.
+    already on disk remains the authoritative observation, even for a rerun.
     """
     if not snapshot.manifest.tracking.enabled:
         raise ValueError(
@@ -71,7 +85,7 @@ class SnapshotIndex:
         self.root = root
 
     def index_path(self, project: str, record: str) -> Path:
-        return self.root / "index" / project / f"{record}.jsonl"
+        return _data_path(self.root, "index", project, record, suffix=".jsonl")
 
     def append(self, project: str, snapshot: Snapshot, *, relative_path: str) -> Path:
         if not snapshot.manifest.tracking.enabled:
@@ -113,28 +127,21 @@ def write_index_listing(data_root: Path) -> Path:
     """Publish the set of index files, so a reader needs no directory listing.
 
     The site fetches the index over plain HTTP, where there is nothing to
-    enumerate — it has to be told what exists. This used to be generated at
-    build time, which meant new data only appeared when the site was rebuilt;
-    writing it here puts it next to the data it describes.
-
-    ``published`` is each project's newest index timestamp, so the site can
-    land on whatever ran last without fetching every ``*.jsonl`` over HTTP.
+    enumerate: it has to be told what exists. ``published`` is each project's
+    newest index timestamp, so the site can open on whatever ran last without
+    fetching every ``*.jsonl``. Rewritten from the tree on every ingest, so it
+    stays right when a record is removed or an earlier run half-finished.
     """
-    index_root = data_root / "index"
-    listing = sorted(path.relative_to(data_root).as_posix() for path in index_root.rglob("*.jsonl"))
+    index = SnapshotIndex(data_root)
+    listing: list[str] = []
     published: dict[str, str] = {}
-    for path in index_root.rglob("*.jsonl"):
-        project = path.relative_to(index_root).parts[0]
-        latest = published.get(project)
-        for line in path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            stamp = json.loads(line).get("timestamp")
-            if isinstance(stamp, str) and (latest is None or stamp > latest):
-                latest = stamp
-        if latest is not None:
-            published[project] = latest
+    for path in sorted((data_root / "index").glob("*/*.jsonl")):
+        project, record = path.parent.name, path.stem
+        listing.append(path.relative_to(data_root).as_posix())
+        stamps = [e.get("timestamp") for e in index.entries(project, record)]
+        stamps = [s for s in stamps if isinstance(s, str)]
+        if stamps and max(stamps) > published.get(project, ""):
+            published[project] = max(stamps)
     path = data_root / "index-listing.json"
     write_json(path, {"indexes": listing, "published": published})
     return path
@@ -147,15 +154,16 @@ def ingest_snapshot(
     *,
     if_exists: IfExists = "fail",
 ) -> Path:
-    """Write immutable snapshot and append an index entry (tracking must be on).
+    """Write the immutable snapshot, index it and refresh ``index-listing.json``.
 
-    Idempotent under ``if_exists="skip"``: the index entry is appended only when
-    this snapshot is not indexed yet, so re-running the call converges instead of
-    growing a duplicate history.
+    Tracking must be on. Idempotent under ``if_exists="skip"``: the index entry
+    is appended only when this snapshot is not indexed yet, so re-running the
+    call converges instead of growing a duplicate history.
     """
     snap_path = write_snapshot(data_root, project, snapshot, if_exists=if_exists)
     rel = snap_path.relative_to(data_root).as_posix()
     index = SnapshotIndex(data_root)
     if not index.has(project, snapshot.manifest.record, snapshot.snapshot_id()):
-        index.append(project, snapshot, relative_path=rel)
+        index.append(project, read_snapshot(snap_path), relative_path=rel)
+    write_index_listing(data_root)
     return snap_path

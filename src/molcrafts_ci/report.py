@@ -15,7 +15,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from molcrafts_ci.producers import read_cargo_test, read_coverage_py, read_junit, read_lcov
+from molcrafts_ci.producers import read_cargo_test, read_coverage, read_junit
 
 NOT_MEASURED = "—"
 
@@ -40,7 +40,7 @@ def render_report(
     junit: Path | None = None,
     cargo_test: Path | None = None,
     coverage: Path | None = None,
-    coverage_format: str = "coverage.py",
+    coverage_format: str = "auto",
 ) -> str:
     """The markdown block for one test run.
 
@@ -65,13 +65,12 @@ def render_report(
             sources.append(f"`{tests_path.name}`")
 
     if coverage:
-        reader = read_lcov if coverage_format == "lcov" else read_coverage_py
-        cov, problem = _read(reader, coverage)
+        cov, problem = _read(lambda p: read_coverage(p, fmt=coverage_format), coverage)
         if problem:
             problems.append(problem)
         else:
             totals = cov["totals"]
-            sources.append(f"`{coverage.name}` ({coverage_format})")
+            sources.append(f"`{coverage.name}`")
 
     def count(key: str) -> str:
         return NOT_MEASURED if tests is None else str(tests[key])

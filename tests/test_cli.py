@@ -99,7 +99,7 @@ class TestIngest:
 
         args = ["ingest", *[str(p) for p in paths], "--project", "molpy"]
         assert main([*args, "--data-root", str(data_root)]) == 0
-        assert [r["status"] for r in read_lines(capsys)] == ["ingested", "ingested", "listed"]
+        assert [r["status"] for r in read_lines(capsys)] == ["ingested", "ingested"]
 
     def test_publishes_an_index_listing(self, tmp_path: Path, capsys) -> None:
         """The site reads the index over HTTP, where there is nothing to enumerate."""
@@ -124,7 +124,7 @@ class TestIngest:
         assert main(args) == 0
         capsys.readouterr()
         assert main([*args, "--if-exists", "skip"]) == 0
-        assert [r["status"] for r in read_lines(capsys)] == ["skipped", "listed"]
+        assert [r["status"] for r in read_lines(capsys)] == ["skipped"]
 
     def test_untracked_is_an_error_unless_the_caller_opts_out(self, tmp_path: Path, capsys) -> None:
         path = write_snapshot_file(tmp_path, "tests", tracked=False)

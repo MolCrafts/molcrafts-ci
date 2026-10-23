@@ -82,7 +82,58 @@ def test_case(tmp_path: Path, case: dict) -> None:
         pr_head=case["head"],
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert outputs(tmp_path) == case["expect"]
+    assert outputs(tmp_path) == {
+        **case["expect"],
+        "nightly": "false",
+        "source-ref": case["ref"],
+        "deploy": "true" if case["case"] == "upstream master push" else "false",
+    }
+
+
+@pytest.mark.parametrize(
+    ("owner", "event", "ref", "workflow", "enabled"),
+    [
+        ("MolCrafts", "schedule", "refs/heads/master", "nightly", True),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/dev", "nightly", True),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/master", "nightly", True),
+        ("Roy-Kid", "schedule", "refs/heads/master", "nightly", False),
+        ("MolCrafts", "push", "refs/heads/nightly", "nightly", False),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/feature", "nightly", False),
+        ("MolCrafts", "workflow_dispatch", "refs/tags/v1.0.0", "nightly", False),
+        ("MolCrafts", "schedule", "refs/heads/master", "test", False),
+    ],
+)
+def test_nightly_selects_dev_only_for_the_nightly_channel(
+    tmp_path: Path, owner: str, event: str, ref: str, workflow: str, enabled: bool
+) -> None:
+    proc = run(
+        tmp_path, owner=owner, repository=f"{owner}/molrs", event=event, ref=ref, workflow=workflow
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    got = outputs(tmp_path)
+    assert got["nightly"] == str(enabled).lower()
+    assert got["source-ref"] == ("refs/heads/dev" if enabled else ref)
+    assert got["publish"] == "false"
+
+
+@pytest.mark.parametrize(
+    ("owner", "event", "ref", "enabled"),
+    [
+        ("MolCrafts", "push", "refs/heads/master", True),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/master", True),
+        ("MolCrafts", "repository_dispatch", "refs/heads/master", True),
+        ("MolCrafts", "push", "refs/heads/dev", False),
+        ("MolCrafts", "workflow_dispatch", "refs/heads/dev", False),
+        ("MolCrafts", "push", "refs/tags/v1.0.0", False),
+        ("Roy-Kid", "push", "refs/heads/master", False),
+    ],
+)
+def test_deploy_is_a_stable_upstream_branch_operation(
+    tmp_path: Path, owner: str, event: str, ref: str, enabled: bool
+) -> None:
+    proc = run(tmp_path, owner=owner, repository=f"{owner}/molrs", event=event, ref=ref)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert outputs(tmp_path)["deploy"] == str(enabled).lower()
 
 
 @pytest.mark.parametrize("missing", ["owner", "repository", "event", "ref"])

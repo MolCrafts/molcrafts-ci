@@ -15,6 +15,20 @@ from molcrafts_ci.producers import (
 
 
 class TestTestsFromJunit:
+    @pytest.mark.parametrize(
+        "body", ["<unrelated/>", "<unrelated><testsuite tests='1'/></unrelated>"]
+    )
+    def test_rejects_unrelated_xml(self, tmp_path, body) -> None:
+        path = tmp_path / "junit.xml"
+        path.write_text(body, encoding="utf-8")
+        with pytest.raises(ValueError, match="JUnit"):
+            read_junit(path)
+
+    def test_accepts_an_empty_test_run(self, tmp_path) -> None:
+        path = tmp_path / "junit.xml"
+        path.write_text("<testsuites/>", encoding="utf-8")
+        assert read_junit(path) == {"passed": 0, "failed": 0, "skipped": 0}
+
     def test_counts_a_single_suite(self, tmp_path) -> None:
         path = tmp_path / "junit.xml"
         path.write_text(
@@ -73,6 +87,26 @@ class TestTestsFromCargoTest:
 
 
 class TestCoverageFromCoveragePy:
+    @pytest.mark.parametrize("body", [{}, {"totals": {}, "files": {}}, {"totals": {}}])
+    def test_rejects_unrelated_json(self, tmp_path, body) -> None:
+        path = tmp_path / "coverage.json"
+        path.write_text(json.dumps(body), encoding="utf-8")
+        with pytest.raises(ValueError, match="coverage.py"):
+            read_coverage_py(path)
+
+    def test_accepts_zero_measured_statements(self, tmp_path) -> None:
+        path = tmp_path / "coverage.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "totals": {"covered_lines": 0, "num_statements": 0},
+                    "files": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert read_coverage_py(path) == {"totals": {}, "files": []}
+
     def test_reads_totals_and_files(self, tmp_path) -> None:
         path = tmp_path / "coverage.json"
         path.write_text(
@@ -147,6 +181,27 @@ end_of_record
 
 
 class TestCoverageFromLcov:
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "",
+            "not an LCOV report",
+            "SF:a.rs\nLF:2\nLH:1\n",
+            "SF:a.rs\nLF:2\nLH:1\nSF:b.rs\nLF:0\nLH:0\nend_of_record\n",
+        ],
+    )
+    def test_rejects_unrecognised_or_truncated_reports(self, tmp_path, body) -> None:
+        path = tmp_path / "lcov.info"
+        path.write_text(body, encoding="utf-8")
+        with pytest.raises(ValueError, match="LCOV"):
+            read_lcov(path)
+
+    def test_accepts_a_file_with_zero_measured_lines(self, tmp_path) -> None:
+        path = tmp_path / "lcov.info"
+        path.write_text("SF:empty.rs\nLF:0\nLH:0\nend_of_record\n", encoding="utf-8")
+        assert read_lcov(path)["totals"] == {}
+        assert read_lcov(path)["files"][0]["path"] == "empty.rs"
+
     def test_sums_totals_across_files(self, tmp_path) -> None:
         path = tmp_path / "lcov.info"
         path.write_text(LCOV, encoding="utf-8")

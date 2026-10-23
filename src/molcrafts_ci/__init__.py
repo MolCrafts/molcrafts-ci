@@ -2,14 +2,11 @@
 
 from importlib.metadata import PackageNotFoundError, version
 
-from molcrafts_ci.gate import GateResult, GateStatus
-from molcrafts_ci.index import SnapshotIndex
 from molcrafts_ci.manifest import Manifest, Source, Tracking
+from molcrafts_ci.persist import SnapshotIndex
 from molcrafts_ci.snapshot import Snapshot
 
 __all__ = [
-    "GateResult",
-    "GateStatus",
     "Manifest",
     "Source",
     "Tracking",

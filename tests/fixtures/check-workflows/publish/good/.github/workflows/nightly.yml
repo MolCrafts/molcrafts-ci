@@ -3,8 +3,7 @@ name: nightly
 on:
   schedule:
     - cron: "17 3 * * *"
-  push:
-    branches: [nightly]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -30,7 +29,7 @@ jobs:
   pypi:
     name: nightly / pypi
     needs: context
-    if: needs.context.outputs.upstream == 'true'
+    if: needs.context.outputs.nightly == 'true'
     environment: pypi-nightly
     runs-on: ubuntu-latest
     steps:

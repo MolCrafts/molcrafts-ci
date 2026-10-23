@@ -28,6 +28,8 @@ once, fetch that exact commit, and verify the checkout before building.
                                   <root>/<SELF> as the working directory and
                                   $PARTNERS_SOURCE naming this checkout (to
                                   copy a result back, e.g. a relocked file).
+    partners.py pin-ci SHA       update CI_REF and every shared Action/workflow
+                                  together, after that CI commit is published.
 
 ``run`` keeps its layout in ~/.cache/molcrafts/partners by default, or
 $MOLCRAFTS_PARTNER_CACHE. A cross-platform file lock protects concurrent
@@ -54,6 +56,10 @@ from pathlib import Path
 ROOT = Path(os.environ.get("MOLCRAFTS_PARTNERS_ROOT", Path.cwd())).resolve()
 PINS = ROOT / ".github" / "partners.env"
 SHA = re.compile(r"[0-9a-f]{40}")
+CI_USE = re.compile(
+    r"(?P<prefix>uses:\s*[\"']?MolCrafts/molcrafts-ci/"
+    r"(?:actions/[^@\s\"']+|\.github/workflows/[^@\s\"']+)@)(?P<ref>[^\s\"'#]+)"
+)
 # Build state inside the layout copy that a sync must not wipe.
 KEEP = {".venv", ".tox", "target", ".pytest_cache", ".ruff_cache", ".cache"}
 
@@ -213,6 +219,29 @@ def tracked(basename: str) -> list[Path]:
     ]
 
 
+def pin_ci(commit: str) -> int:
+    """Update one repository's shared CI references as one verifiable batch."""
+    if not SHA.fullmatch(commit):
+        die("pin-ci requires a full lowercase commit SHA")
+    if not commit_exists(url("MolCrafts/molcrafts-ci"), commit):
+        die(f"molcrafts-ci@{commit} is not published; publish the infrastructure first")
+    paths = sorted((ROOT / ".github/workflows").glob("*.y*ml"))
+    paths += sorted((ROOT / ".github/actions").glob("**/action.y*ml"))
+    for path in paths:
+        before = path.read_text(encoding="utf-8")
+        after = CI_USE.sub(lambda match: match["prefix"] + commit, before)
+        if after != before:
+            path.write_text(after, encoding="utf-8")
+            print(path.relative_to(ROOT))
+    if PINS.is_file() and "CI_REF" in load():
+        before = PINS.read_text(encoding="utf-8")
+        after = re.sub(r"(?m)^CI_REF=.*$", f"CI_REF={commit}", before)
+        if after != before:
+            PINS.write_text(after, encoding="utf-8")
+            print(PINS.relative_to(ROOT))
+    return 0
+
+
 def path_deps() -> list[tuple[Path, str, str]]:
     """(manifest, dependency, path) for every path dependency in a tracked manifest."""
     found = []
@@ -281,10 +310,10 @@ def check() -> int:
     ci_ref = load().get("CI_REF")
     for wf in sorted((ROOT / ".github" / "workflows").glob("*.y*ml")):
         for n, line in enumerate(wf.read_text(encoding="utf-8").splitlines(), 1):
-            action = re.search(r"uses:\s*MolCrafts/molcrafts-ci/actions/[^@\s]+@([^\s#]+)", line)
-            if ci_ref and action and action[1] != ci_ref:
+            action = CI_USE.search(line)
+            if ci_ref and action and action["ref"] != ci_ref:
                 failures.append(
-                    f"{wf.relative_to(ROOT)}:{n}: shared Action ref {action[1]} differs "
+                    f"{wf.relative_to(ROOT)}:{n}: shared CI ref {action['ref']} differs "
                     f"from CI_REF={ci_ref} (local and CI must use the same implementation)"
                 )
             if re.match(r"\s*ref:\s*['\"]?[0-9a-f]{40}\b", line):
@@ -365,6 +394,8 @@ def run(cmd: list[str]) -> int:
 
 
 def main(argv: list[str]) -> int:
+    if argv[:1] == ["pin-ci"] and len(argv) == 2:
+        return pin_ci(argv[1])
     if argv == ["check"]:
         return check()
     if argv == ["fetch-all"]:

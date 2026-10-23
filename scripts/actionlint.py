@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Install locked Python/Node dependencies and the pinned actionlint binary."""
+"""Run actionlint 1.7.12, downloading the checksum-verified binary on first use.
+
+python scripts/actionlint.py [actionlint arguments]
+"""
 
 from __future__ import annotations
 
@@ -7,6 +10,7 @@ import hashlib
 import io
 import platform
 import subprocess
+import sys
 import tarfile
 import urllib.request
 import zipfile
@@ -54,9 +58,4 @@ def actionlint() -> Path:
 
 
 if __name__ == "__main__":
-    import shutil
-
-    subprocess.run(["uv", "sync", "--locked", "--extra", "dev"], cwd=ROOT, check=True)
-    subprocess.run([shutil.which("npm") or "npm", "ci", "--prefix", "site"], cwd=ROOT, check=True)
-    print(actionlint())
-    subprocess.run(["uvx", "pre-commit", "install"], cwd=ROOT, check=True)
+    raise SystemExit(subprocess.run([str(actionlint()), *sys.argv[1:]], cwd=ROOT).returncode)

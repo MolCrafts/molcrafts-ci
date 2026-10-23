@@ -24,14 +24,10 @@ def dumps_deterministic(data: Any, *, indent: int | None = 2) -> str:
     )
 
 
-def loads(text: str) -> Any:
-    return json.loads(text)
-
-
 def write_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(dumps_deterministic(data), encoding="utf-8")
 
 
 def read_json(path: Path) -> Any:
-    return loads(path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8"))
