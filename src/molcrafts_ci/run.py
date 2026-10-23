@@ -62,7 +62,8 @@ def run_checks(
             argv = _wrap(check, [bash, "--noprofile", "--norc", "-eo", "pipefail", "-c", command])
             code = subprocess.run(argv, cwd=root, env=env, check=False).returncode
             if code:
-                log(f"molci: check `{check.name}` failed (exit {code}): {command}")
+                shown = "" if "\n" in command.strip() else f": {command}"
+                log(f"molci: check `{check.name}` failed (exit {code}){shown}")
                 return code
     return 0
 
