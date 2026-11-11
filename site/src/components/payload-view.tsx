@@ -17,7 +17,8 @@ import {
   type Metric,
 } from "@molcrafts/ui";
 import { RunLink } from "@/components/run-link";
-import { readCoverage, readScalars, readTests } from "@/lib/payload";
+import { ScientificBenchmarkView } from "@/components/scientific-benchmark-view";
+import { isScientificBenchmark, readScientificBenchmark, readCoverage, readScalars, readTests } from "@/lib/payload";
 import type { IndexEntry } from "@/lib/snapshot-data";
 
 export interface PayloadViewProps {
@@ -50,6 +51,13 @@ export function PayloadView({
       <EmptyState title="Snapshot body unavailable" />
     ) : (
       <BandSkeleton variant="measures" />
+    );
+  }
+
+  if (isScientificBenchmark(payload, entry?.producer)) {
+    const benchmark = readScientificBenchmark(payload);
+    return benchmark ? <ScientificBenchmarkView benchmark={benchmark} /> : (
+      <EmptyState title="Invalid scientific benchmark" description="The payload is malformed, internally inconsistent, or uses an unsupported schema version." />
     );
   }
 

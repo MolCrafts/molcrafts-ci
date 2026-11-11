@@ -23,7 +23,7 @@ export interface HistorySelectProps {
 
 /** `6e01106 · 2 h ago`, falling back to the id when the entry carries neither. */
 function optionLabel(entry: IndexEntry, index: number): string {
-  const parts = [shortCommit(entry.commit), relativeTime(entry.timestamp)].filter(
+  const parts = [entry.observation_id, shortCommit(entry.commit), relativeTime(entry.timestamp)].filter(
     (p) => p && p !== "—",
   );
   return parts.length > 0

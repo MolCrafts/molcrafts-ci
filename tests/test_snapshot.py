@@ -15,6 +15,7 @@ def _snap(*, tracking: bool = True, generation: int = 1) -> Snapshot:
     return Snapshot(
         manifest=Manifest(
             record="benchmark",
+            observation_id="campaign-one",
             source=Source(
                 repository="MolCrafts/molpy",
                 commit="abcdef1234567890",
@@ -37,7 +38,25 @@ def test_deterministic_json_sorts_keys() -> None:
 
 
 def test_snapshot_id() -> None:
-    assert _snap().snapshot_id() == "benchmark-linux-x86_64-abcdef123456"
+    assert _snap().snapshot_id() == "benchmark-12-linux-x86_64-g1-campaign-one"
+
+
+@pytest.mark.parametrize(
+    "observation", [None, "", ".", "..", "../x", "a/b", "a\\b", "C:x", "a\x00b"]
+)
+def test_benchmark_requires_safe_observation_id(observation) -> None:
+    manifest = _snap().manifest.model_dump()
+    manifest["observation_id"] = observation
+    with pytest.raises(ValueError):
+        Manifest.model_validate(manifest)
+
+
+@pytest.mark.parametrize("record", ["tests", "coverage"])
+def test_other_records_keep_commit_identity(record) -> None:
+    snap = _snap()
+    snap.manifest.record = record
+    snap.manifest.observation_id = None
+    assert snap.snapshot_id() == f"{record}-linux-x86_64-abcdef123456"
 
 
 def test_refuse_persist_when_tracking_disabled(tmp_path: Path) -> None:

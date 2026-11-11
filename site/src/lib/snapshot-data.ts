@@ -14,6 +14,7 @@ import { dataUrl } from "@/lib/data-source";
 /** One line of a published `<record>.jsonl` index. */
 export interface IndexEntry {
   snapshot_id?: string;
+  observation_id?: string;
   path?: string;
   record?: string;
   generation?: number;
@@ -31,6 +32,7 @@ export interface IndexEntry {
 export interface Snapshot<P = unknown> {
   manifest?: {
     record?: string;
+    observation_id?: string;
     producer?: string;
     profile?: string;
     schema_version?: string;
