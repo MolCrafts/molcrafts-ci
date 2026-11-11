@@ -25,9 +25,10 @@ submitted snapshot. The execution node resolves the pinned CI implementation,
 computes its own environment keys and writes a completed receipt. Submission
 alone is not validation. Real Slurm integration must be exercised on the site.
 
-Upstream PRs and master pushes run independent native validation plus the
-remaining platform lanes. Dev pushes run platform integration. Fork pushes
-compile nothing. Required jobs must explicitly succeed for `test / result`.
+External PRs, Dependabot and master pushes run independent native validation
+plus platform lanes. Roy-Kid/molpy:dev PRs authored by Roy-Kid and targeting
+upstream dev run every platform lane; the identity comes from GitHub event
+metadata. Dev pushes run platform integration. Fork pushes compile nothing. Required jobs must explicitly succeed for `test / result`.
 Release evidence must come from the exact upstream master commit and one
 successful workflow attempt. Untrusted tests use hosted runners and read-only
 permissions. Weekly measurements and explicitly requested package publication

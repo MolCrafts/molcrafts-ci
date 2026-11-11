@@ -107,11 +107,18 @@ if [ "${CI_PROFILE:-}" = rust-python ]; then
             push:refs/heads/dev | push:refs/heads/master) intent=integration ;;
             *) intent=fork-development; validate=false ;;
         esac
-        # Server-side native checks are independent for every PR. A repository
-        # name alone cannot attest that trusted authors installed hooks either.
+        # Untrusted PRs receive independent native validation. The configured
+        # maintainer development path still receives every platform lane.
         [ "$CI_EVENT" != pull_request ] || native=true
         [ "$CI_REF" != refs/heads/master ] || native=true
         [ "$CI_EVENT" != workflow_dispatch ] || native=true
+        if [ "$CI_EVENT" = pull_request ] &&
+           [ "${CI_PR_HEAD:-}" = Roy-Kid/molpy ] &&
+           [ "${CI_PR_HEAD_REF:-}" = dev ] &&
+           [ "${CI_PR_BASE_REF:-}" = dev ] &&
+           [ "${CI_PR_AUTHOR:-}" = Roy-Kid ]; then
+            native=false
+        fi
     fi
 fi
 

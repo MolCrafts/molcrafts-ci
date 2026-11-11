@@ -51,6 +51,12 @@ inputs:
       Branch name (no refs/heads/) of a pull request's head; empty for other
       events
     default: ${{ github.event.pull_request.head.ref }}
+  pr-base-ref:
+    description: Target branch of the pull request
+    default: ${{ github.event.pull_request.base.ref }}
+  pr-author:
+    description: GitHub-verified author of the pull request
+    default: ${{ github.event.pull_request.user.login }}
 outputs:
   intent:
     description: Execution intent
@@ -111,4 +117,6 @@ runs:
         CI_REF: ${{ inputs.ref }}
         CI_PR_HEAD: ${{ inputs.pr-head-repository }}
         CI_PR_HEAD_REF: ${{ inputs.pr-head-ref }}
+        CI_PR_BASE_REF: ${{ inputs.pr-base-ref }}
+        CI_PR_AUTHOR: ${{ inputs.pr-author }}
       run: bash "$GITHUB_ACTION_PATH/context.sh"
