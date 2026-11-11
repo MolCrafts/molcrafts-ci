@@ -1,0 +1,14 @@
+- id: molci-commit
+  name: MolCrafts commit checks
+  entry: molci hook --stage pre-commit
+  language: python
+  stages: [pre-commit]
+  always_run: true
+  pass_filenames: false
+- id: molci-push
+  name: MolCrafts native verification
+  entry: molci hook --stage pre-push
+  language: python
+  stages: [pre-push]
+  always_run: true
+  pass_filenames: false

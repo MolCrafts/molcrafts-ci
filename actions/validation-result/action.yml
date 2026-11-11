@@ -1,0 +1,13 @@
+name: validation-result
+description: Require explicit success from all mandatory verification jobs
+inputs:
+  needs:
+    description: Complete toJSON(needs) object
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        NEEDS: ${{ inputs.needs }}
+      run: python3 "$GITHUB_ACTION_PATH/result.py"

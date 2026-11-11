@@ -13,7 +13,7 @@ concurrency:
 jobs:
   context:
     name: library
-    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@master
+    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
   unit:
     name: library / unit

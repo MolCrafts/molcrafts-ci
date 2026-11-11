@@ -33,7 +33,7 @@ runs:
         [ -z "$TARGETS" ] || rustup target add $TARGETS
         [ -z "$COMPONENTS" ] || rustup component add $COMPONENTS
     - if: inputs.cache != ''
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
       with:
         shared-key: ${{ inputs.cache }}-${{ runner.os }}
         workspaces: ${{ inputs.workspaces }}

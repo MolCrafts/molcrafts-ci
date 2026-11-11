@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from molcrafts_ci import run
 from molcrafts_ci.config import ConfigError, parse
 from molcrafts_ci.run import run_checks, select
 
@@ -21,6 +22,28 @@ CONFIG = parse(
     },
     Path("ci.toml"),
 )
+
+
+@pytest.mark.parametrize("git_path", ["cmd/git.exe", "mingw64/bin/git.exe", "bin/git.exe"])
+def test_windows_resolves_git_bash_instead_of_wsl(tmp_path, monkeypatch, git_path):
+    executable = tmp_path / git_path
+    executable.parent.mkdir(parents=True, exist_ok=True)
+    executable.touch()
+    bash = tmp_path / "bin/bash.exe"
+    bash.parent.mkdir(exist_ok=True)
+    bash.touch()
+    monkeypatch.setattr(run.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(
+        run.shutil, "which", lambda name: str(executable) if name == "git" else "WSL"
+    )
+    assert run.bash_executable() == str(bash)
+
+
+def test_windows_without_git_bash_fails_actionably(monkeypatch):
+    monkeypatch.setattr(run.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(run.shutil, "which", lambda name: None)
+    with pytest.raises(RuntimeError, match="Git Bash is required"):
+        run.bash_executable()
 
 
 def test_select_by_name_stage_or_everything_but_release() -> None:

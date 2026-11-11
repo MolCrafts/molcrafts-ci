@@ -182,7 +182,7 @@ jobs:
         with:
           name: dist
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086
 ```
 
 `python-release.yml` checks the tag is on master, waits for `ci` to have
@@ -313,20 +313,12 @@ uv run --locked --extra dev molci check     # what CI runs
 molcrafts-ci checks itself with its own `.github/ci.toml` and `ci.yml`.
 Inside the shared workflows, `$/actions/...` is the Action from the same
 commit as the workflow, so a change is tested by the pull request that makes
-it (runner 2.336.0 or newer). Versioning: while `0.x`, the minor is the
-breaking-change axis, and `manifest.schema_version` is that minor.
+it (runner 2.336.0 or newer).
 The history is git.
 
-## Previous scheme (until every repository has moved)
+## Shared validation
 
-Repositories not yet on `.github/ci.toml` still call these at `@master`;
-they keep working and are deleted when the last caller has moved:
-
-- `.github/workflows/context.yml` and `actions/ci-context`
-- `actions/check-workflows` (with its `release_contract.py`, the
-  `.github/release.toml` rules)
-- `hooks/ci.py` and `profiles/` (git hooks by `CI_PROFILE`)
-- `actions/setup-partners` with `src/molcrafts_ci/partners.py` and
-  `.github/partners.env`
-- `actions/setup-python`, `actions/setup-node`, `actions/setup-rust`
-  (`setup-python` is also used by `ci.yml`)
+The `rust-python` profile owns the gate graph and native/platform selection.
+MolCrafts CI also owns the canonical command implementations; consumers use
+`molci` and one pinned remote repository in `.pre-commit-config.yaml`.
+See [local-first validation](docs/local-first.md).

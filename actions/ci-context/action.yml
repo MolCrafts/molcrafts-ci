@@ -25,6 +25,9 @@ description: >
   The inputs default to the run's own github context; they exist so that the
   rules can be tested against synthetic contexts.
 inputs:
+  profile:
+    description: Project validation profile
+    default: ""
   workflow:
     description: Workflow name; nightly is the scheduled dev channel
     default: ${{ github.workflow }}
@@ -48,7 +51,22 @@ inputs:
       Branch name (no refs/heads/) of a pull request's head; empty for other
       events
     default: ${{ github.event.pull_request.head.ref }}
+  pr-base-ref:
+    description: Target branch of the pull request
+    default: ${{ github.event.pull_request.base.ref }}
+  pr-author:
+    description: GitHub-verified author of the pull request
+    default: ${{ github.event.pull_request.user.login }}
 outputs:
+  intent:
+    description: Execution intent
+    value: ${{ steps.context.outputs.intent }}
+  validate:
+    description: This event owns platform verification
+    value: ${{ steps.context.outputs.validate }}
+  native:
+    description: Independent native verification is required
+    value: ${{ steps.context.outputs.native }}
   tier:
     description: >
       "full" (every fork run, dev/master and tags upstream, pull
@@ -91,6 +109,7 @@ runs:
     - id: context
       shell: bash
       env:
+        CI_PROFILE: ${{ inputs.profile }}
         CI_WORKFLOW: ${{ inputs.workflow }}
         CI_OWNER: ${{ inputs.owner }}
         CI_REPOSITORY: ${{ inputs.repository }}
@@ -98,4 +117,6 @@ runs:
         CI_REF: ${{ inputs.ref }}
         CI_PR_HEAD: ${{ inputs.pr-head-repository }}
         CI_PR_HEAD_REF: ${{ inputs.pr-head-ref }}
+        CI_PR_BASE_REF: ${{ inputs.pr-base-ref }}
+        CI_PR_AUTHOR: ${{ inputs.pr-author }}
       run: bash "$GITHUB_ACTION_PATH/context.sh"

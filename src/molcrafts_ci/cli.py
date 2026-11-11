@@ -243,6 +243,23 @@ def _cmd_nightly(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # Repositories with a named profile use the shared gate runner.
+    from molcrafts_ci import validation
+
+    root = Path(argv[argv.index("--root") + 1]) if "--root" in argv else Path.cwd()
+    pin_file = root / ".github/partners.env"
+    has_profile = pin_file.is_file() and "CI_PROFILE=" in pin_file.read_text("utf-8")
+    if has_profile and argv[:1] == ["partners"]:
+        os.environ["MOLCRAFTS_PARTNERS_ROOT"] = str(root.resolve())
+        from molcrafts_ci import partners
+
+        return partners.main(argv[1:])
+    if argv and (
+        argv[0] in ("doctor", "verify", "run", "explain", "hook", "platform")
+        or (argv[0] in ("check", "--help", "-h") and has_profile)
+    ):
+        return validation.main(argv)
     parser = argparse.ArgumentParser(prog="molci")
     sub = parser.add_subparsers(dest="command", required=True)
 

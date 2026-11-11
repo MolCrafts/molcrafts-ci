@@ -11,6 +11,7 @@ so a cluster can run it on a compute node.
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import subprocess
 from collections.abc import Callable, Iterable
@@ -18,6 +19,19 @@ from pathlib import Path
 
 from molcrafts_ci import workspace
 from molcrafts_ci.config import STAGES, Check, Config, ConfigError
+
+
+def bash_executable() -> str:
+    """Use Git Bash on Windows, never the unrelated Windows WSL launcher."""
+    if platform.system() == "Windows":
+        git = shutil.which("git")
+        if git:
+            for parent in Path(git).resolve().parents[:3]:
+                candidate = parent / "bin" / "bash.exe"
+                if candidate.is_file():
+                    return str(candidate)
+        raise RuntimeError("Git Bash is required: install Git for Windows and add Git to PATH")
+    return shutil.which("bash") or "bash"
 
 
 def select(config: Config, names: Iterable[str], stage: str | None) -> list[Check]:
@@ -54,7 +68,7 @@ def run_checks(
     env.pop("VIRTUAL_ENV", None)
     if python:
         env["UV_PYTHON"] = python
-    bash = shutil.which("bash") or "bash"
+    bash = bash_executable()
     for check in checks:
         log(f"== {check.name}")
         for command in check.run:

@@ -25,7 +25,7 @@ jobs:
       publish: ${{ steps.context.outputs.publish }}
     steps:
       - id: context
-        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
   python:
     name: lint / python
@@ -33,5 +33,5 @@ jobs:
     if: needs.context.outputs.skip-pr != 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: MolCrafts/molcrafts-ci/actions/setup-python@master
+      - uses: MolCrafts/molcrafts-ci/actions/setup-python@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       - uses: actions/checkout@v7

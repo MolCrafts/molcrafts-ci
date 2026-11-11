@@ -41,7 +41,7 @@ class ResolutionTests(unittest.TestCase):
             workflow.write_text(before)
             hook = root / ".pre-commit-config.yaml"
             hook.write_text(
-                "entry: https://raw.githubusercontent.com/MolCrafts/molcrafts-ci/master/hooks/ci.py\n"
+                "repos:\n  - repo: https://github.com/MolCrafts/molcrafts-ci\n    rev: master\n"
             )
             pins = root / ".github/partners.env"
             pins.write_text("# preserved\nCI_REF=" + "b" * 40 + "\nMOLRS_REF=dev\n")
@@ -51,7 +51,7 @@ class ResolutionTests(unittest.TestCase):
                 patch.object(partners, "commit_exists", return_value=True),
             ):
                 self.assertEqual(partners.main(["pin-ci", SHA]), 0)
-                self.assertIn("/" + SHA + "/hooks/ci.py", hook.read_text())
+                self.assertIn("rev: " + SHA, hook.read_text())
                 self.assertEqual(workflow.read_text(), before.replace("@master", "@" + SHA))
                 self.assertEqual(
                     pins.read_text(), "# preserved\nCI_REF=" + SHA + "\nMOLRS_REF=dev\n"

@@ -283,7 +283,7 @@ jobs:
       publish: ${{ steps.context.outputs.publish }}
     steps:
       - id: context
-        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
   bench:
     name: nightly / bench
     needs: context
@@ -363,7 +363,7 @@ def _check_name(caller: dict, callee: dict) -> str:
 
 def test_a_shared_context_call_is_named_by_its_file(tmp_path: Path) -> None:
     spec = yaml.safe_load((FIXTURES / "context/good/.github/workflows/lint.yml").read_text())
-    spec["jobs"]["context"] = {"name": "lint", "uses": cw.CONTEXT_WORKFLOW}
+    spec["jobs"]["context"] = {"name": "lint", "uses": cw.CONTEXT_WORKFLOW + "a" * 40}
     assert one(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
     spec["jobs"]["context"]["name"] = "lint / context"
     messages = {v.message for v in one(write(tmp_path, "lint.yml", yaml.safe_dump(spec)))}
@@ -373,7 +373,7 @@ def test_a_shared_context_call_is_named_by_its_file(tmp_path: Path) -> None:
 
 def test_local_ci_context_only_where_it_exists(tmp_path: Path) -> None:
     text = (FIXTURES / "context/good/.github/workflows/lint.yml").read_text(encoding="utf-8")
-    text = text.replace(cw.CONTEXT_USES, cw.LOCAL_CONTEXT_USES)
+    text = text.replace(cw.CONTEXT_USES + "a" * 40, cw.LOCAL_CONTEXT_USES)
     root = write(tmp_path, "lint.yml", text)
     assert summary(one(root)) == {("lint.yml", "context", "context")}
     (tmp_path / "actions/ci-context").mkdir(parents=True)
@@ -402,13 +402,13 @@ def test_immutable_shared_action_refs(tmp_path: Path) -> None:
     assert one(write(tmp_path, "lint.yml", text)) == []
 
 
-@pytest.mark.parametrize("ref", ["master", "a" * 40])
+@pytest.mark.parametrize("ref", ["a" * 40])
 def test_shared_context_workflow_inherits_its_output_contract(tmp_path: Path, ref: str) -> None:
     text = (FIXTURES / "context/good/.github/workflows/lint.yml").read_text()
     spec = yaml.safe_load(text)
     spec["jobs"]["context"] = {
         "name": "lint",
-        "uses": cw.CONTEXT_WORKFLOW.removesuffix("master") + ref,
+        "uses": cw.CONTEXT_WORKFLOW + ref,
     }
     assert one(write(tmp_path, "lint.yml", yaml.safe_dump(spec))) == []
 
@@ -429,11 +429,97 @@ def test_nightly_rejects_a_separate_publication_branch(tmp_path: Path) -> None:
     assert any("schedule/dispatch only" in violation.message for violation in violations)
 
 
-def test_repository_rules_bind_a_repository_that_pins_ci(tmp_path: Path) -> None:
-    """A legacy consumer on @master keeps the per-workflow rules; pinning CI_REF
-    (pin-ci) adopts files / result / release."""
+def test_repository_rules_always_apply(tmp_path: Path) -> None:
     text = (FIXTURES / "files/bad/.github/workflows/lint.yml").read_text(encoding="utf-8")
     root = write(tmp_path, "lint.yml", text)
-    assert cw.check(root) == []
-    (tmp_path / ".github/partners.env").write_text("CI_REF=" + "a" * 40 + "\n", encoding="utf-8")
     assert {v.rule for v in cw.check(root)} == {"files"}
+
+
+@pytest.fixture
+def native_workflow(tmp_path):
+    pins = tmp_path / ".github/partners.env"
+    pins.parent.mkdir()
+    pins.write_text("CI_PROFILE=rust-python\nCI_REF=" + "a" * 40 + "\n")
+    uses = "MolCrafts/molcrafts-ci/"
+    condition = "needs.context.outputs.validate == 'true'"
+    spec = {
+        "name": "test",
+        "on": {
+            "push": {"branches": ["dev", "master"]},
+            "pull_request": {"branches": ["dev", "master"]},
+            "workflow_dispatch": None,
+        },
+        "permissions": {"contents": "read"},
+        "concurrency": {
+            "group": cw.GROUP.format(stem="test"),
+            "cancel-in-progress": cw.CANCEL_IN_PROGRESS,
+        },
+        "jobs": {
+            "context": {
+                "name": "test",
+                "uses": uses + ".github/workflows/context.yml@" + "a" * 40,
+                "with": {"profile": "rust-python"},
+            },
+            "native": {
+                "name": "test / native",
+                "needs": "context",
+                "runs-on": "ubuntu-latest",
+                "if": condition + " && needs.context.outputs.native == 'true'",
+                "steps": [{"run": "molci platform native"}],
+            },
+            "platform": {
+                "name": "test / platform (${{ matrix.lane }})",
+                "needs": "context",
+                "runs-on": "${{ matrix.os }}",
+                "if": condition,
+                "strategy": {
+                    "fail-fast": False,
+                    "matrix": "${{ fromJSON(needs.context.outputs.matrix) }}",
+                },
+                "steps": [{"run": "molci platform ${{ matrix.lane }}"}],
+            },
+            "result": {
+                "name": "test / result",
+                "needs": ["context", "native", "platform"],
+                "runs-on": "ubuntu-latest",
+                "if": "always() && " + condition,
+                "steps": [
+                    {
+                        "uses": uses + "actions/validation-result@" + "a" * 40,
+                        "with": {"needs": "${{ toJSON(needs) }}"},
+                    }
+                ],
+            },
+        },
+    }
+    path = tmp_path / ".github/workflows/test.yml"
+    path.parent.mkdir()
+    return tmp_path, path, spec
+
+
+def test_native_workflow_passes(native_workflow):
+    root, path, spec = native_workflow
+    path.write_text(yaml.safe_dump(spec, sort_keys=False))
+    assert cw.check_workflow(path, root) == []
+
+
+@pytest.mark.parametrize("mutation", ["skip", "cycle", "missing", "permissions", "pin", "matrix"])
+def test_native_workflow_fail_closed(native_workflow, mutation):
+    root, path, spec = native_workflow
+    jobs = spec["jobs"]
+    if mutation == "skip":
+        jobs["result"]["steps"] = cw.RESULT_STEPS
+    elif mutation == "cycle":
+        jobs["native"]["needs"] = ["context", "result"]
+    elif mutation == "missing":
+        jobs["native"]["needs"] = ["context", "nonexistent"]
+    elif mutation == "permissions":
+        jobs["native"]["permissions"] = {"id-token": "write"}
+    elif mutation == "pin":
+        jobs["native"]["steps"].append({"uses": "actions/checkout@v7"})
+    else:
+        jobs["platform"]["strategy"]["matrix"] = {"include": []}
+    path.write_text(yaml.safe_dump(spec, sort_keys=False))
+    violations = cw.check_workflow(path, root)
+    assert violations
+    assert all(v.file and v.line > 0 and v.rule and v.message for v in violations)

@@ -82,6 +82,46 @@ if [ "$upstream" = true ]; then
     esac
 fi
 
+# Project execution intent and native verification requirements.
+intent=integration
+validate=true
+native=true
+if [ "${CI_PROFILE:-}" = rust-python ]; then
+    upstream=false
+    [ "$CI_REPOSITORY" = MolCrafts/molpy ] && upstream=true
+    publish=false
+    deploy=false
+    skip_pr=false
+    tier=full
+    native=false
+    if [ "$upstream" = false ]; then
+        intent=fork-development
+        validate=false
+        nightly=false
+    else
+        case "$CI_EVENT:$CI_REF" in
+            pull_request:*) intent=pull-request ;;
+            push:refs/tags/v*) intent=release; publish=true ;;
+            schedule:*) intent=nightly ;;
+            workflow_dispatch:*) intent=integration ;;
+            push:refs/heads/dev | push:refs/heads/master) intent=integration ;;
+            *) intent=fork-development; validate=false ;;
+        esac
+        # Untrusted PRs receive independent native validation. The configured
+        # maintainer development path still receives every platform lane.
+        [ "$CI_EVENT" != pull_request ] || native=true
+        [ "$CI_REF" != refs/heads/master ] || native=true
+        [ "$CI_EVENT" != workflow_dispatch ] || native=true
+        if [ "$CI_EVENT" = pull_request ] &&
+           [ "${CI_PR_HEAD:-}" = Roy-Kid/molpy ] &&
+           [ "${CI_PR_HEAD_REF:-}" = dev ] &&
+           [ "${CI_PR_BASE_REF:-}" = dev ] &&
+           [ "${CI_PR_AUTHOR:-}" = Roy-Kid ]; then
+            native=false
+        fi
+    fi
+fi
+
 {
     echo "tier=$tier"
     echo "upstream=$upstream"
@@ -91,4 +131,7 @@ fi
     echo "nightly=$nightly"
     echo "source-ref=$source_ref"
     echo "deploy=$deploy"
+    echo "intent=$intent"
+    echo "validate=$validate"
+    echo "native=$native"
 } | tee -a "${GITHUB_OUTPUT:-/dev/null}"
