@@ -1,0 +1,40 @@
+# Local-first validation
+
+MolCrafts CI owns one `rust-python` gate registry and the actual checks.
+MolPy supplies its source tree, `.github/partners.env`, one
+`.pre-commit-config.yaml` and platform/release workflows. There are no
+consumer-side launchers or CI shell scripts.
+
+Pre-commit installs the single remote repository at an immutable commit and
+reuses its managed environment. Both hook stages execute the same `molci`
+entry point. Install with `molci doctor --install-hooks`; the push transport
+preserves all Git refs before pre-commit reads stdin. A pushed source snapshot
+must match HEAD and be clean. Distinct source snapshots require separate
+clean worktrees/pushes. Doctor checks tools, both hooks, pins, cache and runner.
+
+Commands: `molci check`, `molci verify`, `molci verify --full`, `molci run GATE`
+and `molci explain GATE`. Every applicable native gate is required before push.
+Only successful results with matching source, dependency artifacts, tools,
+platform, environment and configuration are reused. Unknown paths invalidate
+all gates. OS locks protect shared build artifacts. Full verification and
+GitHub ignore success receipts. One tested wheel supplies typing, conformance,
+documentation and package checks. Python dependencies share `molpy/uv.lock`.
+
+`MOLCRAFTS_HOOK_RUNNER` must finish validation synchronously on the exact
+submitted snapshot. The execution node resolves the pinned CI implementation,
+computes its own environment keys and writes a completed receipt. Submission
+alone is not validation. Real Slurm integration must be exercised on the site.
+
+Upstream PRs and master pushes run independent native validation plus the
+remaining platform lanes. Dev pushes run platform integration. Fork pushes
+compile nothing. Required jobs must explicitly succeed for `test / result`.
+Release evidence must come from the exact upstream master commit and one
+successful workflow attempt. Untrusted tests use hosted runners and read-only
+permissions. Weekly measurements and explicitly requested package publication
+are separate; all artifacts use one immutable source commit.
+
+Publish the CI revision first, then use `molci partners pin-ci SHA` to update
+consumer hooks, Actions and the locked CI dependency together. Run full native
+verification and negative/cache tests before the normal fork-to-upstream PR.
+Keep branch protection on `test / result`. Measure timing and runner minutes
+before claiming improvements. Follow the consumer's approval rules for pushes.

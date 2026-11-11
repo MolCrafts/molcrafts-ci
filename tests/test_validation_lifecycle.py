@@ -1,4 +1,4 @@
-"""Schema-2 lifecycle decisions do not rely on hook callers' claims."""
+"""Gate lifecycle decisions do not rely on hook callers' claims."""
 
 from __future__ import annotations
 
@@ -82,10 +82,10 @@ SCRIPT = Path(__file__).parents[1] / "actions/ci-context/context.sh"
         ),
     ],
 )
-def test_v2_lifecycle(repo, event, ref, head, intent, validate, native, publish):
+def test_lifecycle(repo, event, ref, head, intent, validate, native, publish):
     env = {k: v for k, v in os.environ.items() if not k.startswith("CI_") and k != "GITHUB_OUTPUT"}
     env.update(
-        CI_PROFILE="rust-python-v2",
+        CI_PROFILE="rust-python",
         CI_OWNER=repo.split("/")[0],
         CI_REPOSITORY=repo,
         CI_EVENT=event,

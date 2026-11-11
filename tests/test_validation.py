@@ -24,7 +24,7 @@ def repo(tmp_path):
         subprocess.run(["git", *args], cwd=tmp_path, check=True)
     (tmp_path / ".github").mkdir()
     (tmp_path / ".github/partners.env").write_text(
-        "CI_PROFILE=rust-python-v2\nCI_REF=" + "a" * 40 + "\n"
+        "CI_PROFILE=rust-python\nCI_REF=" + "a" * 40 + "\n"
     )
     (tmp_path / "core.rs").write_text("core")
     (tmp_path / "python.py").write_text("python")
@@ -38,7 +38,6 @@ def repo(tmp_path):
 def config():
     return dict(
         name="synthetic",
-        schema=2,
         global_inputs=["Cargo.lock", ".github/*"],
         gates=[
             dict(id="core", stage="pre-push", inputs=["core.rs"], run="printf c >> .git/count"),
@@ -98,7 +97,7 @@ def test_failure_or_interruption_never_cached(repo, config, failure):
         runner = v.Runner(repo, config)
         assert runner.execute(runner.select()) != 0
     assert (repo / ".git/count").read_text() == "cc"
-    assert not list((repo / ".git/molci-v2/success").glob("*.json"))
+    assert not list((repo / ".git/molci/success").glob("*.json"))
 
 
 def test_mutating_source_never_cached(repo, config):
@@ -106,7 +105,7 @@ def test_mutating_source_never_cached(repo, config):
     runner = v.Runner(repo, config)
     with pytest.raises(ValueError, match="source changed"):
         runner.execute(runner.select())
-    assert not list((repo / ".git/molci-v2/success").glob("*.json"))
+    assert not list((repo / ".git/molci/success").glob("*.json"))
 
 
 def test_artifact_corruption_invalidates_producer_and_reuses_only_verified_bytes(repo, config):
@@ -114,7 +113,7 @@ def test_artifact_corruption_invalidates_producer_and_reuses_only_verified_bytes
     config["gates"][0]["artifact_directory"] = "MOLPY_WHEEL_DIR"
     config["gates"][0]["run"] += '; printf wheel > "$MOLPY_WHEEL_DIR/test.whl"'
     execute(repo, config)
-    wheel = next((repo / ".git/molci-v2/artifacts").glob("*/*.whl"))
+    wheel = next((repo / ".git/molci/artifacts").glob("*/*.whl"))
     wheel.write_text("corrupted")
     assert execute(repo, config) == "cpc"
     assert wheel.read_text() == "wheel"
@@ -226,7 +225,7 @@ def test_invalid_gate_graph_fails_before_execution(repo, config, monkeypatch, ki
         config["gates"][0]["depends_on"] = ["missing"]
     else:
         config["gates"].append(config["gates"][0])
-    (directory / "rust-python-v2.yml").write_text(yaml.safe_dump(config))
+    (directory / "rust-python.yml").write_text(yaml.safe_dump(config))
     with pytest.raises(ValueError):
         v.profile(repo)
 
@@ -244,3 +243,12 @@ def test_wrong_platform_lane_fails_before_execution(repo, config):
     config["platforms"] = {"windows": {"os": "UnsupportedOS", "gates": ["core"]}}
     with pytest.raises(ValueError, match="UNSUPPORTED PLATFORM"):
         v.Runner(repo, config).select(lane="windows")
+
+
+def test_user_cargo_configuration_invalidates_success(repo, config, monkeypatch):
+    home = repo / ".git/cargo-home"
+    home.mkdir()
+    monkeypatch.setenv("CARGO_HOME", str(home))
+    execute(repo, config)
+    (home / "config.toml").write_text('[build]\nrustflags = ["--cfg", "different"]\n')
+    assert execute(repo, config) == "cpcp"

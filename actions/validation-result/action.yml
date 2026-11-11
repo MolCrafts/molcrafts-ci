@@ -1,5 +1,5 @@
 name: validation-result
-description: Require explicit success from all mandatory v2 verification jobs
+description: Require explicit success from all mandatory verification jobs
 inputs:
   needs:
     description: Complete toJSON(needs) object

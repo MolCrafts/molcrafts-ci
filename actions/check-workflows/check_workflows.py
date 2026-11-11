@@ -13,7 +13,7 @@ scheme (Revisions 2-4), the ones a reviewer cannot be trusted to see:
   context      the first job is `context` and its status check reads
                `<file> / context`: a call of the shared context workflow is
                named `<file>` (GitHub appends the called job, `context`); a
-               legacy inline Action job is named `<file> / context`
+               inline Action job is named `<file> / context`
   needs        every other job reaches `context` through `needs`
   skip-pr      every job that a pull request can run is skipped for an
                in-fork pull request: its own `if` carries
@@ -29,7 +29,7 @@ scheme (Revisions 2-4), the ones a reviewer cannot be trusted to see:
                nightly.yml on `nightly == 'true'`; stable site/API deployment
                on `deploy == 'true'`
   concurrency  the workflow-level block is exactly the canonical one
-  pin          MolCrafts/molcrafts-ci/actions/* uses an immutable SHA (legacy @master is accepted)
+  pin          MolCrafts/molcrafts-ci/actions/* uses an immutable SHA
   comment      no comment mentions workflow_call unless the workflow has it
   name         every job is named `<file> / <what>`
   files        the workflow files are test.yml (required), release.yml,
@@ -66,8 +66,7 @@ CI_CONTEXT = HERE.parent / "ci-context" / "action.yml"
 
 
 def _load_release():
-    """release_contract.py beside this script: the release.toml contract of the
-    previous CI scheme, loaded by path (this PEP 723 script brings only PyYAML)."""
+    """Load the release.toml contract beside this standalone policy script."""
     path = HERE / "release_contract.py"
     spec = importlib.util.spec_from_file_location("molcrafts_ci_release", path)
     module = importlib.util.module_from_spec(spec)
@@ -107,14 +106,14 @@ CANCEL_IN_PROGRESS = (
 # These never cancel: a schedule, a release or a deploy is not superseded.
 NEVER_CANCEL = {"context", "nightly", "release", "deploy"}
 
-CONTEXT_USES = "MolCrafts/molcrafts-ci/actions/ci-context@master"
+CONTEXT_USES = "MolCrafts/molcrafts-ci/actions/ci-context@"
 LOCAL_CONTEXT_USES = "./actions/ci-context"  # molcrafts-ci itself
-CONTEXT_WORKFLOW = "MolCrafts/molcrafts-ci/.github/workflows/context.yml@master"
+CONTEXT_WORKFLOW = "MolCrafts/molcrafts-ci/.github/workflows/context.yml@"
 LOCAL_CONTEXT_WORKFLOW = "./.github/workflows/context.yml"
 
 
 def valid_action_ref(ref: str) -> bool:
-    return ref == "master" or re.fullmatch(r"[0-9a-f]{40}", ref) is not None
+    return re.fullmatch(r"[0-9a-f]{40}", ref) is not None
 
 
 def valid_context_use(use: str, local_ok: bool) -> bool:
@@ -421,8 +420,8 @@ def check_caller(path: Path, root: Path, spec: dict, text: str) -> list[Violatio
     for job_id, job in jobs.items():
         job = job or {}
         ref = CALLER_USES.match(str(job.get("uses"))).group("ref")
-        if ref != "master" and not re.fullmatch(r"[0-9a-f]{40}", ref):
-            report(job_id, "pin", f"call ci.yml@master (or a 40-character SHA); got @{ref}")
+        if not re.fullmatch(r"[0-9a-f]{40}", ref):
+            report(job_id, "pin", f"call ci.yml at a 40-character SHA; got @{ref}")
         chosen = str((job.get("with") or {}).get("profile") or "")
         if want and chosen != want:
             report(job_id, "profile", f"with.profile is {chosen!r}; CI_PROFILE is {want!r}")
@@ -444,7 +443,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
     if is_thin_caller(jobs):
         return check_caller(path, root, spec, text)
     events = triggers(spec)
-    v2 = profile_name(root) == "rust-python-v2"
+    native_profile = profile_name(root) == "rust-python"
     out: list[Violation] = []
 
     def report(job: str | None, rule: str, message: str, line: int | None = None) -> None:
@@ -461,7 +460,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
         if ids[0] != "context":
             report("context", "context", f"is not the first job (the first is `{ids[0]}`)")
         shared_use = str(ctx.get("uses", ""))
-        shared_prefix = CONTEXT_WORKFLOW.removesuffix("master")
+        shared_prefix = CONTEXT_WORKFLOW
         shared_context = (
             shared_use.startswith(shared_prefix)
             and valid_action_ref(shared_use.removeprefix(shared_prefix))
@@ -536,7 +535,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             report(job_id, "needs", "circular job dependencies; remove the cycle")
 
     # skip-pr: transitive skipping, unless always()/cancelled() overrides it.
-    if not v2 and events & PR_EVENTS and "context" in jobs:
+    if not native_profile and events & PR_EVENTS and "context" in jobs:
         gated: dict[str, bool] = {}
 
         def is_gated(job_id: str, seen: frozenset[str] = frozenset()) -> bool:
@@ -625,13 +624,15 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             if missing:
                 report("result", "result", f"must need every other job; missing {missing}")
             expected_if = (
-                "always() && needs.context.outputs.validate == 'true'" if v2 else RESULT_IF
+                "always() && needs.context.outputs.validate == 'true'"
+                if native_profile
+                else RESULT_IF
             )
             if _normalize(_unwrap(str(result.get("if") or ""))) != expected_if:
                 report("result", "result", f"must run `if: {expected_if}`")
-            if not v2 and result.get("steps") != RESULT_STEPS:
+            if not native_profile and result.get("steps") != RESULT_STEPS:
                 report("result", "result", "steps must be the canonical result step")
-            if v2:
+            if native_profile:
                 steps = result.get("steps") or []
                 if (
                     len(steps) != 1
@@ -647,7 +648,11 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                         "use pinned validation-result with complete toJSON(needs)",
                     )
                 if set(jobs) != {"context", "native", "platform", "result"}:
-                    report(None, "platform", "v2 requires context, native, platform, result jobs")
+                    report(
+                        None,
+                        "platform",
+                        "the native profile requires context, native, platform, result jobs",
+                    )
                 expected_conditions = {
                     "platform": "needs.context.outputs.validate == 'true'",
                     "native": (
@@ -661,19 +666,17 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                         report(name, "platform", f"must run `if: {condition}`")
                     lane = "native" if name == "native" else "${{ matrix.lane }}"
                     if not any(
-                        s.get("run") == f"scripts/ci-hook.sh platform {lane}"
+                        s.get("run") == f"molci platform {lane}"
                         and "if" not in s
                         and not s.get("continue-on-error")
                         for s in job.get("steps", [])
                     ):
-                        report(
-                            name, "platform", "invoke the registry platform lane through ci-hook.sh"
-                        )
+                        report(name, "platform", "invoke the registry platform lane through molci")
                 matrix = (jobs.get("platform") or {}).get("strategy", {}).get("matrix")
                 if matrix != "${{ fromJSON(needs.context.outputs.matrix) }}":
                     report("platform", "platform", "use context's authoritative lane matrix")
-                if (jobs.get("context", {}).get("with") or {}).get("profile") != "rust-python-v2":
-                    report("context", "profile", "opt into rust-python-v2 explicitly")
+                if (jobs.get("context", {}).get("with") or {}).get("profile") != "rust-python":
+                    report("context", "profile", "opt into rust-python explicitly")
                 if events != {"push", "pull_request", "workflow_dispatch"}:
                     report(
                         None,
@@ -692,7 +695,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                             "untrusted verification uses hosted runners and read-only permissions",
                         )
 
-    if v2 and stem == "release":
+    if native_profile and stem == "release":
         guard = jobs.get("guard") or {}
         if not any(
             re.fullmatch(
@@ -738,7 +741,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
     # pin + comment: line by line.
     has_call = "workflow_call" in events
     for n, raw in enumerate(text.splitlines(), 1):
-        if v2:
+        if native_profile:
             external = re.search(r"uses:\s*['\"]?([^\s'\"]+)@([^\s'\"]+)", raw)
             if external and not re.fullmatch(r"[0-9a-f]{40}", external[2]):
                 report(None, "pin", f"{external[1]}: pin an immutable 40-character action SHA", n)
@@ -747,7 +750,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                 report(
                     None,
                     "pin",
-                    f"{m.group('path')}: requires SHA or master; got @{m.group('ref')}",
+                    f"{m.group('path')}: requires an immutable SHA; got @{m.group('ref')}",
                     n,
                 )
         if not has_call and COMMENT_WORKFLOW_CALL.search(raw):
@@ -782,7 +785,7 @@ def check_actions(root: Path) -> list[Violation]:
         for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             for m in SHARED_ACTION.finditer(raw):
                 if not valid_action_ref(m.group("ref")):
-                    msg = f"{m.group('path')}: requires SHA or master; got @{m.group('ref')}"
+                    msg = f"{m.group('path')}: requires an immutable SHA; got @{m.group('ref')}"
                     out.append(Violation(rel, n, None, "pin", msg))
     return out
 
@@ -889,30 +892,8 @@ def check_release(root: Path, workflows: list[Path]) -> list[Violation]:
 REPOSITORY_RULES = frozenset({"files", "result", "release"})
 
 
-def pinned_ci_ref(root: Path) -> str:
-    path = root / ".github" / "partners.env"
-    if not path.is_file():
-        return ""
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.strip().startswith("CI_REF="):
-            return line.split("=", 1)[1].strip()
-    return ""
-
-
-def adopted(root: Path) -> bool:
-    """The repository rules bind molcrafts-ci and every consumer that pins
-    CI_REF to a commit (`partners.py pin-ci` adopts them); a legacy consumer
-    following @master keeps the per-workflow rules until it migrates."""
-    if (root / "actions/ci-context/action.yml").is_file():
-        return True
-    return re.fullmatch(r"[0-9a-f]{40}", pinned_ci_ref(root)) is not None
-
-
-def check(root: Path, *, whole: bool | None = None) -> list[Violation]:
-    """Every violation under ``root``. ``whole`` forces the repository rules
-    on (True) or off (False, a one-concern fixture); by default they apply
-    when the repository has adopted them (`adopted`)."""
-    whole = adopted(root) if whole is None else whole
+def check(root: Path, *, whole: bool = True) -> list[Violation]:
+    """Every violation under root; tests may explicitly isolate per-file rules."""
     workflows = sorted((root / ".github/workflows").glob("*.yml"))
     out = [v for path in workflows for v in check_workflow(path, root)]
     out += check_files(root, workflows) + check_release(root, workflows)

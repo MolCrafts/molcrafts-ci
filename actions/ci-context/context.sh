@@ -82,11 +82,11 @@ if [ "$upstream" = true ]; then
     esac
 fi
 
-# v2 opts in explicitly; no change to existing profiles' event ownership.
+# Project execution intent and native verification requirements.
 intent=integration
 validate=true
 native=true
-if [ "${CI_PROFILE:-}" = rust-python-v2 ]; then
+if [ "${CI_PROFILE:-}" = rust-python ]; then
     upstream=false
     [ "$CI_REPOSITORY" = MolCrafts/molpy ] && upstream=true
     publish=false

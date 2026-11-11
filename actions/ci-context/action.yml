@@ -26,7 +26,7 @@ description: >
   rules can be tested against synthetic contexts.
 inputs:
   profile:
-    description: Opt-in lifecycle profile (empty preserves v1)
+    description: Project validation profile
     default: ""
   workflow:
     description: Workflow name; nightly is the scheduled dev channel
@@ -53,7 +53,7 @@ inputs:
     default: ${{ github.event.pull_request.head.ref }}
 outputs:
   intent:
-    description: v2 execution intent
+    description: Execution intent
     value: ${{ steps.context.outputs.intent }}
   validate:
     description: This event owns platform verification

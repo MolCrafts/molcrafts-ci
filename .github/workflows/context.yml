@@ -63,9 +63,9 @@ jobs:
         with:
           profile: ${{ inputs.profile }}
       - uses: $/actions/setup-python
-        if: inputs.profile == 'rust-python-v2'
+        if: inputs.profile == 'rust-python'
       - id: plan
-        if: inputs.profile == 'rust-python-v2' && steps.context.outputs.validate == 'true'
+        if: inputs.profile == 'rust-python' && steps.context.outputs.validate == 'true'
         uses: $/actions/validation-plan
         with:
           native: ${{ steps.context.outputs.native }}

@@ -15,7 +15,7 @@ concurrency:
 jobs:
   context:
     name: nightly
-    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@master
+    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
   pypi:
     name: nightly / pypi

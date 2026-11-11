@@ -6,7 +6,7 @@ on:
     branches: [dev, master]
 jobs:
   ci:
-    uses: MolCrafts/molcrafts-ci/.github/workflows/ci.yml@master
+    uses: MolCrafts/molcrafts-ci/.github/workflows/ci.yml@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     with:
       profile: node-python
       area: lint

@@ -1,4 +1,4 @@
-"""Fail-closed aggregation for schema-2 test.yml. No checkout of PR code needed."""
+"""Fail-closed aggregation for gate test.yml. No checkout of PR code needed."""
 
 from __future__ import annotations
 

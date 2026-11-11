@@ -64,7 +64,7 @@ def main() -> int:
             native = [j for j in jobs if j["name"] == "test / native"]
             platform = [j for j in jobs if j["name"].startswith("test / platform (")]
             registry = yaml.safe_load(
-                (Path(__file__).parents[2] / "profiles/rust-python-v2.yml").read_text("utf-8")
+                (Path(__file__).parents[2] / "profiles/rust-python.yml").read_text("utf-8")
             )
             expected = {
                 f"test / platform ({lane})"

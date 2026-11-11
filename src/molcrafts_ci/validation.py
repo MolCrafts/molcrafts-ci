@@ -1,4 +1,4 @@
-"""Schema-2 gate graph and local successful-result receipts.
+"""Gate gate graph and local successful-result receipts.
 
 Receipts are a developer optimisation, never a remote attestation. GitHub
 always executes its selected gates with cache reuse disabled.
@@ -13,6 +13,7 @@ import json
 import os
 import platform
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -27,6 +28,28 @@ import yaml
 
 from molcrafts_ci.jsonutil import dumps_deterministic
 from molcrafts_ci.workspace import clean_git_env
+
+OS_USE = re.compile(r"\bstd::os::(?:unix|windows)\b")
+
+
+def check_os_cfg(cwd: Path) -> int:
+    bad: list[str] = []
+    skip = {".git", "target", "node_modules", "dist"}
+    for path in cwd.rglob("*.rs"):
+        if skip.intersection(path.parts):
+            continue
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        for index, line in enumerate(lines):
+            if not OS_USE.search(line) or line.lstrip().startswith("//"):
+                continue
+            prev = lines[index - 1] if index else ""
+            if "#[cfg" in prev or "#[cfg" in line or "os-gated" in prev or "os-gated" in line:
+                continue
+            bad.append(f"{path.relative_to(cwd)}:{index + 1}: std::os without #[cfg")
+    if bad:
+        print("\n".join(bad), file=sys.stderr)
+        return 1
+    return 0
 
 
 def implementation() -> Path:
@@ -53,8 +76,6 @@ def profile(root: Path) -> dict:
     if not re.fullmatch(r"[a-z0-9-]+", name):
         raise ValueError("invalid CI_PROFILE")
     data = yaml.safe_load((implementation() / "profiles" / f"{name}.yml").read_text("utf-8"))
-    if data.get("schema") != 2:
-        raise ValueError(f"{name}: this command requires schema 2")
     gates = data["gates"]
     registry = {g["id"]: g for g in gates}
     if len(registry) != len(gates) or not gates:
@@ -165,8 +186,6 @@ def contents(root: Path) -> dict[str, str]:
             result[name] = digest([path.stat().st_mode & 0o111, path.read_bytes().hex()])
         elif path.exists():
             raise ValueError(f"unsupported source input {name} (submodule/directory)")
-        else:
-            result[name] = "deleted"
     return result
 
 
@@ -199,12 +218,26 @@ class Runner:
         self.root, self.config = root.resolve(), config
         self.gates = {g["id"]: g for g in config["gates"]}
         common = Path(git(root, "rev-parse", "--git-common-dir"))
-        self.cache = (root / common).resolve() / "molci-v2"
+        self.cache = (root / common).resolve() / "molci"
         self.files = contents(root)
         self.keys: dict[str, str] = {}
         self.env = clean_git_env()
         self.env.pop("VIRTUAL_ENV", None)
+        self.env.update(
+            MOLCI_ROOT=self.root.as_posix(),
+            MOLCI_PYTHON=Path(sys.executable).as_posix(),
+            MOLCI_CHECKS_DIR=(Path(__file__).parent / "checks").as_posix(),
+            MOLCRAFTS_PARTNERS_ROOT=str(self.root),
+        )
         self.tools: dict[str, str] = {}
+        package = Path(__file__).parent
+        self.engine = digest(
+            {
+                str(p.relative_to(package)): hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in [Path(__file__), *sorted((package / "checks").glob("*"))]
+                if p.is_file() and p.suffix in (".py", ".sh")
+            }
+        )
         self.platform = f"{platform.system()}-{platform.machine()}"
         known = [p for g in config["gates"] for p in g.get("inputs", [])]
         self.unknown = {
@@ -248,7 +281,17 @@ class Runner:
 
     def key(self, gate: dict) -> str:
         tools = {}
-        for command in gate.get("tools", []):
+        for probe in gate.get("tools", []):
+            if isinstance(probe, str):
+                probe = self.config["tools"][probe]
+            if isinstance(probe, dict):
+                if platform.system() not in probe.get("os", [platform.system()]):
+                    continue
+                command = probe["run"]
+                if self.env.get(probe.get("environment")):
+                    command = shlex.split(self.env[probe["environment"]]) + command[1:]
+            else:
+                command = probe
             name = command[0]
             if not shutil.which(name):
                 raise ValueError(
@@ -286,6 +329,24 @@ class Runner:
                 or k in self.config.get("environment", [])
             )
         }
+        cargo_home = Path(self.env.get("CARGO_HOME", Path.home() / ".cargo"))
+        config_paths = [cargo_home / name for name in ("config", "config.toml")]
+        for ancestor in (self.root, *self.root.parents):
+            config_paths.extend(ancestor / ".cargo" / name for name in ("config", "config.toml"))
+        config_paths.extend(
+            [
+                Path(self.env.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "uv/uv.toml",
+                Path(self.env.get("APPDATA", Path.home() / ".config")) / "uv/uv.toml",
+                Path("/etc/uv/uv.toml"),
+            ]
+        )
+        if self.env.get("UV_CONFIG_FILE"):
+            config_paths.append(Path(self.env["UV_CONFIG_FILE"]))
+        external = {
+            str(path): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in set(config_paths)
+            if path.is_file()
+        }
         return digest(
             {
                 "gate": gate,
@@ -298,7 +359,8 @@ class Runner:
                 "python": sys.version,
                 "tools": tools,
                 "environment": execution,
-                "engine": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                "engine": self.engine,
+                "external_configuration": external,
             }
         )
 
@@ -333,7 +395,7 @@ class Runner:
     ) -> int:
         commit = git(self.root, "rev-parse", "HEAD")
         print(
-            f"MolCrafts CI v2\nCommit: {commit}\nPlatform: {self.platform}\n"
+            f"MolCrafts CI\nCommit: {commit}\nPlatform: {self.platform}\n"
             f"Profile: {self.config['name']}",
             flush=True,
         )
@@ -347,7 +409,12 @@ class Runner:
                     raise ValueError(f"UNSUPPORTED PLATFORM {self.platform}: required gate {name}")
                 key = self.key(gate)
                 self.keys[name] = key
-                hit = not full and not gate.get("always") and self.cached(key, gate)
+                hit = (
+                    not full
+                    and not gate.get("always")
+                    and bool(gate.get("inputs"))
+                    and self.cached(key, gate)
+                )
                 if explain:
                     reason = (
                         "matching successful receipt and artifacts"
@@ -368,7 +435,7 @@ class Runner:
                     artifact_dir = self.cache / "artifacts" / key
                     artifact_dir.mkdir(parents=True, exist_ok=True)
                     if gate.get("artifact_directory"):
-                        self.env[gate["artifact_directory"]] = str(artifact_dir)
+                        self.env[gate["artifact_directory"]] = artifact_dir.as_posix()
                     log = self.cache / "logs" / f"{name}-{key}.log"
                     log.parent.mkdir(parents=True, exist_ok=True)
                     command = gate["run"]
@@ -431,7 +498,7 @@ class Runner:
                     artifacts = list(self.artifacts(key, gate))
                     if len(artifacts) != 1:
                         raise ValueError(f"{name}: expected exactly one exported artifact")
-                    self.env[gate["artifact_environment"]] = artifacts[0]
+                    self.env[gate["artifact_environment"]] = Path(artifacts[0]).as_posix()
                 self.keys[name] = digest({"key": key, "artifacts": self.artifacts(key, gate)})
             if contents(self.root) != self.files:
                 raise ValueError("source changed during validation; rerun before pushing")
@@ -440,17 +507,28 @@ class Runner:
         return 0
 
     def internal(self, command: str) -> list[str]:
-        hook = implementation() / "hooks/ci.py"
-        return [
-            sys.executable,
-            str(hook),
-            "--root",
-            str(self.root),
-            "--profile",
-            "rust-python",
-            "--gate",
-            command.removeprefix("molci:"),
-        ]
+        if command.startswith("molci:rust-python:"):
+            return [
+                "bash",
+                (Path(__file__).parent / "checks/rust_python.sh").as_posix(),
+                command.removeprefix("molci:rust-python:"),
+            ]
+        if command == "molci:workflows":
+            return [
+                sys.executable,
+                str(implementation() / "actions/check-workflows/check_workflows.py"),
+                str(self.root),
+            ]
+        if command == "molci:os-cfg":
+            return [
+                sys.executable,
+                "-c",
+                "import sys; from pathlib import Path; "
+                "from molcrafts_ci.validation import check_os_cfg; "
+                "sys.exit(check_os_cfg(Path(sys.argv[1])))",
+                str(self.root),
+            ]
+        raise ValueError(f"unknown internal gate: {command}")
 
 
 def main(argv: list[str]) -> int:
@@ -518,6 +596,12 @@ def main(argv: list[str]) -> int:
             push_commit(root, os.environ.get("MOLCI_PUSH_REFS", ""))
         runner = Runner(root, config)
         if args.command == "doctor":
+            remote = os.environ.get("MOLCRAFTS_HOOK_RUNNER")
+            if remote and not shutil.which(remote):
+                raise ValueError(f"MISSING RUNNER {remote}: configure MOLCRAFTS_HOOK_RUNNER")
+            commit_hook = root / Path(git(root, "rev-parse", "--git-path", "hooks/pre-commit"))
+            if not commit_hook.is_file():
+                raise ValueError("pre-commit hook is missing; run `molci doctor --install-hooks`")
             for gate in runner.select():
                 runner.keys[gate["id"]] = runner.key(gate)
             print(f"Tools: PASS\nHooks: PASS\nPins: {pins(root)}\nCache: {runner.cache}")
@@ -548,7 +632,12 @@ def main(argv: list[str]) -> int:
             code = subprocess.run(
                 [
                     remote,
-                    str(root / "scripts/ci-hook.sh"),
+                    "uv",
+                    "tool",
+                    "run",
+                    "--from",
+                    f"molcrafts-ci @ git+https://github.com/MolCrafts/molcrafts-ci@{pins(root)['CI_REF']}",
+                    "molci",
                     *argv,
                     "--snapshot",
                     snapshot,

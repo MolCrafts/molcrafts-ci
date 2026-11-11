@@ -33,4 +33,4 @@ jobs:
       cancel: ${{ steps.context.outputs.cancel }}
     steps:
       - id: context
-        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

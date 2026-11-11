@@ -24,7 +24,7 @@ jobs:
       publish: ${{ steps.context.outputs.publish }}
     steps:
       - id: context
-        uses: MolCrafts/molcrafts-ci/actions/ci-context@master
+        uses: MolCrafts/molcrafts-ci/actions/ci-context@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
   pypi:
     name: release / pypi

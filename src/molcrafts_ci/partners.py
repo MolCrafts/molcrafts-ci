@@ -231,11 +231,12 @@ def pin_ci(commit: str) -> int:
     for path in paths:
         before = path.read_text(encoding="utf-8")
         after = CI_USE.sub(lambda match: match["prefix"] + commit, before)
-        after = re.sub(
-            r"(https://raw\.githubusercontent\.com/MolCrafts/molcrafts-ci/)[^/]+(/hooks/ci\.py)",
-            lambda match: match[1] + commit + match[2],
-            after,
-        )
+        if path.name == ".pre-commit-config.yaml":
+            after = re.sub(
+                r"(repo:\s*https://github\.com/MolCrafts/molcrafts-ci(?:\.git)?\s*\n\s*rev:\s*)\S+",
+                lambda match: match[1] + commit,
+                after,
+            )
         if after != before:
             path.write_text(after, encoding="utf-8")
             print(path.relative_to(ROOT))
@@ -245,6 +246,29 @@ def pin_ci(commit: str) -> int:
         if after != before:
             PINS.write_text(after, encoding="utf-8")
             print(PINS.relative_to(ROOT))
+    for manifest in tracked("pyproject.toml"):
+        sources = (
+            tomllib.loads(manifest.read_text(encoding="utf-8"))
+            .get("tool", {})
+            .get("uv", {})
+            .get("sources", {})
+        )
+        source = sources.get("molcrafts-ci", {})
+        if isinstance(source, dict) and str(source.get("git", "")).removesuffix(".git") == url(
+            "MolCrafts/molcrafts-ci"
+        ).removesuffix(".git"):
+            before = manifest.read_text(encoding="utf-8")
+            after = re.sub(
+                r'(?m)^(molcrafts-ci\s*=\s*\{[^\n]*\brev\s*=\s*")[^"]+',
+                lambda match: match[1] + commit,
+                before,
+            )
+            if after != before:
+                manifest.write_text(after, encoding="utf-8")
+                subprocess.run(
+                    ["uv", "--directory", str(manifest.parent), "lock"], env=ENV, check=True
+                )
+                print(manifest.relative_to(ROOT))
     return 0
 
 
@@ -314,6 +338,34 @@ def check() -> int:
         )
 
     ci_ref = load().get("CI_REF")
+    for manifest in tracked("pyproject.toml"):
+        sources = (
+            tomllib.loads(manifest.read_text(encoding="utf-8"))
+            .get("tool", {})
+            .get("uv", {})
+            .get("sources", {})
+        )
+        for package, key in (("molcrafts-ci", "CI_REF"), ("molrec", "MOLREC_REF")):
+            source = sources.get(package, {})
+            if (
+                isinstance(source, dict)
+                and source.get("git")
+                and source.get("rev") != load().get(key)
+            ):
+                failures.append(
+                    f"{manifest.relative_to(ROOT)}: {package} source must match "
+                    f"{key} in partners.env"
+                )
+    hooks = ROOT / ".pre-commit-config.yaml"
+    if ci_ref and hooks.is_file():
+        match = re.search(
+            r"repo:\s*https://github\.com/MolCrafts/molcrafts-ci(?:\.git)?\s*\n\s*rev:\s*(\S+)",
+            hooks.read_text(encoding="utf-8"),
+        )
+        if match and match[1] != ci_ref:
+            failures.append(
+                ".pre-commit-config.yaml: shared hooks must match CI_REF in partners.env"
+            )
     for wf in sorted((ROOT / ".github" / "workflows").glob("*.y*ml")):
         for n, line in enumerate(wf.read_text(encoding="utf-8").splitlines(), 1):
             action = CI_USE.search(line)

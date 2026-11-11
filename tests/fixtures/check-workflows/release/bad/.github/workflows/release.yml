@@ -15,7 +15,7 @@ concurrency:
 jobs:
   context:
     name: release
-    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@master
+    uses: MolCrafts/molcrafts-ci/.github/workflows/context.yml@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
   pypi:
     name: release / pypi

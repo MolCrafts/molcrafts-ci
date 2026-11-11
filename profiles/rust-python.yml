@@ -1,31 +1,415 @@
-# molrs. Selected by CI_PROFILE=rust-python.
 name: rust-python
+global_inputs:
+- .github/partners.env
+- .github/**
+- .pre-commit-config.yaml
+- .cargo/**
+- Cargo.toml
+- '**/Cargo.toml'
+- Cargo.lock
+- '**/Cargo.lock'
+- '**/uv.lock'
+- rust-toolchain.toml
+- ruff.toml
+- .python-version
+environment:
+- PATH
+- LANG
+- LC_ALL
+- MACOSX_DEPLOYMENT_TARGET
+- SDKROOT
+- CPATH
+- LIBRARY_PATH
+- LD_LIBRARY_PATH
+- SLURM_CLUSTER_NAME
+- SLURM_JOB_PARTITION
+- CFLAGS
+- CPPFLAGS
+- CXXFLAGS
+- LDFLAGS
+- AR
+- FC
+- NODE_OPTIONS
+- WASM_BINDGEN_TEST_TIMEOUT
+- PYO3_PYTHON
+- PYO3_CROSS
+- PYO3_CROSS_LIB_DIR
+- VCToolsVersion
+- WindowsSDKVersion
+- VSINSTALLDIR
+- VCToolsInstallDir
+- INCLUDE
+- LIB
+- LIBPATH
+- CL
+- _CL_
+tools:
+  cargo:
+  - cargo
+  - --version
+  rustc:
+  - rustc
+  - -vV
+  rustfmt:
+  - rustfmt
+  - --version
+  uv:
+  - uv
+  - --version
+  python:
+  - uv
+  - run
+  - --no-project
+  - --python
+  - 3.12.12
+  - python
+  - --version
+  clippy-driver:
+  - clippy-driver
+  - --version
+  cc:
+    os:
+    - Linux
+    - Darwin
+    environment: CC
+    run:
+    - cc
+    - --version
+  msvc:
+    os:
+    - Windows
+    run:
+    - powershell
+    - -NoProfile
+    - -Command
+    - '& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+      -latest -products * -property installationVersion'
+  cxx:
+    os:
+    - Linux
+    - Darwin
+    environment: CXX
+    run:
+    - c++
+    - --version
+  cmake:
+  - cmake
+  - --version
+  ctest:
+  - ctest
+  - --version
+  node:
+  - node
+  - --version
+  wasm-pack:
+  - wasm-pack
+  - --version
+  wasm-opt:
+  - wasm-opt
+  - --version
 gates:
-  - id: workflows
-    stage: pre-commit
-    workflow: lint
-    run: molci:workflows
-  - id: fmt
-    stage: pre-commit
-    workflow: lint
-    setup: [rust, python]
-    run: scripts/check.sh fmt
-  - id: ruff
-    stage: pre-commit
-    workflow: lint
-    setup: [python]
-    run: scripts/check.sh ruff
-  - id: os-cfg
-    stage: pre-commit
-    workflow: lint
-    run: molci:os-cfg
-  - id: partners
-    stage: pre-commit
-    workflow: lint
-    setup: [python]
-    run: scripts/check.sh partners
-  - id: verify
-    stage: pre-push
-    workflow: test
-    setup: [rust, python]
-    run: scripts/check.sh verify
+- id: workflows
+  stage: pre-commit
+  run: molci:workflows
+  inputs:
+  - .github/**
+  depends_on: []
+  tools: []
+  always: true
+- id: fmt
+  stage: pre-commit
+  run: molci:rust-python:fmt
+  inputs:
+  - '**/*.rs'
+  - Cargo.toml
+  - '**/Cargo.toml'
+  depends_on: []
+  tools:
+  - cargo
+  - rustc
+  - rustfmt
+  always: true
+- id: ruff
+  stage: pre-commit
+  run: molci:rust-python:ruff
+  inputs:
+  - '**/*.py'
+  - '**/*.pyi'
+  - ruff.toml
+  - molpy/pyproject.toml
+  depends_on: []
+  tools:
+  - uv
+  - python
+- id: os-cfg
+  stage: pre-commit
+  run: molci:os-cfg
+  inputs:
+  - '**/*.rs'
+  depends_on: []
+  tools: []
+- id: partners
+  stage: pre-commit
+  run: molci:rust-python:partners
+  inputs:
+  - '**/Cargo.toml'
+  - '**/pyproject.toml'
+  depends_on: []
+  tools:
+  - uv
+  - python
+- id: clippy
+  stage: pre-push
+  run: molci:rust-python:clippy
+  inputs:
+  - crates/molrs/**
+  - tests-data/**
+  - crates/molrs-ffi/**
+  - molc/**
+  - molcxx/**
+  - molpy/src/**
+  - molwasm/**
+  - molpy/build.rs
+  depends_on: []
+  tools:
+  - cargo
+  - rustc
+  - clippy-driver
+  - cc
+  - msvc
+  - cxx
+- id: doc
+  stage: pre-push
+  run: molci:rust-python:doc
+  inputs:
+  - crates/molrs/**
+  - tests-data/**
+  depends_on: []
+  tools:
+  - cargo
+  - rustc
+  - cc
+  - msvc
+- id: test
+  stage: pre-push
+  run: molci:rust-python:test
+  inputs:
+  - crates/molrs/**
+  - tests-data/**
+  depends_on: []
+  tools:
+  - cargo
+  - rustc
+  - cc
+  - msvc
+  extra_inputs:
+  - tests-data/**/*
+- id: ffi
+  stage: pre-push
+  run: molci:rust-python:ffi
+  inputs:
+  - crates/molrs-ffi/**
+  - crates/molrs/**
+  - tests-data/**
+  depends_on: []
+  tools:
+  - cargo
+  - rustc
+  - cc
+  - msvc
+- id: cxx
+  stage: pre-push
+  run: molci:rust-python:cxx
+  inputs:
+  - molcxx/**
+  depends_on:
+  - ffi
+  tools:
+  - cargo
+  - rustc
+  - cc
+  - msvc
+  - cxx
+- id: capi
+  stage: pre-push
+  run: molci:rust-python:capi
+  inputs:
+  - molc/**
+  depends_on:
+  - ffi
+  tools:
+  - cargo
+  - rustc
+  - cmake
+  - ctest
+  - cc
+  - msvc
+  - cxx
+- id: python
+  stage: pre-push
+  run: molci:rust-python:python
+  inputs:
+  - molpy/**
+  depends_on:
+  - ffi
+  tools:
+  - cargo
+  - rustc
+  - uv
+  - python
+  - cc
+  - msvc
+  produces:
+  - '*.whl'
+  extra_inputs:
+  - tests-data/**/*
+  - molpy/tests/tests-data/**/*
+  artifact_directory: MOLPY_WHEEL_DIR
+  artifact_environment: MOLPY_TESTED_WHEEL
+- id: types
+  stage: pre-push
+  run: molci:rust-python:types
+  inputs:
+  - molpy/**
+  depends_on:
+  - python
+  tools:
+  - uv
+  - python
+- id: wasm
+  stage: pre-push
+  run: molci:rust-python:wasm
+  inputs:
+  - molwasm/**
+  - crates/molrs/**
+  - tests-data/**
+  depends_on: []
+  tools:
+  - cargo
+  - rustc
+  - node
+  - wasm-pack
+  - cc
+  - msvc
+- id: mrec
+  stage: pre-push
+  run: molci:rust-python:mrec
+  inputs:
+  - molpy/**
+  depends_on:
+  - python
+  tools:
+  - uv
+  - python
+- id: docs
+  stage: pre-push
+  run: molci:rust-python:docs
+  inputs:
+  - docs/**
+  - zensical.toml
+  - molpy/scripts/**
+  depends_on:
+  - python
+  tools:
+  - uv
+  - python
+- id: package-crate
+  stage: pre-push
+  run: molci:rust-python:package-crate
+  inputs:
+  - crates/molrs/**
+  - LICENSE
+  - README.md
+  depends_on: []
+  tools:
+  - cargo
+  - rustc
+  - cc
+  - msvc
+- id: package-python
+  stage: pre-push
+  run: molci:rust-python:package-python
+  inputs:
+  - molpy/**
+  - crates/molrs/**
+  - crates/molrs-ffi/**
+  depends_on:
+  - python
+  tools:
+  - cargo
+  - rustc
+  - uv
+  - python
+  - cc
+  - msvc
+- id: package-wasm
+  stage: pre-push
+  run: molci:rust-python:package-wasm
+  inputs:
+  - molwasm/**
+  - crates/molrs/**
+  depends_on:
+  - wasm
+  tools:
+  - cargo
+  - rustc
+  - node
+  - wasm-pack
+  - wasm-opt
+  - cc
+  - msvc
+- id: measure-rust
+  stage: measurement
+  run: molci:rust-python:measure-rust
+  inputs:
+  - crates/molrs/**
+  tools:
+  - cargo
+  - rustc
+  - cc
+  - msvc
+  always: true
+- id: measure-conformance
+  stage: measurement
+  run: molci:rust-python:mrec
+  inputs:
+  - molpy/**
+  depends_on:
+  - python
+  tools:
+  - uv
+  env:
+    MOLCI_CONFORMANCE_OUT: .ci-out/snapshots/conformance.json
+    MOLCI_TRACK: 'true'
+  always: true
+platforms:
+  linux:
+    runner: ubuntu-latest
+    gates:
+    - workflows
+    - test
+    - ffi
+    - cxx
+    - capi
+    - python
+    os: Linux
+  windows:
+    runner: windows-latest
+    gates:
+    - python
+    - capi
+    os: Windows
+  macos:
+    runner: macos-latest
+    gates:
+    - python
+    - cxx
+    os: Darwin
+  wasm:
+    runner: ubuntu-latest
+    gates:
+    - wasm
+    os: Linux
+  native:
+    runner: ubuntu-latest
+    all_native: true
