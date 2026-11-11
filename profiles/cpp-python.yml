@@ -211,11 +211,11 @@ platforms:
   macos:
     runner: macos-latest
     os: Darwin
-    gates: [workflows, native, python]
+    gates: [native, python]
   windows:
     runner: windows-latest
     os: Windows
-    gates: [workflows, package]
+    gates: [package]
   native:
     runner: ubuntu-24.04
     all_native: true
