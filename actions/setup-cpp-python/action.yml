@@ -56,10 +56,20 @@ runs:
       with:
         path: |
           build/molci
+          !build/molci/ccache/**
           build/ci-partners
         key: cpp-${{ runner.os }}-${{ runner.arch }}-${{ inputs.scope }}-${{ steps.environment.outputs.identity }}-${{ hashFiles('rust-toolchain.toml', 'python/uv.lock', '.github/partners.env') }}-${{ github.sha }}
         restore-keys: |
           cpp-${{ runner.os }}-${{ runner.arch }}-${{ inputs.scope }}-${{ steps.environment.outputs.identity }}-${{ hashFiles('rust-toolchain.toml', 'python/uv.lock', '.github/partners.env') }}-
+    # ccache checks each compile's source, headers and arguments itself. Keep
+    # those objects across CI/dependency pin updates; never restore receipts.
+    - if: inputs.native == 'true'
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+      with:
+        path: build/molci/ccache
+        key: cpp-ccache-${{ runner.os }}-${{ runner.arch }}-${{ steps.environment.outputs.identity }}-${{ github.sha }}
+        restore-keys: |
+          cpp-ccache-${{ runner.os }}-${{ runner.arch }}-${{ steps.environment.outputs.identity }}-
     - shell: bash
       run: |
         echo "CCACHE_DIR=$GITHUB_WORKSPACE/build/molci/ccache" >> "$GITHUB_ENV"

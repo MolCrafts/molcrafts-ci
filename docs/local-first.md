@@ -16,6 +16,8 @@ Python delivery; CUDA stays an explicit aarch64 GH200 gate, never an untrusted
 self-hosted PR job. Atomiverse owns integration verification in PRs and master
 pushes, avoiding a second matrix after a dev merge. Scientific campaigns remain
 independent of ordinary verification and keep build attestations and failures.
+Content-addressed ccache objects are stored separately from dependency/build
+snapshots, so updating a CI pin can retain unchanged C++ compilation outputs.
 Atomiverse's development mirror is not in the upstream GitHub fork network;
 its upstream PRs all receive independent native validation.
 
