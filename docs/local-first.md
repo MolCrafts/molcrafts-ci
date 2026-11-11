@@ -16,6 +16,8 @@ Python delivery; CUDA stays an explicit aarch64 GH200 gate, never an untrusted
 self-hosted PR job. Atomiverse owns integration verification in PRs and master
 pushes, avoiding a second matrix after a dev merge. Scientific campaigns remain
 independent of ordinary verification and keep build attestations and failures.
+Atomiverse's development mirror is not in the upstream GitHub fork network;
+its upstream PRs all receive independent native validation.
 
 Pre-commit installs the single remote repository at an immutable commit and
 reuses its managed environment. Both hook stages execute the same `molci`

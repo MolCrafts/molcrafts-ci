@@ -1,6 +1,5 @@
 name: cpp-python
 repository: MolCrafts/Atomiverse
-trusted_repository: Roy-Kid/Atomiverse
 global_inputs:
   - .github/**
   - .pre-commit-config.yaml

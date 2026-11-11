@@ -140,5 +140,7 @@ def test_trusted_development_path_uses_verified_event_identity(
     )
     outputs = dict(line.split("=", 1) for line in result.stdout.splitlines())
     assert outputs["validate"] == "true"
-    assert outputs["native"] == native
+    # Atomiverse's development mirror is not an upstream GitHub fork, so
+    # its profile grants no trusted-fork exception to independent validation.
+    assert outputs["native"] == (native if profile == "rust-python" else "true")
     assert outputs["publish"] == "false"
