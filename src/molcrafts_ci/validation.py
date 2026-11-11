@@ -27,6 +27,7 @@ from pathlib import Path
 import yaml
 
 from molcrafts_ci.jsonutil import dumps_deterministic
+from molcrafts_ci.run import bash_executable
 from molcrafts_ci.workspace import clean_git_env
 
 OS_USE = re.compile(r"\bstd::os::(?:unix|windows)\b")
@@ -443,7 +444,7 @@ class Runner:
                         command = self.internal(command)
                     else:
                         command = [
-                            "bash",
+                            bash_executable(),
                             "--noprofile",
                             "--norc",
                             "-euo",
@@ -509,7 +510,7 @@ class Runner:
     def internal(self, command: str) -> list[str]:
         if command.startswith("molci:rust-python:"):
             return [
-                "bash",
+                bash_executable(),
                 (Path(__file__).parent / "checks/rust_python.sh").as_posix(),
                 command.removeprefix("molci:rust-python:"),
             ]
