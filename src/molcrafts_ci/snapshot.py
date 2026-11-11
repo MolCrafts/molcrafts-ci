@@ -22,13 +22,20 @@ class Snapshot(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
     def snapshot_id(self) -> str:
-        """Stable id from record, profile, generation and commit.
+        """Benchmark identity is profile + generation + observation, never commit.
 
-        Generation 1 is left out, so ids published before generations were
-        told apart keep their meaning; a later generation of the same commit
-        is a different snapshot (`tests-default-g2-abc123def456`).
+        A length-prefixed profile keeps benchmark fields unambiguous even when
+        profiles and observation IDs contain hyphens. Other records retain
+        their commit-based identity and omit generation 1.
         """
         m = self.manifest
+        if m.record == "benchmark":
+            # Models are mutable; revalidate before constructing a storage key.
+            m = Manifest.model_validate(m.model_dump())
+            return (
+                f"benchmark-{len(m.profile)}-{m.profile}"
+                f"-g{m.tracking.generation}-{m.observation_id}"
+            )
         short = m.source.commit[:12]
         generation = m.tracking.generation
         tag = "" if generation == 1 else f"g{generation}-"

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Literal
@@ -48,11 +50,10 @@ def write_snapshot(
 ) -> Path:
     """Persist an immutable snapshot file.
 
-    A snapshot id is derived from its source, so the same CI commit re-running
-    produces the same path. ``if_exists="fail"`` keeps that collision loud;
-    ``if_exists="skip"`` returns the existing path untouched, which is what a
-    retried or concurrent ingest needs — the file is immutable, so the one
-    already on disk remains the authoritative observation, even for a rerun.
+    Benchmarks key on observation, profile and generation. A transport retry
+    with ``if_exists="skip"`` is accepted only for identical content; a reused
+    observation with different content always fails. Other records retain
+    their existing commit-keyed skip behavior.
     """
     if not snapshot.manifest.tracking.enabled:
         raise ValueError(
@@ -66,6 +67,23 @@ def write_snapshot(
         generation=snapshot.manifest.tracking.generation,
         snapshot_id=snapshot.snapshot_id(),
     )
+    if snapshot.manifest.record == "benchmark":
+        content = dumps_deterministic(snapshot.model_dump(mode="json"))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Publish a complete file atomically without replacing an observation
+        # another ingest may have created after the initial path check.
+        with tempfile.NamedTemporaryFile(dir=path.parent, mode="w", encoding="utf-8") as fh:
+            fh.write(content)
+            fh.flush()
+            try:
+                os.link(fh.name, path)
+            except FileExistsError:
+                stored = dumps_deterministic(read_snapshot(path).model_dump(mode="json"))
+                if stored != content:
+                    raise ValueError(f"conflicting benchmark observation: {path}") from None
+                if if_exists != "skip":
+                    raise FileExistsError(f"snapshot already exists: {path}") from None
+        return path
     if path.exists():
         if if_exists == "skip":
             return path
@@ -105,6 +123,8 @@ class SnapshotIndex:
             "producer": snapshot.manifest.producer,
             "timestamp": snapshot.manifest.source.timestamp,
         }
+        if snapshot.manifest.record == "benchmark":
+            entry["observation_id"] = snapshot.manifest.observation_id
         with path.open("a", encoding="utf-8") as fh:
             fh.write(dumps_deterministic(entry, indent=None))
         return path

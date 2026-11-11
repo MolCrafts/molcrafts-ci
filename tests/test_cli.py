@@ -47,6 +47,7 @@ def write_snapshot_file(tmp_path: Path, record: str, *, tracked: bool = True) ->
     snap = Snapshot(
         manifest=Manifest(
             record=record,
+            observation_id="campaign-one" if record == "benchmark" else None,
             source=Source(
                 repository="MolCrafts/molpy",
                 commit="abc123def456789",
@@ -68,6 +69,16 @@ def read_lines(capsys) -> list[dict]:
 
 
 class TestValidateSnapshot:
+    def test_benchmark_without_observation_has_no_commit_fallback(self, tmp_path, capsys):
+        path = write_snapshot_file(tmp_path, "benchmark")
+        data = json.loads(path.read_text())
+        del data["manifest"]["observation_id"]
+        path.write_text(json.dumps(data))
+        assert main(["validate-snapshot", str(path)]) == 2
+        output = capsys.readouterr()
+        assert output.out == ""
+        assert "requires observation_id" in json.loads(output.err)["error"]
+
     def test_reports_tracking_for_every_file(self, tmp_path: Path, capsys) -> None:
         """The submit action reads `tracking` to decide whether it has to push."""
         paths = [

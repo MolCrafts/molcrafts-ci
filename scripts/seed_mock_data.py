@@ -66,6 +66,7 @@ def _entry(
     return mci.Snapshot(
         manifest=mci.Manifest(
             record=record,
+            observation_id=f"run-{workflow_run}" if record == "benchmark" else None,
             source=mci.Source(
                 repository=project_repo,
                 commit=commit,

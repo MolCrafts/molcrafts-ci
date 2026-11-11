@@ -7,10 +7,17 @@ from molcrafts_ci.persist import SnapshotIndex, ingest_snapshot, read_snapshot, 
 from molcrafts_ci.snapshot import Snapshot
 
 
-def make_snapshot(*, tracked: bool = True, commit: str = "abc123def456789") -> Snapshot:
+def make_snapshot(
+    *,
+    tracked: bool = True,
+    commit: str = "abc123def456789",
+    observation: str = "campaign-one",
+    record: str = "benchmark",
+) -> Snapshot:
     return Snapshot(
         manifest=Manifest(
-            record="benchmark",
+            record=record,
+            observation_id=observation if record == "benchmark" else None,
             source=Source(repository="MolCrafts/molpy", commit=commit),
             producer="pytest-benchmark",
             profile="linux-x86_64",
@@ -42,7 +49,12 @@ class TestIngestSnapshot:
 
     def test_skip_still_ingests_a_new_snapshot(self, tmp_path) -> None:
         ingest_snapshot(tmp_path, "molpy", make_snapshot(), if_exists="skip")
-        ingest_snapshot(tmp_path, "molpy", make_snapshot(commit="fed987"), if_exists="skip")
+        ingest_snapshot(
+            tmp_path,
+            "molpy",
+            make_snapshot(commit="fed987", observation="campaign-two"),
+            if_exists="skip",
+        )
 
         assert len(list(SnapshotIndex(tmp_path).entries("molpy", "benchmark"))) == 2
 
@@ -51,18 +63,18 @@ class TestIngestSnapshot:
             ingest_snapshot(tmp_path, "molpy", make_snapshot(tracked=False))
 
     def test_recovery_indexes_the_stored_observation(self, tmp_path) -> None:
-        original = make_snapshot()
+        original = make_snapshot(record="tests")
         original.manifest.source.workflow_run = 1
         original.manifest.source.timestamp = "2026-01-01T00:00:00Z"
         path = write_snapshot(tmp_path, "molpy", original)
-        rerun = make_snapshot()
+        rerun = make_snapshot(record="tests")
         rerun.manifest.source.workflow_run = 2
         rerun.manifest.source.timestamp = "2026-01-02T00:00:00Z"
         rerun.payload = {"different": True}
 
         ingest_snapshot(tmp_path, "molpy", rerun, if_exists="skip")
 
-        (entry,) = SnapshotIndex(tmp_path).entries("molpy", "benchmark")
+        (entry,) = SnapshotIndex(tmp_path).entries("molpy", "tests")
         assert entry["workflow_run"] == 1
         assert entry["timestamp"] == original.manifest.source.timestamp
         assert read_snapshot(path) == original
@@ -75,6 +87,7 @@ class TestIngestSnapshot:
         if field == "project":
             project = unsafe
         elif field == "commit":
+            snap.manifest.record = "tests"
             snap.manifest.source.commit = unsafe
         else:
             setattr(snap.manifest, field, unsafe)
@@ -137,9 +150,50 @@ class TestGenerations:
 
         entries = list(SnapshotIndex(tmp_path).entries("molpy", "benchmark"))
         assert [(e["generation"], e["snapshot_id"]) for e in entries] == [
-            (1, "benchmark-linux-x86_64-abc123def456"),
-            (2, "benchmark-linux-x86_64-g2-abc123def456"),
+            (1, "benchmark-12-linux-x86_64-g1-campaign-one"),
+            (2, "benchmark-12-linux-x86_64-g2-campaign-one"),
         ]
+
+    def test_same_commit_campaigns_have_independent_observations(self, tmp_path) -> None:
+        first = make_snapshot()
+        second = make_snapshot(observation="campaign-two")
+        a = ingest_snapshot(tmp_path, "molpy", first)
+        b = ingest_snapshot(tmp_path, "molpy", second)
+        assert a != b
+        entries = list(SnapshotIndex(tmp_path).entries("molpy", "benchmark"))
+        assert [e["observation_id"] for e in entries] == ["campaign-one", "campaign-two"]
+        assert entries[0]["commit"] == entries[1]["commit"]
+
+    @pytest.mark.parametrize("change", ["payload", "source", "provenance"])
+    def test_reused_observation_rejects_conflicts_even_when_skipping(
+        self, tmp_path, change
+    ) -> None:
+        original = make_snapshot()
+        path = ingest_snapshot(tmp_path, "molpy", original)
+        different = make_snapshot()
+        if change == "payload":
+            different.payload["metrics"]["mean_ns"] = 13
+        elif change == "source":
+            different.manifest.source.commit = "another-commit"
+        else:
+            different.manifest.provenance = {"bundle_sha256": "different"}
+        with pytest.raises(ValueError, match="conflicting benchmark observation"):
+            ingest_snapshot(tmp_path, "molpy", different, if_exists="skip")
+        assert read_snapshot(path) == original
+        assert len(list(SnapshotIndex(tmp_path).entries("molpy", "benchmark"))) == 1
+
+    def test_identical_retry_recovers_a_snapshot_not_yet_indexed(self, tmp_path) -> None:
+        snap = make_snapshot()
+        write_snapshot(tmp_path, "molpy", snap)
+        ingest_snapshot(tmp_path, "molpy", snap, if_exists="skip")
+        assert len(list(SnapshotIndex(tmp_path).entries("molpy", "benchmark"))) == 1
+
+    def test_profiles_with_delimiters_cannot_alias_observations(self) -> None:
+        first = make_snapshot(observation="x-g1-y")
+        second = make_snapshot(observation="y")
+        first.manifest.profile = "a"
+        second.manifest.profile = "a-g1-x"
+        assert first.snapshot_id() != second.snapshot_id()
 
 
 class TestListing:

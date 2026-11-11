@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Tracking(BaseModel):
@@ -56,8 +56,16 @@ class Manifest(BaseModel):
 
     schema_version: str = Field(default_factory=lambda: schema_version())
     record: str
+    observation_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-][A-Za-z0-9._-]*$")
     source: Source
     producer: str
     profile: str = "default"
     tracking: Tracking = Field(default_factory=Tracking)
     provenance: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def benchmark_requires_observation(self) -> Manifest:
+        """A benchmark campaign is an observation, even at an unchanged commit."""
+        if self.record == "benchmark" and self.observation_id is None:
+            raise ValueError("benchmark requires observation_id (a safe path component)")
+        return self

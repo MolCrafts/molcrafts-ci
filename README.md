@@ -229,7 +229,14 @@ producer and only submitted here. `tracking.enabled` decides whether a
 snapshot becomes history; `tracking.generation` starts a new history when a
 record's shape changes incompatibly (generation 2 of a commit is its own
 snapshot, `<record>-<profile>-g2-<commit>`). A stored snapshot is never
-rewritten.
+rewritten. A `benchmark` additionally requires an `observation_id`: a new
+campaign gets a new ID even when its source commit is unchanged. The ID uses
+ASCII letters, digits, `_`, `-` and `.`, starting with a letter, digit, `_` or
+`-`. Benchmark identity is record + profile + generation + observation ID;
+commit remains provenance. A benchmark retry with `--if-exists skip` must carry
+identical complete snapshot content; conflicting content is rejected. The
+profile is length-prefixed in the filename so hyphens cannot alias fields.
+Other records retain their existing commit-based identity and skip behavior.
 
 ```python
 from pathlib import Path
@@ -238,6 +245,7 @@ import molci as mci
 snap = mci.Snapshot(
     manifest=mci.Manifest(
         record="benchmark",
+        observation_id="campaign-20261026-01",
         source=mci.Source(repository="MolCrafts/molpy", commit="abc1234"),
         producer="pytest-benchmark",
         tracking=mci.Tracking(enabled=True, generation=1),
@@ -285,6 +293,14 @@ with its commit, run, profile and producer) and **Dock** (publish log and
 problems; a row opens that record at that generation). A link is
 `#/<project>/<tab>?profile=&snapshot=`. Register another tab with
 `registerPlugin` from `@/plugins/registry`.
+
+The `atomiverse.scientific-benchmark/1` payload has a dedicated wide method /
+system / participant matrix, a final hardware-notes column, and expandable
+actual environment, source, protocol and roadmap evidence. Its overview reads
+the declared numerical/coverage/performance summary; `unbaselined` remains
+explicit. Malformed, inconsistent or unsupported scientific payloads display
+an error instead of generic passing counts. Scientific tolerance calculations
+and payload production remain the producer's responsibility.
 
 ## Working on molcrafts-ci
 

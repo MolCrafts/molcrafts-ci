@@ -11,6 +11,8 @@ import {
   readMeasure,
   readScalars,
   readTests,
+  isScientificBenchmark,
+  readScientificBenchmark,
   type MeasureReading,
 } from "@/lib/payload";
 import type { IndexEntry, Snapshot } from "@/lib/snapshot-data";
@@ -68,12 +70,21 @@ export const STATUS_ORDER: Status[] = [
 /**
  * The verdict a snapshot carries for itself.
  *
- * Only a pass/fail count is a verdict the schema actually records. Coverage
- * targets and benchmark thresholds are not in the snapshot schema yet, so those
- * records report `ready` — published, no verdict — rather than borrowing a
- * threshold this code invented.
+ * Scientific bundles publish their own numerical/coverage/history summary.
+ * Generic test counts carry a verdict too; coverage percentages and arbitrary
+ * scalar metrics do not acquire an invented threshold here.
  */
-export function verdictOf(payload: unknown): RecordVerdict {
+export function verdictOf(payload: unknown, producer?: string): RecordVerdict {
+  if (isScientificBenchmark(payload, producer)) {
+    const benchmark = readScientificBenchmark(payload);
+    if (!benchmark) return { status: "warning", statusLabel: "invalid benchmark payload" };
+    const s = benchmark.summary;
+    if (s.failed > 0) return { status: "failed", statusLabel: `${s.failed} numerical failed` };
+    if (s.performance_regressions > 0) return { status: "failed", statusLabel: `${s.performance_regressions} performance regressions` };
+    if (s.incomplete > 0 || !s.complete) return { status: "warning", statusLabel: `${s.incomplete} incomplete` };
+    if (s.required === 0) return { status: "warning", statusLabel: "no required evidence" };
+    return { status: "completed", statusLabel: `numerical passed · ${s.historical_status}` };
+  }
   const tests = readTests(payload);
   if (!tests) return { status: "ready", statusLabel: "no verdict" };
   if (tests.failed > 0) return { status: "failed", statusLabel: `${tests.failed} failed` };
@@ -86,7 +97,13 @@ export function verdictOf(payload: unknown): RecordVerdict {
  * Keyed on what the payload contains rather than on the record name, so a project
  * that spells a record differently still gets a real headline.
  */
-export function headlineOf(payload: unknown): string {
+export function headlineOf(payload: unknown, producer?: string): string {
+  if (isScientificBenchmark(payload, producer)) {
+    const benchmark = readScientificBenchmark(payload);
+    if (!benchmark) return "Invalid or unsupported scientific benchmark";
+    const s = benchmark.summary;
+    return `${s.passed}/${s.required} numerical passed · ${s.failed} failed · ${s.incomplete} incomplete`;
+  }
   const tests = readTests(payload);
   if (tests) {
     // Skips are named only when there are some: a trailing "· 0 skipped" on
@@ -140,8 +157,8 @@ export function toHistory(
     .reverse()
     .map(({ entry, snapshot }) => ({
       entry,
-      measure: snapshot ? readMeasure(snapshot.payload) : null,
-      failed: snapshot ? verdictOf(snapshot.payload).status === "failed" : false,
+      measure: snapshot ? readMeasure(snapshot.payload, entry.producer) : null,
+      failed: snapshot ? verdictOf(snapshot.payload, entry.producer).status === "failed" : false,
     }));
 }
 
@@ -218,9 +235,9 @@ export function summarise(
     profile,
     profiles,
     history: toHistory(bodies, profile),
-    headline: snapshot ? headlineOf(snapshot.payload) : "—",
+    headline: snapshot ? headlineOf(snapshot.payload, entry.producer) : "—",
     ...(snapshot
-      ? verdictOf(snapshot.payload)
+      ? verdictOf(snapshot.payload, entry.producer)
       : { status: "ready" as const, statusLabel: "body unavailable" }),
   };
 }

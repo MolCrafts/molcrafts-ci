@@ -16,6 +16,7 @@ def test_molci_builds_snapshot() -> None:
     snap = mci.Snapshot(
         manifest=mci.Manifest(
             record="benchmark",
+            observation_id="campaign-one",
             source=mci.Source(repository="MolCrafts/molpy", commit="abc1234567890"),
             producer="test",
             tracking=mci.Tracking(enabled=False),
