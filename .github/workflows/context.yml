@@ -62,12 +62,11 @@ jobs:
         uses: $/actions/ci-context
         with:
           profile: ${{ inputs.profile }}
-      - uses: $/actions/setup-python
-        if: inputs.profile == 'rust-python'
       - id: plan
-        if: inputs.profile == 'rust-python' && steps.context.outputs.validate == 'true'
+        if: steps.context.outputs.native-profile == 'true' && steps.context.outputs.validate == 'true'
         uses: $/actions/validation-plan
         with:
+          profile: ${{ inputs.profile }}
           native: ${{ steps.context.outputs.native }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         if: steps.context.outputs.nightly == 'true' || steps.context.outputs.publish == 'true'

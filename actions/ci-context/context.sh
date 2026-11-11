@@ -86,9 +86,22 @@ fi
 intent=integration
 validate=true
 native=true
-if [ "${CI_PROFILE:-}" = rust-python ]; then
+native_profile=false
+if [ -n "${CI_PROFILE:-}" ]; then
+    policy=$(uv run --no-project --with pyyaml==6.0.3 python - "$(dirname "$0")/../../profiles" "$CI_PROFILE" <<'PY'
+import re, sys, yaml
+from pathlib import Path
+name = sys.argv[2]
+assert re.fullmatch(r"[a-z0-9-]+", name), "invalid CI_PROFILE"
+profile = yaml.safe_load((Path(sys.argv[1]) / f"{name}.yml").read_text(encoding="utf-8"))
+print("true" if profile.get("platforms") else "false", profile.get("repository", "-"), profile.get("trusted_repository", "-"))
+PY
+    )
+    read -r native_profile canonical_repository trusted_repository <<< "$policy"
+fi
+if [ "$native_profile" = true ]; then
     upstream=false
-    [ "$CI_REPOSITORY" = MolCrafts/molpy ] && upstream=true
+    [ "$CI_REPOSITORY" = "$canonical_repository" ] && upstream=true
     publish=false
     deploy=false
     skip_pr=false
@@ -113,10 +126,10 @@ if [ "${CI_PROFILE:-}" = rust-python ]; then
         [ "$CI_REF" != refs/heads/master ] || native=true
         [ "$CI_EVENT" != workflow_dispatch ] || native=true
         if [ "$CI_EVENT" = pull_request ] &&
-           [ "${CI_PR_HEAD:-}" = Roy-Kid/molpy ] &&
+           [ "${CI_PR_HEAD:-}" = "$trusted_repository" ] &&
            [ "${CI_PR_HEAD_REF:-}" = dev ] &&
            [ "${CI_PR_BASE_REF:-}" = dev ] &&
-           [ "${CI_PR_AUTHOR:-}" = Roy-Kid ]; then
+           [ "${CI_PR_AUTHOR:-}" = "${trusted_repository%%/*}" ]; then
             native=false
         fi
     fi
@@ -134,4 +147,5 @@ fi
     echo "intent=$intent"
     echo "validate=$validate"
     echo "native=$native"
+    echo "native-profile=$native_profile"
 } | tee -a "${GITHUB_OUTPUT:-/dev/null}"

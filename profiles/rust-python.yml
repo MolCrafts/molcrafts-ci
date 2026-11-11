@@ -1,4 +1,6 @@
 name: rust-python
+repository: MolCrafts/molpy
+trusted_repository: Roy-Kid/molpy
 global_inputs:
 - .github/partners.env
 - .github/**

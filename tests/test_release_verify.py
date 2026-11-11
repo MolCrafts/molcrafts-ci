@@ -42,9 +42,9 @@ def good():
 )
 def test_exact_trusted_run_identity(field, value):
     run = good()
-    assert VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40)
+    assert VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40, "MolCrafts/molpy")
     run[field] = value
-    assert not VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40)
+    assert not VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40, "MolCrafts/molpy")
 
 
 @pytest.mark.parametrize("status", ["skipped", "failure", "cancelled", None])

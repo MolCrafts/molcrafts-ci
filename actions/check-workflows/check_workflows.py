@@ -180,7 +180,9 @@ class Violation:
 def context_outputs() -> list[str]:
     """The outputs a context job maps: whatever actions/ci-context declares."""
     action = yaml.safe_load(CI_CONTEXT.read_text(encoding="utf-8"))
-    return list(action["outputs"])
+    # Registry metadata is internal to the shared workflow, not a required
+    # output of a consumer's inline context job.
+    return [name for name in action["outputs"] if name != "native-profile"]
 
 
 # --- expressions ---------------------------------------------------------
@@ -443,7 +445,10 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
     if is_thin_caller(jobs):
         return check_caller(path, root, spec, text)
     events = triggers(spec)
-    native_profile = profile_name(root) == "rust-python"
+    profile = profile_name(root)
+    registry_path = HERE.parents[1] / "profiles" / f"{profile}.yml"
+    registry = yaml.safe_load(registry_path.read_text("utf-8")) if registry_path.is_file() else {}
+    native_profile = bool(registry.get("platforms"))
     out: list[Violation] = []
 
     def report(job: str | None, rule: str, message: str, line: int | None = None) -> None:
@@ -675,8 +680,8 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
                 matrix = (jobs.get("platform") or {}).get("strategy", {}).get("matrix")
                 if matrix != "${{ fromJSON(needs.context.outputs.matrix) }}":
                     report("platform", "platform", "use context's authoritative lane matrix")
-                if (jobs.get("context", {}).get("with") or {}).get("profile") != "rust-python":
-                    report("context", "profile", "opt into rust-python explicitly")
+                if (jobs.get("context", {}).get("with") or {}).get("profile") != profile:
+                    report("context", "profile", f"opt into {profile} explicitly")
                 if events != {"push", "pull_request", "workflow_dispatch"}:
                     report(
                         None,
@@ -697,12 +702,15 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
 
     if native_profile and stem == "release":
         guard = jobs.get("guard") or {}
+        guard_inputs = {"publish": "${{ needs.context.outputs.publish }}"}
+        if profile != "rust-python":
+            guard_inputs["profile"] = profile
         if not any(
             re.fullmatch(
                 r"MolCrafts/molcrafts-ci/actions/release-verify@[0-9a-f]{40}",
                 str(step.get("uses", "")),
             )
-            and step.get("with") == {"publish": "${{ needs.context.outputs.publish }}"}
+            and step.get("with") == guard_inputs
             and "if" not in step
             and not step.get("continue-on-error")
             for step in guard.get("steps", [])

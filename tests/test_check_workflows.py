@@ -129,7 +129,7 @@ def test_context_job_messages() -> None:
 
 def test_context_outputs_follow_the_action() -> None:
     action = yaml.safe_load((ROOT / "actions/ci-context/action.yml").read_text(encoding="utf-8"))
-    assert cw.context_outputs() == list(action["outputs"])
+    assert cw.context_outputs() == [name for name in action["outputs"] if name != "native-profile"]
     assert "publish" in cw.context_outputs() and "cancel" not in cw.context_outputs()
 
 
