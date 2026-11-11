@@ -281,8 +281,13 @@ def main(gate: str) -> int:
         run_config(config, resolve_source(str(ROOT)), build_dir=build)
         state = BuildState.load(state_file_in_build(build))
         shutil.rmtree(build / "dist", ignore_errors=True)
+        command = build_wheel_command(ROOT / "python", build, state.defines)
+        if kind == "hf":
+            # The benchmark receipt attests the build binary's exact bytes.
+            # Installing that wheel must preserve those bytes as well as RPATH.
+            command += ["-C", "install.strip=false"]
         subprocess.run(
-            build_wheel_command(ROOT / "python", build, state.defines),
+            command,
             env=build_env(jobs),
             check=True,
         )
