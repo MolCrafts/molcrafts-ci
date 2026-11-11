@@ -240,6 +240,14 @@ def test_result_rejects_missing_skipped_failed_and_cancelled_platforms():
     }
     assert module.check(needs) == []
     for status in ["skipped", "failure", "cancelled", None]:
+        needs["context"]["result"] = status
+        assert module.check(needs)
+    needs["context"]["result"] = "success"
+    for decision in ["false", "", None]:
+        needs["context"]["outputs"]["validate"] = decision
+        assert module.check(needs)
+    needs["context"]["outputs"]["validate"] = "true"
+    for status in ["skipped", "failure", "cancelled", None]:
         needs["platform"]["result"] = status
         assert module.check(needs)
     del needs["platform"]

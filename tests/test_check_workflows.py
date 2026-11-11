@@ -482,7 +482,10 @@ def native_workflow(tmp_path):
                 "name": "test / result",
                 "needs": ["context", "native", "platform"],
                 "runs-on": "ubuntu-latest",
-                "if": "always() && " + condition,
+                "if": (
+                    "always() && (needs.context.result != 'success' || "
+                    "needs.context.outputs.validate != 'false')"
+                ),
                 "steps": [
                     {
                         "uses": uses + "actions/validation-result@" + "a" * 40,
@@ -503,12 +506,16 @@ def test_native_workflow_passes(native_workflow):
     assert cw.check_workflow(path, root) == []
 
 
-@pytest.mark.parametrize("mutation", ["skip", "cycle", "missing", "permissions", "pin", "matrix"])
+@pytest.mark.parametrize(
+    "mutation", ["skip", "context-mask", "cycle", "missing", "permissions", "pin", "matrix"]
+)
 def test_native_workflow_fail_closed(native_workflow, mutation):
     root, path, spec = native_workflow
     jobs = spec["jobs"]
     if mutation == "skip":
         jobs["result"]["steps"] = cw.RESULT_STEPS
+    elif mutation == "context-mask":
+        jobs["result"]["if"] = "always() && needs.context.outputs.validate == 'true'"
     elif mutation == "cycle":
         jobs["native"]["needs"] = ["context", "result"]
     elif mutation == "missing":

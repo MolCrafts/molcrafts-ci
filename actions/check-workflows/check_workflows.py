@@ -629,7 +629,8 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             if missing:
                 report("result", "result", f"must need every other job; missing {missing}")
             expected_if = (
-                "always() && needs.context.outputs.validate == 'true'"
+                "always() && (needs.context.result != 'success' || "
+                "needs.context.outputs.validate != 'false')"
                 if native_profile
                 else RESULT_IF
             )
