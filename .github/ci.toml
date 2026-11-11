@@ -42,9 +42,11 @@ run = [
 
 [check.browser]
 node = "site/.nvmrc"
+# Hosted runners provide the native libraries. Playwright validates them at
+# launch and reports missing dependencies; do not reinstall optional OS fonts.
 run = [
   "npm --prefix site ci",
-  "cd site && npx playwright install --with-deps chromium",
+  "cd site && npx playwright install chromium",
   "npm --prefix site run test:browser",
 ]
 
