@@ -75,9 +75,8 @@ gates:
     run: >-
       uv tool run --from pre-commit==4.5.0 pre-commit run
       --config "$MOLCI_CHECKS_DIR/atomiverse-hooks.yaml" --all-files --show-diff-on-failure
-    inputs: []
+    inputs: ['**']
     tools: [uv]
-    always: true
   - id: workflows
     stage: pre-commit
     run: molci:workflows

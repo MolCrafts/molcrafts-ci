@@ -136,7 +136,17 @@ def main(gate: str) -> int:
             command += ["--extra", extra]
         subprocess.run(command, check=True)
         return subprocess.run(
-            ["uv", "--directory", "python", "run", "--no-sync", "python", __file__, gate],
+            [
+                "uv",
+                "--directory",
+                "python",
+                "run",
+                "--no-sync",
+                "python",
+                "-m",
+                "molcrafts_ci.checks.atomiverse",
+                gate,
+            ],
             env=os.environ | {"MOLCI_ATV_ENV": "1"},
             check=False,
         ).returncode

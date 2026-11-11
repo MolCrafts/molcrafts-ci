@@ -552,7 +552,8 @@ class Runner:
         if command.startswith("molci:atomiverse:"):
             return [
                 sys.executable,
-                str(Path(__file__).parent / "checks/atomiverse.py"),
+                "-m",
+                "molcrafts_ci.checks.atomiverse",
                 command.removeprefix("molci:atomiverse:"),
             ]
         if command.startswith("molci:rust-python:"):
