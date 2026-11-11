@@ -20,7 +20,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v7
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
         node-version: ${{ hashFiles('.nvmrc') == '' && inputs.node-version || '' }}
         node-version-file: ${{ hashFiles('.nvmrc') != '' && '.nvmrc' || '' }}

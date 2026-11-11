@@ -71,7 +71,7 @@ def test_outputs_are_the_action_outputs(tmp_path: Path) -> None:
         event="push",
         ref="refs/heads/dev",
     )
-    assert list(outputs(tmp_path)) == list(action["outputs"])
+    assert set(outputs(tmp_path)) == set(action["outputs"])
     assert "cancel" not in action["outputs"]
 
 
@@ -89,6 +89,9 @@ def test_case(tmp_path: Path, case: dict) -> None:
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert outputs(tmp_path) == {
         **case["expect"],
+        "intent": "integration",
+        "validate": "true",
+        "native": "true",
         "nightly": "false",
         "source-ref": case["ref"],
         "deploy": "true" if case["case"] == "upstream master push" else "false",

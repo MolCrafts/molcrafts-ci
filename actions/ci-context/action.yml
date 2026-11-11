@@ -25,6 +25,9 @@ description: >
   The inputs default to the run's own github context; they exist so that the
   rules can be tested against synthetic contexts.
 inputs:
+  profile:
+    description: Opt-in lifecycle profile (empty preserves v1)
+    default: ""
   workflow:
     description: Workflow name; nightly is the scheduled dev channel
     default: ${{ github.workflow }}
@@ -49,6 +52,15 @@ inputs:
       events
     default: ${{ github.event.pull_request.head.ref }}
 outputs:
+  intent:
+    description: v2 execution intent
+    value: ${{ steps.context.outputs.intent }}
+  validate:
+    description: This event owns platform verification
+    value: ${{ steps.context.outputs.validate }}
+  native:
+    description: Independent native verification is required
+    value: ${{ steps.context.outputs.native }}
   tier:
     description: >
       "full" (every fork run, dev/master and tags upstream, pull
@@ -91,6 +103,7 @@ runs:
     - id: context
       shell: bash
       env:
+        CI_PROFILE: ${{ inputs.profile }}
         CI_WORKFLOW: ${{ inputs.workflow }}
         CI_OWNER: ${{ inputs.owner }}
         CI_REPOSITORY: ${{ inputs.repository }}

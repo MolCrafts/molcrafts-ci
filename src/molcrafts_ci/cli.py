@@ -243,6 +243,29 @@ def _cmd_nightly(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["profile-hook"]:
+        import importlib.util
+
+        from molcrafts_ci.validation import implementation
+
+        spec = importlib.util.spec_from_file_location(
+            "molci_hook", implementation() / "hooks/ci.py"
+        )
+        hook = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(hook)
+        return hook.main(argv[1:])
+    # Schema 2 is opt-in. Preserve the TOML-based CLI for all v1 consumers.
+    from molcrafts_ci import validation
+
+    root = Path(argv[argv.index("--root") + 1]) if "--root" in argv else Path.cwd()
+    pin_file = root / ".github/partners.env"
+    v2 = pin_file.is_file() and "CI_PROFILE=rust-python-v2" in pin_file.read_text("utf-8")
+    if argv and (
+        argv[0] in ("doctor", "verify", "run", "explain", "hook", "platform")
+        or (argv[0] == "check" and v2)
+    ):
+        return validation.main(argv)
     parser = argparse.ArgumentParser(prog="molci")
     sub = parser.add_subparsers(dest="command", required=True)
 

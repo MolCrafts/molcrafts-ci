@@ -2,7 +2,19 @@ name: context
 
 on:
   workflow_call:
+    inputs:
+      profile:
+        type: string
+        default: ""
     outputs:
+      matrix:
+        value: ${{ jobs.context.outputs.matrix }}
+      intent:
+        value: ${{ jobs.context.outputs.intent }}
+      validate:
+        value: ${{ jobs.context.outputs.validate }}
+      native:
+        value: ${{ jobs.context.outputs.native }}
       tier:
         value: ${{ jobs.context.outputs.tier }}
       upstream:
@@ -33,6 +45,10 @@ jobs:
     name: context
     runs-on: ubuntu-latest
     outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      intent: ${{ steps.context.outputs.intent }}
+      validate: ${{ steps.context.outputs.validate }}
+      native: ${{ steps.context.outputs.native }}
       tier: ${{ steps.context.outputs.tier }}
       upstream: ${{ steps.context.outputs.upstream }}
       integration: ${{ steps.context.outputs.integration }}
@@ -44,7 +60,16 @@ jobs:
     steps:
       - id: context
         uses: $/actions/ci-context
-      - uses: actions/checkout@v7
+        with:
+          profile: ${{ inputs.profile }}
+      - uses: $/actions/setup-python
+        if: inputs.profile == 'rust-python-v2'
+      - id: plan
+        if: inputs.profile == 'rust-python-v2' && steps.context.outputs.validate == 'true'
+        uses: $/actions/validation-plan
+        with:
+          native: ${{ steps.context.outputs.native }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         if: steps.context.outputs.nightly == 'true' || steps.context.outputs.publish == 'true'
         with:
           ref: ${{ steps.context.outputs.source-ref }}

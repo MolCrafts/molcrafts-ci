@@ -26,7 +26,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import yaml
@@ -61,15 +60,29 @@ def ci_root(root: Path | None = None) -> Path:
             if line.strip().startswith("CI_REF="):
                 ref = line.strip().split("=", 1)[1].strip()
                 break
+    if not ref and (
+        os.environ.get("CI_PROFILE") == "rust-python-v2"
+        or (pins.is_file() and "CI_PROFILE=rust-python-v2" in pins.read_text(encoding="utf-8"))
+    ):
+        sys.exit("rust-python-v2 requires an immutable CI_REF in .github/partners.env")
     ref = ref or "master"
     if ref != "master" and not re.fullmatch(r"[0-9a-f]{40}", ref):
         sys.exit("CI_REF must be a full lowercase commit SHA")
-    dest = Path(tempfile.gettempdir()) / f"molcrafts-ci-{ref}-{os.getpid()}"
-    if not (dest / ".git").is_dir():
-        subprocess.run(["git", "init", "-q", str(dest)], check=True)
-    subprocess.run(["git", "-C", str(dest), "fetch", "--depth", "1", MASTER, ref], check=True)
-    subprocess.run(["git", "-C", str(dest), "checkout", "--detach", "FETCH_HEAD"], check=True)
-    return dest
+    # uv's persistent, atomically installed tool environment resolves this exact
+    # Git revision. Once installed, a hook needs no additional checkout/fetch.
+    os.execvp(
+        "uv",
+        [
+            "uv",
+            "tool",
+            "run",
+            "--from",
+            f"molcrafts-ci @ git+{MASTER}@{ref}",
+            "molci",
+            "profile-hook",
+            *sys.argv[1:],
+        ],
+    )
 
 
 def profile_name(cwd: Path, explicit: str | None) -> str:
@@ -173,6 +186,14 @@ def main(argv: list[str]) -> int:
     cwd = Path(args.root).resolve()
     name = profile_name(cwd, args.profile)
     profile = load_profile(name, cwd)
+    if profile.get("schema") == 2 and not (args.list or args.describe):
+        source = ci_root(cwd) / "src"
+        if source.is_dir():
+            sys.path.insert(0, str(source))
+        from molcrafts_ci.validation import main as validate
+
+        command = ["run", args.gate] if args.gate else ["hook", "--stage", args.stage or "pre-push"]
+        return validate([*command, "--root", str(cwd)])
     workflow = args.workflow or args.area
     if args.list:
         ids = [g["id"] for g in selected(profile, None, workflow, None)]

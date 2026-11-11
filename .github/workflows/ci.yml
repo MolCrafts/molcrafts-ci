@@ -34,7 +34,7 @@ jobs:
     outputs:
       checks: ${{ steps.plan.outputs.checks }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
           sparse-checkout: .github
@@ -55,7 +55,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - uses: $/actions/setup-molci
@@ -69,7 +69,7 @@ jobs:
         if: matrix.rust
         run: molci rust >> "$GITHUB_OUTPUT"
       - if: matrix.rust && steps.rust.outputs.workspaces != ''
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
         with:
           # Shared by every check on one OS: lint, test and docs build the same crates.
           shared-key: ${{ runner.os }}
@@ -81,7 +81,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - if: matrix.node-version != '' || matrix.node-version-file != ''
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: ${{ matrix.node-version }}
           node-version-file: ${{ matrix.node-version-file }}

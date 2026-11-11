@@ -344,6 +344,7 @@ version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
+    { name = "pyyaml" },
 ]
 
 [package.optional-dependencies]
@@ -361,6 +362,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0" },
+    { name = "pyyaml", specifier = "==6.0.3" },
     { name = "pyyaml", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11" },
 ]

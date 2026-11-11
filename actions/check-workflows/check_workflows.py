@@ -444,6 +444,7 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
     if is_thin_caller(jobs):
         return check_caller(path, root, spec, text)
     events = triggers(spec)
+    v2 = profile_name(root) == "rust-python-v2"
     out: list[Violation] = []
 
     def report(job: str | None, rule: str, message: str, line: int | None = None) -> None:
@@ -498,10 +499,10 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
         got = {str(k): str(v) for k, v in (ctx.get("outputs") or {}).items()}
         # Existing pinned actions expose the original five outputs. New consumers
         # use the reusable workflow and inherit its complete output contract.
-        required = want.keys() - {"nightly", "source-ref", "deploy"}
+        required = want.keys() - {"nightly", "source-ref", "deploy", "intent", "validate", "native"}
         for name in sorted(required - got.keys()) if not shared_context else []:
             report("context", "context", f"does not map the output `{name}: {want[name]}`")
-        for name in sorted(got.keys() - want.keys()):
+        for name in sorted(got.keys() - want.keys() - ({"matrix"} if stem == "context" else set())):
             report("context", "context", f"maps `{name}`, which ci-context does not output")
         for name in sorted(want.keys() & got.keys()) if not shared_context else []:
             if stem == "context" and name == "source-ref":
@@ -519,9 +520,23 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
     for job_id in ids:
         if job_id != "context" and "context" in jobs and not reaches(job_id):
             report(job_id, "needs", "does not reach `context` through `needs`")
+        for dep in needs_of(jobs[job_id] or {}):
+            if dep not in jobs:
+                report(job_id, "needs", f"unknown dependency `{dep}`; name an existing job")
+
+    def cycle(job_id: str, trail: frozenset[str] = frozenset()) -> bool:
+        if job_id in trail:
+            return True
+        return any(
+            cycle(d, trail | {job_id}) for d in needs_of(jobs.get(job_id) or {}) if d in jobs
+        )
+
+    for job_id in ids:
+        if cycle(job_id):
+            report(job_id, "needs", "circular job dependencies; remove the cycle")
 
     # skip-pr: transitive skipping, unless always()/cancelled() overrides it.
-    if events & PR_EVENTS and "context" in jobs:
+    if not v2 and events & PR_EVENTS and "context" in jobs:
         gated: dict[str, bool] = {}
 
         def is_gated(job_id: str, seen: frozenset[str] = frozenset()) -> bool:
@@ -609,10 +624,94 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
             missing = sorted(set(ids) - {"result"} - set(needs_of(result)))
             if missing:
                 report("result", "result", f"must need every other job; missing {missing}")
-            if _normalize(_unwrap(str(result.get("if") or ""))) != RESULT_IF:
-                report("result", "result", f"must run `if: {RESULT_IF}`")
-            if result.get("steps") != RESULT_STEPS:
+            expected_if = (
+                "always() && needs.context.outputs.validate == 'true'" if v2 else RESULT_IF
+            )
+            if _normalize(_unwrap(str(result.get("if") or ""))) != expected_if:
+                report("result", "result", f"must run `if: {expected_if}`")
+            if not v2 and result.get("steps") != RESULT_STEPS:
                 report("result", "result", "steps must be the canonical result step")
+            if v2:
+                steps = result.get("steps") or []
+                if (
+                    len(steps) != 1
+                    or not re.fullmatch(
+                        r"MolCrafts/molcrafts-ci/actions/validation-result@[0-9a-f]{40}",
+                        str(steps[0].get("uses", "")),
+                    )
+                    or steps[0].get("with") != {"needs": "${{ toJSON(needs) }}"}
+                ):
+                    report(
+                        "result",
+                        "result",
+                        "use pinned validation-result with complete toJSON(needs)",
+                    )
+                if set(jobs) != {"context", "native", "platform", "result"}:
+                    report(None, "platform", "v2 requires context, native, platform, result jobs")
+                expected_conditions = {
+                    "platform": "needs.context.outputs.validate == 'true'",
+                    "native": (
+                        "needs.context.outputs.validate == 'true' && "
+                        "needs.context.outputs.native == 'true'"
+                    ),
+                }
+                for name, condition in expected_conditions.items():
+                    job = jobs.get(name) or {}
+                    if _normalize(_unwrap(str(job.get("if", "")))) != condition:
+                        report(name, "platform", f"must run `if: {condition}`")
+                    lane = "native" if name == "native" else "${{ matrix.lane }}"
+                    if not any(
+                        s.get("run") == f"scripts/ci-hook.sh platform {lane}"
+                        and "if" not in s
+                        and not s.get("continue-on-error")
+                        for s in job.get("steps", [])
+                    ):
+                        report(
+                            name, "platform", "invoke the registry platform lane through ci-hook.sh"
+                        )
+                matrix = (jobs.get("platform") or {}).get("strategy", {}).get("matrix")
+                if matrix != "${{ fromJSON(needs.context.outputs.matrix) }}":
+                    report("platform", "platform", "use context's authoritative lane matrix")
+                if (jobs.get("context", {}).get("with") or {}).get("profile") != "rust-python-v2":
+                    report("context", "profile", "opt into rust-python-v2 explicitly")
+                if events != {"push", "pull_request", "workflow_dispatch"}:
+                    report(
+                        None,
+                        "events",
+                        "test.yml requires push, pull_request and workflow_dispatch only",
+                    )
+                if spec.get("permissions") != {"contents": "read"}:
+                    report(None, "permissions", "untrusted tests must have only contents: read")
+                for name, job in jobs.items():
+                    if job.get("continue-on-error"):
+                        report(name, "result", "required verification must propagate failures")
+                    if job.get("permissions") or "self-hosted" in str(job.get("runs-on", "")):
+                        report(
+                            name,
+                            "permissions",
+                            "untrusted verification uses hosted runners and read-only permissions",
+                        )
+
+    if v2 and stem == "release":
+        guard = jobs.get("guard") or {}
+        if not any(
+            re.fullmatch(
+                r"MolCrafts/molcrafts-ci/actions/release-verify@[0-9a-f]{40}",
+                str(step.get("uses", "")),
+            )
+            and step.get("with") == {"publish": "${{ needs.context.outputs.publish }}"}
+            and "if" not in step
+            and not step.get("continue-on-error")
+            for step in guard.get("steps", [])
+        ):
+            report(
+                "guard",
+                "release",
+                "use immutable release-verify for exact upstream master verification",
+            )
+        for name, job in jobs.items():
+            if publish_reasons(job) and "guard" not in needs_of(job):
+                report(name, "release", "publication must directly depend on release guard")
 
     # concurrency: the canonical block.
     conc = spec.get("concurrency")
@@ -639,6 +738,10 @@ def check_workflow(path: Path, root: Path) -> list[Violation]:
     # pin + comment: line by line.
     has_call = "workflow_call" in events
     for n, raw in enumerate(text.splitlines(), 1):
+        if v2:
+            external = re.search(r"uses:\s*['\"]?([^\s'\"]+)@([^\s'\"]+)", raw)
+            if external and not re.fullmatch(r"[0-9a-f]{40}", external[2]):
+                report(None, "pin", f"{external[1]}: pin an immutable 40-character action SHA", n)
         for m in SHARED_ACTION.finditer(raw):
             if not valid_action_ref(m.group("ref")):
                 report(

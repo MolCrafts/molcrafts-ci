@@ -437,3 +437,93 @@ def test_repository_rules_bind_a_repository_that_pins_ci(tmp_path: Path) -> None
     assert cw.check(root) == []
     (tmp_path / ".github/partners.env").write_text("CI_REF=" + "a" * 40 + "\n", encoding="utf-8")
     assert {v.rule for v in cw.check(root)} == {"files"}
+
+
+@pytest.fixture
+def v2_workflow(tmp_path):
+    pins = tmp_path / ".github/partners.env"
+    pins.parent.mkdir()
+    pins.write_text("CI_PROFILE=rust-python-v2\nCI_REF=" + "a" * 40 + "\n")
+    uses = "MolCrafts/molcrafts-ci/"
+    condition = "needs.context.outputs.validate == 'true'"
+    spec = {
+        "name": "test",
+        "on": {
+            "push": {"branches": ["dev", "master"]},
+            "pull_request": {"branches": ["dev", "master"]},
+            "workflow_dispatch": None,
+        },
+        "permissions": {"contents": "read"},
+        "concurrency": {
+            "group": cw.GROUP.format(stem="test"),
+            "cancel-in-progress": cw.CANCEL_IN_PROGRESS,
+        },
+        "jobs": {
+            "context": {
+                "name": "test",
+                "uses": uses + ".github/workflows/context.yml@" + "a" * 40,
+                "with": {"profile": "rust-python-v2"},
+            },
+            "native": {
+                "name": "test / native",
+                "needs": "context",
+                "runs-on": "ubuntu-latest",
+                "if": condition + " && needs.context.outputs.native == 'true'",
+                "steps": [{"run": "scripts/ci-hook.sh platform native"}],
+            },
+            "platform": {
+                "name": "test / platform (${{ matrix.lane }})",
+                "needs": "context",
+                "runs-on": "${{ matrix.os }}",
+                "if": condition,
+                "strategy": {
+                    "fail-fast": False,
+                    "matrix": "${{ fromJSON(needs.context.outputs.matrix) }}",
+                },
+                "steps": [{"run": "scripts/ci-hook.sh platform ${{ matrix.lane }}"}],
+            },
+            "result": {
+                "name": "test / result",
+                "needs": ["context", "native", "platform"],
+                "runs-on": "ubuntu-latest",
+                "if": "always() && " + condition,
+                "steps": [
+                    {
+                        "uses": uses + "actions/validation-result@" + "a" * 40,
+                        "with": {"needs": "${{ toJSON(needs) }}"},
+                    }
+                ],
+            },
+        },
+    }
+    path = tmp_path / ".github/workflows/test.yml"
+    path.parent.mkdir()
+    return tmp_path, path, spec
+
+
+def test_v2_workflow_passes(v2_workflow):
+    root, path, spec = v2_workflow
+    path.write_text(yaml.safe_dump(spec, sort_keys=False))
+    assert cw.check_workflow(path, root) == []
+
+
+@pytest.mark.parametrize("mutation", ["skip", "cycle", "missing", "permissions", "pin", "matrix"])
+def test_v2_workflow_fail_closed(v2_workflow, mutation):
+    root, path, spec = v2_workflow
+    jobs = spec["jobs"]
+    if mutation == "skip":
+        jobs["result"]["steps"] = cw.RESULT_STEPS
+    elif mutation == "cycle":
+        jobs["native"]["needs"] = ["context", "result"]
+    elif mutation == "missing":
+        jobs["native"]["needs"] = ["context", "nonexistent"]
+    elif mutation == "permissions":
+        jobs["native"]["permissions"] = {"id-token": "write"}
+    elif mutation == "pin":
+        jobs["native"]["steps"].append({"uses": "actions/checkout@v7"})
+    else:
+        jobs["platform"]["strategy"]["matrix"] = {"include": []}
+    path.write_text(yaml.safe_dump(spec, sort_keys=False))
+    violations = cw.check_workflow(path, root)
+    assert violations
+    assert all(v.file and v.line > 0 and v.rule and v.message for v in violations)

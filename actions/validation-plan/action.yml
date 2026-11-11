@@ -1,0 +1,27 @@
+name: validation-plan
+description: Select platform lanes from the authoritative schema-2 registry
+inputs:
+  native:
+    description: Whether the independent native job covers the Linux lane
+    required: true
+outputs:
+  matrix:
+    description: Platform lane matrix
+    value: ${{ steps.plan.outputs.matrix }}
+runs:
+  using: composite
+  steps:
+    - id: plan
+      shell: bash
+      env:
+        NATIVE: ${{ inputs.native }}
+      run: |
+        uv run --no-project --with pyyaml==6.0.3 python - "$GITHUB_ACTION_PATH/../../profiles/rust-python-v2.yml" >> "$GITHUB_OUTPUT" <<'PY'
+        import json, os, sys, yaml
+        from pathlib import Path
+        profile = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8"))
+        excluded = {"native", "linux"} if os.environ["NATIVE"] == "true" else {"native"}
+        rows = [{"lane": name, "os": spec["runner"]} for name, spec in profile["platforms"].items() if name not in excluded]
+        assert rows, "no required platform lanes"
+        print("matrix=" + json.dumps({"include": rows}))
+        PY

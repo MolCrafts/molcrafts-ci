@@ -26,7 +26,7 @@ def run(*args: str) -> subprocess.CompletedProcess[str]:
 
 def test_profiles_are_named() -> None:
     names = sorted(p.stem for p in (ROOT / "profiles").glob("*.yml"))
-    assert names == ["node", "node-python", "python", "rust-python"]
+    assert names == ["node", "node-python", "python", "rust-python", "rust-python-v2"]
 
 
 def test_list_lint_gates_for_node_python() -> None:
@@ -105,22 +105,17 @@ def test_node_python_runs_each_check_once() -> None:
     assert "npm run build" not in later
 
 
-@pytest.mark.parametrize("ref", ["a" * 40, "master"])
-def test_downloaded_hook_fetches_the_callers_ci_ref(tmp_path, monkeypatch, ref) -> None:
+def test_downloaded_hook_uses_persistent_uv_tool_cache(tmp_path, monkeypatch):
     ci = load_ci()
     monkeypatch.setattr(ci, "__file__", str(tmp_path / "download" / "ci.py"))
     monkeypatch.setattr(ci, "scrub_git_env", lambda: None)
-    monkeypatch.setattr(ci.tempfile, "gettempdir", lambda: str(tmp_path))
-    monkeypatch.delenv("CI_REF", raising=False)
-    pins = tmp_path / ".github/partners.env"
-    pins.parent.mkdir()
-    if ref != "master":
-        pins.write_text(f"CI_REF={ref}\n")
+    monkeypatch.setenv("CI_REF", "a" * 40)
     calls = []
-    monkeypatch.setattr(ci.subprocess, "run", lambda args, **kwargs: calls.append(args))
-    root = ci.ci_root(tmp_path)
-    assert ["git", "-C", str(root), "fetch", "--depth", "1", ci.MASTER, ref] in calls
-    assert calls[-1] == ["git", "-C", str(root), "checkout", "--detach", "FETCH_HEAD"]
+    monkeypatch.setattr(ci.os, "execvp", lambda name, argv: calls.append((name, argv)))
+    ci.ci_root(tmp_path)
+    assert calls[0][0] == "uv"
+    assert "git+https://github.com/MolCrafts/molcrafts-ci.git@" + "a" * 40 in calls[0][1][4]
+    assert "profile-hook" in calls[0][1]
 
 
 def test_downloaded_hook_rejects_mutable_ci_ref(tmp_path, monkeypatch) -> None:
