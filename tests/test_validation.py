@@ -80,6 +80,13 @@ def test_python_only_preserves_core_success(repo, config):
     assert execute(repo, config) == "cpp"
 
 
+def test_formatting_glob_cannot_hide_unknown_native_inputs(repo, config):
+    config["gates"].insert(0, dict(id="style", stage="pre-commit", inputs=["**"], run="true"))
+    assert execute(repo, config) == "cp"
+    (repo / "unknown.cpp").write_text("new shared implementation")
+    assert execute(repo, config) == "cpcp"
+
+
 def test_partner_source_content_invalidates_native_consumers(repo, config):
     partner = repo / ".git/partner"
     partner.mkdir()

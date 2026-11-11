@@ -99,6 +99,11 @@ def main(gate: str) -> int:
         )
         if not versions or any(value != version for value in versions):
             raise ValueError(f"CMake and Python release versions must both be {version}")
+        documentation_version = re.search(
+            r"(?m)^PROJECT_NUMBER\s*=\s*([^\s]+)", (ROOT / "Doxyfile").read_text("utf-8")
+        )
+        if not documentation_version or documentation_version[1].strip('"') != version:
+            raise ValueError(f"Doxyfile PROJECT_NUMBER must be {version}")
         if (
             os.environ.get("GITHUB_REF_TYPE") == "tag"
             and os.environ.get("GITHUB_REF_NAME") != f"v{version}"

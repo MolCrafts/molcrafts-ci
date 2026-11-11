@@ -86,7 +86,7 @@ gates:
   - id: pins
     stage: pre-commit
     run: molci:atomiverse:pins
-    inputs: [python/pyproject.toml, python/uv.lock, .github/partners.env, CMakeLists.txt, python/src/atomiverse/__init__.py]
+    inputs: [python/pyproject.toml, python/uv.lock, .github/partners.env, CMakeLists.txt, python/src/atomiverse/__init__.py, Doxyfile]
     tools: [uv]
   - id: partners
     stage: pre-push

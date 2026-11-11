@@ -241,7 +241,10 @@ class Runner:
             }
         )
         self.platform = f"{platform.system()}-{platform.machine()}"
-        known = [p for g in config["gates"] for p in g.get("inputs", [])]
+        # Formatting globs do not establish that a source has native coverage.
+        known = config.get("global_inputs", []) + [
+            p for g in config["gates"] if g["stage"] == "pre-push" for p in g.get("inputs", [])
+        ]
         self.unknown = {
             p: h
             for p, h in self.files.items()
