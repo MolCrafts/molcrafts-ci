@@ -229,3 +229,18 @@ def test_invalid_gate_graph_fails_before_execution(repo, config, monkeypatch, ki
     (directory / "rust-python-v2.yml").write_text(yaml.safe_dump(config))
     with pytest.raises(ValueError):
         v.profile(repo)
+
+
+def test_commit_checks_do_not_claim_native_verification(repo, config, monkeypatch, capsys):
+    config["gates"][0]["stage"] = "pre-commit"
+    monkeypatch.setattr(v, "profile", lambda root: config)
+    assert v.main(["check", "--root", str(repo)]) == 0
+    output = capsys.readouterr().out
+    assert "Commit checks: PASS" in output
+    assert "Native verification: PASS" not in output
+
+
+def test_wrong_platform_lane_fails_before_execution(repo, config):
+    config["platforms"] = {"windows": {"os": "UnsupportedOS", "gates": ["core"]}}
+    with pytest.raises(ValueError, match="UNSUPPORTED PLATFORM"):
+        v.Runner(repo, config).select(lane="windows")

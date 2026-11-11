@@ -380,20 +380,24 @@ platforms:
     - cxx
     - capi
     - python
+    os: Linux
   windows:
     runner: windows-latest
     gates:
     - python
     - capi
+    os: Windows
   macos:
     runner: macos-latest
     gates:
     - python
     - cxx
+    os: Darwin
   wasm:
     runner: ubuntu-latest
     gates:
     - wasm
+    os: Linux
   native:
     runner: ubuntu-latest
     all_native: true

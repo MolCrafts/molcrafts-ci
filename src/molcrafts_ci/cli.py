@@ -263,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     v2 = pin_file.is_file() and "CI_PROFILE=rust-python-v2" in pin_file.read_text("utf-8")
     if argv and (
         argv[0] in ("doctor", "verify", "run", "explain", "hook", "platform")
-        or (argv[0] == "check" and v2)
+        or (argv[0] in ("check", "--help", "-h") and v2)
     ):
         return validation.main(argv)
     parser = argparse.ArgumentParser(prog="molci")

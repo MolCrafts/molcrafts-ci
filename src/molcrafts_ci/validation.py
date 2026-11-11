@@ -221,6 +221,11 @@ class Runner:
         lanes = self.config.get("platforms", {})
         if lane and lane not in lanes:
             raise ValueError(f"unknown platform lane: {lane}")
+        if lane and lanes[lane].get("os") not in (None, platform.system()):
+            raise ValueError(
+                f"UNSUPPORTED PLATFORM: lane {lane} requires {lanes[lane]['os']}, "
+                f"running on {platform.system()}"
+            )
         wanted = (
             {gate}
             if gate
@@ -318,7 +323,14 @@ class Runner:
         except (OSError, ValueError):
             return False
 
-    def execute(self, gates: list[dict], *, full: bool = False, explain: bool = False) -> int:
+    def execute(
+        self,
+        gates: list[dict],
+        *,
+        full: bool = False,
+        explain: bool = False,
+        label: str = "Native verification",
+    ) -> int:
         commit = git(self.root, "rev-parse", "HEAD")
         print(
             f"MolCrafts CI v2\nCommit: {commit}\nPlatform: {self.platform}\n"
@@ -424,7 +436,7 @@ class Runner:
             if contents(self.root) != self.files:
                 raise ValueError("source changed during validation; rerun before pushing")
             if not explain:
-                print("Native verification: PASS", flush=True)
+                print(f"{label}: PASS", flush=True)
         return 0
 
     def internal(self, command: str) -> list[str]:
@@ -568,10 +580,16 @@ def main(argv: list[str]) -> int:
 
         signal.signal(signal.SIGTERM, cancelled)
         try:
+            label = "Native verification"
+            if args.command == "check" or (args.command == "hook" and stage == "pre-commit"):
+                label = "Commit checks"
+            elif args.command in ("run", "platform"):
+                label = f"{args.command.title()} verification ({args.gate})"
             code = runner.execute(
                 gates,
                 full=args.full or bool(os.environ.get("GITHUB_ACTIONS")),
                 explain=args.command == "explain",
+                label=label,
             )
         finally:
             signal.signal(signal.SIGTERM, previous)
