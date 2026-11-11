@@ -42,9 +42,9 @@ def good():
 )
 def test_exact_trusted_run_identity(field, value):
     run = good()
-    assert VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40)
+    assert VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40, "MolCrafts/molpy")
     run[field] = value
-    assert not VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40)
+    assert not VERIFY.eligible(run, "MolCrafts/molpy", "a" * 40, "MolCrafts/molpy")
 
 
 @pytest.mark.parametrize("status", ["skipped", "failure", "cancelled", None])
@@ -73,3 +73,34 @@ def test_manual_dry_run_never_requests_release_attestation(monkeypatch):
     monkeypatch.setenv("PUBLISH", "false")
     monkeypatch.setattr(VERIFY, "api", lambda path: pytest.fail("dry run queried release evidence"))
     assert VERIFY.main() == 0
+
+
+@pytest.mark.parametrize("missing", [None, "windows", "macos"])
+def test_atomiverse_requires_its_exact_native_and_platform_run(monkeypatch, missing):
+    monkeypatch.setenv("PUBLISH", "true")
+    monkeypatch.setenv("PROFILE", "cpp-python")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "MolCrafts/Atomiverse")
+    monkeypatch.setenv("GITHUB_SHA", "a" * 40)
+    run = good() | {
+        "repository": {"full_name": "MolCrafts/Atomiverse"},
+        "head_repository": {"full_name": "MolCrafts/Atomiverse"},
+    }
+    jobs = [
+        {"name": "test / result", "conclusion": "success"},
+        {"name": "test / native", "conclusion": "success"},
+    ]
+    jobs += [
+        {"name": f"test / platform ({lane})", "conclusion": "success"}
+        for lane in ("windows", "macos")
+        if lane != missing
+    ]
+    monkeypatch.setattr(
+        VERIFY,
+        "api",
+        lambda path: [{"jobs": jobs}] if "/jobs?" in path else [{"workflow_runs": [run]}],
+    )
+    if missing is None:
+        assert VERIFY.main() == 0
+    else:
+        with pytest.raises(ValueError, match="requires successful"):
+            VERIFY.main()

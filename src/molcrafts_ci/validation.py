@@ -222,6 +222,7 @@ class Runner:
         self.cache = (root / common).resolve() / "molci"
         self.files = contents(root)
         self.keys: dict[str, str] = {}
+        self.repositories: dict[Path, dict[str, str]] = {}
         self.env = clean_git_env()
         self.env.pop("VIRTUAL_ENV", None)
         self.env.update(
@@ -236,11 +237,14 @@ class Runner:
             {
                 str(p.relative_to(package)): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in [Path(__file__), *sorted((package / "checks").glob("*"))]
-                if p.is_file() and p.suffix in (".py", ".sh")
+                if p.is_file() and p.suffix in (".py", ".sh", ".yml", ".yaml")
             }
         )
         self.platform = f"{platform.system()}-{platform.machine()}"
-        known = [p for g in config["gates"] for p in g.get("inputs", [])]
+        # Formatting globs do not establish that a source has native coverage.
+        known = config.get("global_inputs", []) + [
+            p for g in config["gates"] if g["stage"] == "pre-push" for p in g.get("inputs", [])
+        ]
         self.unknown = {
             p: h
             for p, h in self.files.items()
@@ -252,6 +256,11 @@ class Runner:
     ) -> list[dict]:
         if gate and gate not in self.gates:
             raise ValueError(f"unknown gate: {gate}")
+        if gate and (
+            platform.system() not in self.gates[gate].get("os", [platform.system()])
+            or platform.machine() not in self.gates[gate].get("arch", [platform.machine()])
+        ):
+            raise ValueError(f"UNSUPPORTED PLATFORM {self.platform}: gate {gate}")
         lanes = self.config.get("platforms", {})
         if lane and lane not in lanes:
             raise ValueError(f"unknown platform lane: {lane}")
@@ -268,8 +277,12 @@ class Runner:
             else {
                 g["id"]
                 for g in self.gates.values()
-                if (stage == "pre-push" and g["stage"] in ("pre-commit", "pre-push"))
-                or g["stage"] == stage
+                if (
+                    (stage == "pre-push" and g["stage"] in ("pre-commit", "pre-push"))
+                    or g["stage"] == stage
+                )
+                and platform.system() in g.get("os", [platform.system()])
+                and platform.machine() in g.get("arch", [platform.machine()])
             }
         )
         pending = list(wanted)
@@ -281,6 +294,17 @@ class Runner:
         return [g for g in self.gates.values() if g["id"] in wanted]
 
     def key(self, gate: dict) -> str:
+        repositories = {}
+        for name in gate.get("repositories", []):
+            source = (self.root / self.config["repositories"][name]).resolve()
+            if not source.is_dir():
+                raise ValueError(f"missing dependency {source}; run `molci run partners`")
+            if Path(git(source, "rev-parse", "--show-toplevel")).resolve() != source:
+                raise ValueError(f"dependency must be a Git checkout: {source}")
+            snapshot = contents(source)
+            if self.repositories.setdefault(source, snapshot) != snapshot:
+                raise ValueError(f"dependency source changed during validation: {source}")
+            repositories[name] = {"path": str(source), "contents": snapshot}
         tools = {}
         for probe in gate.get("tools", []):
             if isinstance(probe, str):
@@ -325,7 +349,7 @@ class Runner:
             for k, v in self.env.items()
             if (
                 k.startswith(
-                    ("CARGO_", "RUST", "UV_", "PYTHON", "CC", "CXX", "CMAKE_", "MOLCRAFTS_")
+                    ("CARGO_", "RUST", "UV_", "PYTHON", "CC", "CXX", "CMAKE_", "MOLCRAFTS_", "ATV_")
                 )
                 or k in self.config.get("environment", [])
             )
@@ -362,6 +386,7 @@ class Runner:
                 "environment": execution,
                 "engine": self.engine,
                 "external_configuration": external,
+                "repositories": repositories,
             }
         )
 
@@ -372,6 +397,12 @@ class Runner:
             files = sorted(directory.glob(pattern))
             if not files:
                 raise ValueError(f"{gate['id']}: missing artifact {directory / pattern}")
+            for path in files:
+                result[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
+        for pattern in gate.get("workspace_artifacts", []):
+            files = sorted(path for path in self.root.glob(pattern) if path.is_file())
+            if not files:
+                raise ValueError(f"{gate['id']}: missing build artifact {pattern}")
             for path in files:
                 result[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
         return result
@@ -406,7 +437,9 @@ class Runner:
                 raise ValueError("source changed while waiting for validation lock; retry")
             for gate in gates:
                 name = gate["id"]
-                if platform.system() not in gate.get("os", [platform.system()]):
+                if platform.system() not in gate.get(
+                    "os", [platform.system()]
+                ) or platform.machine() not in gate.get("arch", [platform.machine()]):
                     raise ValueError(f"UNSUPPORTED PLATFORM {self.platform}: required gate {name}")
                 key = self.key(gate)
                 self.keys[name] = key
@@ -484,7 +517,9 @@ class Runner:
                             file=sys.stderr,
                         )
                         return code if code > 0 else 128 - code
-                    if contents(self.root) != self.files:
+                    if contents(self.root) != self.files or any(
+                        contents(path) != snapshot for path, snapshot in self.repositories.items()
+                    ):
                         raise ValueError(
                             f"{name}: source changed during validation; result not cached"
                         )
@@ -496,18 +531,31 @@ class Runner:
                     temporary.replace(receipt)
                     print(f"PASS    {name} ({time.monotonic() - started:.2f}s)", flush=True)
                 if gate.get("artifact_environment"):
-                    artifacts = list(self.artifacts(key, gate))
+                    artifacts = [
+                        p
+                        for p in self.artifacts(key, gate)
+                        if Path(p).match(gate.get("artifact_export", "*"))
+                    ]
                     if len(artifacts) != 1:
                         raise ValueError(f"{name}: expected exactly one exported artifact")
                     self.env[gate["artifact_environment"]] = Path(artifacts[0]).as_posix()
                 self.keys[name] = digest({"key": key, "artifacts": self.artifacts(key, gate)})
-            if contents(self.root) != self.files:
+            if contents(self.root) != self.files or any(
+                contents(path) != snapshot for path, snapshot in self.repositories.items()
+            ):
                 raise ValueError("source changed during validation; rerun before pushing")
             if not explain:
                 print(f"{label}: PASS", flush=True)
         return 0
 
     def internal(self, command: str) -> list[str]:
+        if command.startswith("molci:atomiverse:"):
+            return [
+                sys.executable,
+                "-m",
+                "molcrafts_ci.checks.atomiverse",
+                command.removeprefix("molci:atomiverse:"),
+            ]
         if command.startswith("molci:rust-python:"):
             return [
                 bash_executable(),

@@ -92,6 +92,7 @@ def test_case(tmp_path: Path, case: dict) -> None:
         "intent": "integration",
         "validate": "true",
         "native": "true",
+        "native-profile": "false",
         "nightly": "false",
         "source-ref": case["ref"],
         "deploy": "true" if case["case"] == "upstream master push" else "false",

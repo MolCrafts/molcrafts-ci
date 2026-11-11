@@ -82,10 +82,15 @@ SCRIPT = Path(__file__).parents[1] / "actions/ci-context/context.sh"
         ),
     ],
 )
-def test_lifecycle(repo, event, ref, head, intent, validate, native, publish):
+@pytest.mark.parametrize(
+    "project,profile", [("molpy", "rust-python"), ("Atomiverse", "cpp-python")]
+)
+def test_lifecycle(repo, event, ref, head, intent, validate, native, publish, project, profile):
+    repo = repo.replace("molpy", project)
+    head = head.replace("molpy", project)
     env = {k: v for k, v in os.environ.items() if not k.startswith("CI_") and k != "GITHUB_OUTPUT"}
     env.update(
-        CI_PROFILE="rust-python",
+        CI_PROFILE=profile,
         CI_OWNER=repo.split("/")[0],
         CI_REPOSITORY=repo,
         CI_EVENT=event,
@@ -112,18 +117,21 @@ def test_lifecycle(repo, event, ref, head, intent, validate, native, publish):
         ("Roy-Kid", "Roy-Kid/molpy", "dev", "master", "true"),
     ],
 )
+@pytest.mark.parametrize(
+    "project,profile", [("molpy", "rust-python"), ("Atomiverse", "cpp-python")]
+)
 def test_trusted_development_path_uses_verified_event_identity(
-    author, head, head_ref, base, native
+    author, head, head_ref, base, native, project, profile
 ):
     env = {k: v for k, v in os.environ.items() if not k.startswith("CI_") and k != "GITHUB_OUTPUT"}
     env.update(
-        CI_PROFILE="rust-python",
+        CI_PROFILE=profile,
         CI_OWNER="MolCrafts",
-        CI_REPOSITORY="MolCrafts/molpy",
+        CI_REPOSITORY=f"MolCrafts/{project}",
         CI_EVENT="pull_request",
         CI_REF="refs/pull/1/merge",
         CI_PR_AUTHOR=author,
-        CI_PR_HEAD=head,
+        CI_PR_HEAD=head.replace("molpy", project),
         CI_PR_HEAD_REF=head_ref,
         CI_PR_BASE_REF=base,
     )
@@ -132,5 +140,7 @@ def test_trusted_development_path_uses_verified_event_identity(
     )
     outputs = dict(line.split("=", 1) for line in result.stdout.splitlines())
     assert outputs["validate"] == "true"
-    assert outputs["native"] == native
+    # Atomiverse's development mirror is not an upstream GitHub fork, so
+    # its profile grants no trusted-fork exception to independent validation.
+    assert outputs["native"] == (native if profile == "rust-python" else "true")
     assert outputs["publish"] == "false"

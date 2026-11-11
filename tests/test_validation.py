@@ -80,6 +80,79 @@ def test_python_only_preserves_core_success(repo, config):
     assert execute(repo, config) == "cpp"
 
 
+def test_formatting_glob_cannot_hide_unknown_native_inputs(repo, config):
+    config["gates"].insert(0, dict(id="style", stage="pre-commit", inputs=["**"], run="true"))
+    assert execute(repo, config) == "cp"
+    (repo / "unknown.cpp").write_text("new shared implementation")
+    assert execute(repo, config) == "cpcp"
+
+
+def test_partner_source_content_invalidates_native_consumers(repo, config):
+    partner = repo / ".git/partner"
+    partner.mkdir()
+    subprocess.run(["git", "init", "-q", str(partner)], check=True)
+    source = partner / "bridge.h"
+    source.write_text("layout one")
+    config["repositories"] = {"binding": str(partner)}
+    config["gates"][0]["repositories"] = ["binding"]
+    assert execute(repo, config) == "cp"
+    assert execute(repo, config) == "cp"
+    source.write_text("layout two")
+    assert execute(repo, config) == "cpcp"
+
+
+def test_partner_source_mutation_never_enters_success_cache(repo, config):
+    partner = repo / ".git/partner"
+    partner.mkdir()
+    subprocess.run(["git", "init", "-q", str(partner)], check=True)
+    source = partner / "bridge.h"
+    source.write_text("initial")
+    config["repositories"] = {"binding": str(partner)}
+    config["gates"][0]["repositories"] = ["binding"]
+    config["gates"][0]["run"] = f"printf mutated > '{source}'"
+    runner = v.Runner(repo, config)
+    with pytest.raises(ValueError, match="source changed"):
+        runner.execute(runner.select())
+    assert not list((repo / ".git/molci/success").glob("*.json"))
+
+
+def test_artifact_export_keeps_other_products_in_success_receipt(repo, config):
+    gate = config["gates"][0]
+    gate.update(
+        produces=["*.whl", "*.tar.gz"],
+        artifact_directory="OUTPUT",
+        artifact_environment="TESTED_WHEEL",
+        artifact_export="*.whl",
+        run='printf wheel > "$OUTPUT/a.whl"; printf sdist > "$OUTPUT/a.tar.gz"',
+    )
+    config["gates"][1]["run"] = '[ "$(cat "$TESTED_WHEEL")" = wheel ]; printf p >> .git/count'
+    assert execute(repo, config) == "p"
+    assert execute(repo, config) == "p"
+    sdist = next((repo / ".git/molci/artifacts").glob("*/*.tar.gz"))
+    sdist.write_text("corrupt")
+    assert execute(repo, config) == "p"
+    assert sdist.read_text() == "sdist"
+
+
+def test_missing_workspace_binary_invalidates_the_producer(repo, config):
+    config["gates"][0]["workspace_artifacts"] = [".git/built-binary"]
+    config["gates"][0]["run"] += "; printf executable > .git/built-binary"
+    assert execute(repo, config) == "cp"
+    assert execute(repo, config) == "cp"
+    (repo / ".git/built-binary").unlink()
+    assert execute(repo, config) == "cpc"
+    assert (repo / ".git/built-binary").read_text() == "executable"
+
+
+def test_native_selection_omits_only_explicitly_unsupported_platforms(repo, config, monkeypatch):
+    config["gates"][1]["os"] = ["Windows"]
+    monkeypatch.setattr(v.platform, "system", lambda: "Darwin")
+    runner = v.Runner(repo, config)
+    assert [g["id"] for g in runner.select()] == ["core"]
+    with pytest.raises(ValueError, match="UNSUPPORTED PLATFORM"):
+        runner.select(gate="python")
+
+
 def test_profile_command_and_target_are_cache_inputs(repo, config):
     execute(repo, config)
     config["gates"][1]["run"] = "printf P >> .git/count"
@@ -166,6 +239,14 @@ def test_result_rejects_missing_skipped_failed_and_cancelled_platforms():
         "native": {"result": "success"},
     }
     assert module.check(needs) == []
+    for status in ["skipped", "failure", "cancelled", None]:
+        needs["context"]["result"] = status
+        assert module.check(needs)
+    needs["context"]["result"] = "success"
+    for decision in ["false", "", None]:
+        needs["context"]["outputs"]["validate"] = decision
+        assert module.check(needs)
+    needs["context"]["outputs"]["validate"] = "true"
     for status in ["skipped", "failure", "cancelled", None]:
         needs["platform"]["result"] = status
         assert module.check(needs)

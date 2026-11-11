@@ -1,9 +1,25 @@
 # Local-first validation
 
-MolCrafts CI owns one `rust-python` gate registry and the actual checks.
-MolPy supplies its source tree, `.github/partners.env`, one
+MolCrafts CI owns the `rust-python` and `cpp-python` gate registries and checks.
+Consumers supply their source tree, `.github/partners.env`, one
 `.pre-commit-config.yaml` and platform/release workflows. There are no
 consumer-side launchers or CI shell scripts.
+
+The C++/Python profile serves Atomiverse. It calls Atomiverse's existing public
+configuration and wheel-command APIs, builds one wheel per project and verifies
+the pinned MolPy source used by both Rust/CXX and Python. Dependency repositories
+are content-hashed and must remain unchanged throughout verification. CMake test
+binaries and build caches are checked alongside wheel artifacts, so a deleted
+build tree invalidates its producer. CPU model/instruction flags are part of the
+compiler-cache identity for `-march=native`. Windows verifies the supported pure
+Python delivery; CUDA stays an explicit aarch64 GH200 gate, never an untrusted
+self-hosted PR job. Atomiverse owns integration verification in PRs and master
+pushes, avoiding a second matrix after a dev merge. Scientific campaigns remain
+independent of ordinary verification and keep build attestations and failures.
+Content-addressed ccache objects are stored separately from dependency/build
+snapshots, so updating a CI pin can retain unchanged C++ compilation outputs.
+Atomiverse's development mirror is not in the upstream GitHub fork network;
+its upstream PRs all receive independent native validation.
 
 Pre-commit installs the single remote repository at an immutable commit and
 reuses its managed environment. Both hook stages execute the same `molci`

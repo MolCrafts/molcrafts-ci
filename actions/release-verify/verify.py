@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -12,9 +13,9 @@ from pathlib import Path
 import yaml
 
 
-def eligible(run: dict, repository: str, commit: str) -> bool:
+def eligible(run: dict, repository: str, commit: str, expected_repository: str) -> bool:
     return (
-        repository == "MolCrafts/molpy"
+        repository == expected_repository
         and run.get("head_sha") == commit
         and run.get("head_branch") == "master"
         and run.get("event") == "push"
@@ -39,6 +40,14 @@ def main() -> int:
         print("Dry run: publication disabled; no remote release attestation issued")
         return 0
     repo, sha = os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_SHA"]
+    profile = os.environ.get("PROFILE", "rust-python")
+    if not re.fullmatch(r"[a-z0-9-]+", profile):
+        raise ValueError("invalid verification profile")
+    registry = yaml.safe_load(
+        (Path(__file__).parents[2] / "profiles" / f"{profile}.yml").read_text("utf-8")
+    )
+    if repo != registry["repository"]:
+        raise ValueError(f"release requires upstream repository {registry['repository']}")
     deadline = time.monotonic() + 90 * 60
     while True:
         runs = [
@@ -47,7 +56,7 @@ def main() -> int:
                 f"repos/{repo}/actions/workflows/test.yml/runs?head_sha={sha}&event=push&per_page=100"
             )
             for run in page["workflow_runs"]
-            if eligible(run, repo, sha)
+            if eligible(run, repo, sha, registry["repository"])
         ]
         latest = max(runs, key=lambda run: (run["id"], run.get("run_attempt", 1)), default=None)
         if latest and latest["status"] == "completed":
@@ -63,13 +72,10 @@ def main() -> int:
             result = [j for j in jobs if j["name"] == "test / result"]
             native = [j for j in jobs if j["name"] == "test / native"]
             platform = [j for j in jobs if j["name"].startswith("test / platform (")]
-            registry = yaml.safe_load(
-                (Path(__file__).parents[2] / "profiles/rust-python.yml").read_text("utf-8")
-            )
             expected = {
                 f"test / platform ({lane})"
                 for lane in registry["platforms"]
-                if lane not in ("native", "linux")
+                if lane not in ("native", "linux") and not registry["platforms"][lane].get("manual")
             }
             if (
                 len(result) != 1

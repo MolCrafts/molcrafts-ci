@@ -1,0 +1,219 @@
+name: cpp-python
+repository: MolCrafts/Atomiverse
+global_inputs:
+  - .github/**
+  - .pre-commit-config.yaml
+  - python/pyproject.toml
+  - python/uv.lock
+  - python/.python-version
+  - rust-toolchain.toml
+environment:
+  - PATH
+  - LANG
+  - LC_ALL
+  - SDKROOT
+  - MACOSX_DEPLOYMENT_TARGET
+  - CPATH
+  - LIBRARY_PATH
+  - LD_LIBRARY_PATH
+  - CFLAGS
+  - CXXFLAGS
+  - LDFLAGS
+  - PKG_CONFIG_PATH
+  - OPENBLAS_ROOT
+  - OPENBLAS_NUM_THREADS
+  - OMP_NUM_THREADS
+  - CUDA_HOME
+  - CUDA_PATH
+  - SLURM_CLUSTER_NAME
+  - SLURM_JOB_PARTITION
+  - VCToolsVersion
+  - WindowsSDKVersion
+  - VSINSTALLDIR
+  - INCLUDE
+  - LIB
+  - LIBPATH
+repositories:
+  molpy: build/ci-partners/molpy
+cache_tools: [cpu-linux, cpu-macos, cxx, cmake, cargo, rustc, blas-linux, blas-macos, ccache, msvc]
+package_cache_tools: [cargo, rustc, msvc]
+tools:
+  uv: [uv, --version]
+  rustc: [rustc, -vV]
+  cargo: [cargo, --version]
+  cmake: [cmake, --version]
+  ctest: [ctest, --version]
+  ninja: [ninja, --version]
+  ccache:
+    os: [Linux, Darwin]
+    run: [ccache, --version]
+  msvc:
+    os: [Windows]
+    run: [powershell, -NoProfile, -Command, '& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products * -property installationVersion']
+  cpu-linux:
+    os: [Linux]
+    run: [bash, -c, "LC_ALL=C lscpu | awk '/^[[:space:]]*(Architecture|Vendor ID|CPU family|Model|Model name|Stepping|Flags):/'"]
+  cpu-macos:
+    os: [Darwin]
+    run: [sysctl, -n, machdep.cpu.brand_string, hw.machine]
+  blas-linux:
+    os: [Linux]
+    run: [pkg-config, --modversion, openblas, fftw3]
+  blas-macos:
+    os: [Darwin]
+    run: [bash, -c, 'PKG_CONFIG_PATH="$(brew --prefix openblas)/lib/pkgconfig:$(brew --prefix fftw)/lib/pkgconfig" pkg-config --modversion openblas fftw3']
+  cxx:
+    os: [Linux, Darwin]
+    environment: CXX
+    run: [c++, --version]
+  nvcc: [nvcc, --version]
+  gpu: [nvidia-smi, '--query-gpu=name,driver_version', '--format=csv,noheader']
+gates:
+  - id: style
+    stage: pre-commit
+    run: >-
+      uv tool run --from pre-commit==4.5.0 pre-commit run
+      --config "$MOLCI_CHECKS_DIR/atomiverse-hooks.yaml" --all-files --show-diff-on-failure
+    inputs: ['**']
+    tools: [uv]
+  - id: workflows
+    stage: pre-commit
+    run: molci:workflows
+    inputs: [.github/**]
+    always: true
+  - id: pins
+    stage: pre-commit
+    run: molci:atomiverse:pins
+    inputs: [python/pyproject.toml, python/uv.lock, .github/partners.env, CMakeLists.txt, python/src/atomiverse/__init__.py, Doxyfile]
+    tools: [uv]
+  - id: partners
+    stage: pre-push
+    run: molci:atomiverse:partners
+    inputs: [.github/partners.env]
+    depends_on: [pins]
+    always: true
+  - id: molpy-wheel
+    stage: pre-push
+    run: molci:atomiverse:molpy-wheel
+    inputs: [python/src/atomiverse/cli/**]
+    depends_on: [partners]
+    repositories: [molpy]
+    tools: [uv, cargo, rustc, msvc]
+    produces: ['*.whl']
+    artifact_directory: MOLCI_WHEEL_DIR
+    artifact_environment: MOLCI_MOLPY_WHEEL
+  - id: package
+    stage: pre-push
+    run: molci:atomiverse:package
+    inputs: [python/**, LICENSE, README.md]
+    depends_on: [molpy-wheel]
+    tools: [uv]
+    produces: ['*.whl', '*.tar.gz']
+    artifact_directory: MOLCI_WHEEL_DIR
+    artifact_environment: MOLCI_ATV_PURE_WHEEL
+    artifact_export: 'atomiverse-*.whl'
+  - id: native-build
+    stage: pre-push
+    run: molci:atomiverse:native-build
+    inputs: [include/**, src/**, cmake/**, CMakeLists.txt, CMakePresets.json, tests/**, examples/**, benchmarks/**, python/**]
+    depends_on: [package]
+    repositories: [molpy]
+    os: [Linux, Darwin]
+    tools: [uv, cmake, ninja, cxx, cargo, rustc, cpu-linux, cpu-macos, blas-linux, blas-macos, ccache]
+    produces: ['*.whl']
+    workspace_artifacts: [build/molci/native/cmake/CMakeCache.txt, build/molci/native/cmake/**/atv_tests]
+    artifact_directory: MOLCI_WHEEL_DIR
+    artifact_environment: MOLCI_ATV_NATIVE_WHEEL
+    artifact_export: 'atomiverse-*.whl'
+  - id: native
+    stage: pre-push
+    run: molci:atomiverse:native
+    inputs: [include/**, src/**, tests/**, cmake/**, CMakeLists.txt]
+    depends_on: [native-build]
+    os: [Linux, Darwin]
+    tools: [uv, ctest]
+  - id: python
+    stage: pre-push
+    run: molci:atomiverse:python
+    inputs: [python/**]
+    depends_on: [native-build]
+    os: [Linux, Darwin]
+    tools: [uv]
+  - id: framework
+    stage: pre-push
+    run: molci:atomiverse:framework
+    inputs: [benchmarks/**, tests/benchmarks/**]
+    depends_on: [package]
+    tools: [uv]
+  - id: docs
+    stage: pre-push
+    run: molci:atomiverse:docs
+    inputs: [docs/**, zensical.toml, Doxyfile]
+    depends_on: [native-build]
+    os: [Linux, Darwin]
+    tools: [uv]
+  - id: hf-build
+    stage: measurement
+    run: molci:atomiverse:hf-build
+    inputs: [include/**, src/**, cmake/**, CMakeLists.txt, benchmarks/**, python/**]
+    depends_on: [package]
+    repositories: [molpy]
+    os: [Linux, Darwin]
+    tools: [uv, cmake, ninja, cxx, cargo, rustc, cpu-linux, cpu-macos, blas-linux, blas-macos, ccache]
+    produces: ['*.whl']
+    workspace_artifacts: [build/molci/hf/cmake/CMakeCache.txt, 'build/molci/hf/cmake/**/_atomiverse*.so']
+    artifact_directory: MOLCI_WHEEL_DIR
+    artifact_environment: MOLCI_ATV_NATIVE_WHEEL
+    artifact_export: 'atomiverse-*.whl'
+  - id: benchmark-hf
+    stage: measurement
+    run: molci:atomiverse:benchmark-hf
+    inputs: [benchmarks/**, tests/benchmarks/**, python/tests/test_hf_bindings.py]
+    depends_on: [hf-build]
+    os: [Linux, Darwin]
+    tools: [uv, cmake]
+    always: true
+  - id: cuda-build
+    stage: measurement
+    run: molci:atomiverse:cuda-build
+    inputs: [include/**, src/**, cmake/**, CMakeLists.txt, tests/**, python/**]
+    depends_on: [package]
+    repositories: [molpy]
+    os: [Linux]
+    arch: [aarch64]
+    tools: [uv, cmake, ninja, cxx, cargo, rustc, nvcc, gpu, cpu-linux, blas-linux, ccache]
+    produces: ['*.whl']
+    workspace_artifacts: [build/molci/cuda/cmake/CMakeCache.txt, build/molci/cuda/cmake/**/atv_tests_cuda]
+    artifact_directory: MOLCI_WHEEL_DIR
+    artifact_environment: MOLCI_ATV_NATIVE_WHEEL
+    artifact_export: 'atomiverse-*.whl'
+  - id: benchmark-report
+    stage: measurement
+    run: molci:atomiverse:benchmark-report
+    inputs: [benchmarks/**]
+    tools: [uv]
+    always: true
+  - id: cuda
+    stage: measurement
+    run: molci:atomiverse:cuda
+    inputs: [include/atomiverse/cuda/**, src/cuda/**, tests/cuda/**]
+    depends_on: [cuda-build]
+    os: [Linux]
+    arch: [aarch64]
+    tools: [uv, ctest, gpu]
+platforms:
+  linux:
+    runner: ubuntu-24.04
+    os: Linux
+    gates: [workflows, native, python]
+  macos:
+    runner: macos-latest
+    os: Darwin
+    gates: [native, python]
+  windows:
+    runner: windows-latest
+    os: Windows
+    gates: [package]
+  native:
+    runner: ubuntu-24.04
+    all_native: true

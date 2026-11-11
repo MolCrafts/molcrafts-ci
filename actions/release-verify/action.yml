@@ -1,6 +1,9 @@
 name: release-verify
 description: Require completed upstream master verification of the exact release commit
 inputs:
+  profile:
+    description: Authoritative project verification profile
+    default: rust-python
   publish:
     description: Context publication permission; false is a dry run
     required: true
@@ -11,4 +14,5 @@ runs:
     - shell: bash
       env:
         PUBLISH: ${{ inputs.publish }}
+        PROFILE: ${{ inputs.profile }}
       run: uv run --no-project --with pyyaml==6.0.3 python "$GITHUB_ACTION_PATH/verify.py"

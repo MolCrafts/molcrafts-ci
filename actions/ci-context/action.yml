@@ -58,6 +58,9 @@ inputs:
     description: GitHub-verified author of the pull request
     default: ${{ github.event.pull_request.user.login }}
 outputs:
+  native-profile:
+    description: Whether the profile declares native and platform verification
+    value: ${{ steps.context.outputs.native-profile }}
   intent:
     description: Execution intent
     value: ${{ steps.context.outputs.intent }}
@@ -106,6 +109,8 @@ outputs:
 runs:
   using: composite
   steps:
+    - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
+      if: inputs.profile != ''
     - id: context
       shell: bash
       env:
