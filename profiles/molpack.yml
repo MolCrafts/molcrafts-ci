@@ -131,13 +131,14 @@ gates:
   run: |
     molci partners check
     "$MOLCI_PYTHON" - <<'PY'
+    import tomllib
     from molcrafts_ci.partners import ROOT, git, load
     source = ROOT.parent / "molpy"
     expected = load()["MOLPY_REF"]
     actual = git("rev-parse", "HEAD", cwd=source, quiet=True).stdout.strip()
     assert actual == expected, f"{source}: expected {expected}, found {actual}; use a matching sibling worktree"
     assert not git("status", "--porcelain", "--untracked-files=no", cwd=source, quiet=True).stdout, f"{source}: uncommitted dependency changes"
-    assert (ROOT / "rust-toolchain.toml").read_bytes() == (source / "rust-toolchain.toml").read_bytes(), "molpack and molpy must use the same Rust toolchain"
+    assert tomllib.loads((ROOT / "rust-toolchain.toml").read_text(encoding="utf-8")) == tomllib.loads((source / "rust-toolchain.toml").read_text(encoding="utf-8")), "molpack and molpy must use the same Rust toolchain"
     PY
   inputs:
   - .github/partners.env
