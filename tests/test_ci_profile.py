@@ -12,7 +12,9 @@ from molcrafts_ci.validation import Runner, profile
 ROOT = Path(__file__).parents[1]
 
 
-@pytest.mark.parametrize("name", ["node", "node-python", "python", "rust-python", "cpp-python"])
+@pytest.mark.parametrize(
+    "name", ["node", "node-python", "python", "rust-python", "cpp-python", "molpack"]
+)
 def test_named_profile_loads_without_schema_switch(tmp_path, name):
     pins = tmp_path / ".github/partners.env"
     pins.parent.mkdir()

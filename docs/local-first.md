@@ -1,9 +1,17 @@
 # Local-first validation
 
-MolCrafts CI owns the `rust-python` and `cpp-python` gate registries and checks.
+MolCrafts CI owns the `rust-python`, `cpp-python` and `molpack` gate registries and checks.
 Consumers supply their source tree, `.github/partners.env`, one
 `.pre-commit-config.yaml` and platform/release workflows. There are no
 consumer-side launchers or CI shell scripts.
+
+The `molpack` profile covers the Rust library/CLI and its Python binding. Its
+Rust gate checks CLI compilation without dev dependencies as well as unit tests,
+doctests and feature combinations. It builds one non-editable molpy wheel and
+one molpack wheel from the same pinned source/compiler, then reuses them for
+Python tests, typing and documentation. Local verification refuses a mismatched
+or dirty sibling checkout rather than moving it. Hooks and hosted lanes use
+this same registry; a fork push does not duplicate upstream PR validation.
 
 The C++/Python profile serves Atomiverse. It calls Atomiverse's existing public
 configuration and wheel-command APIs, builds one wheel per project and verifies
