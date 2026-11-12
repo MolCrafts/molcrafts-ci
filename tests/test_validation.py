@@ -144,6 +144,26 @@ def test_missing_workspace_binary_invalidates_the_producer(repo, config):
     assert (repo / ".git/built-binary").read_text() == "executable"
 
 
+def test_molpack_exports_its_wheel_without_the_venv_marker(repo, config):
+    (repo / ".gitignore").write_text(".venv/\n")
+    pins = repo / ".github/partners.env"
+    pins.write_text(pins.read_text().replace("rust-python", "molpack"))
+    gate = next(g for g in v.profile(repo)["gates"] if g["id"] == "molpy-wheel")
+    gate.update(
+        run=(
+            'printf wheel > "$MOLPY_WHEEL_DIR/molcrafts_molpy-test.whl"; '
+            "mkdir -p python/.venv; printf environment > python/.venv/pyvenv.cfg"
+        ),
+        depends_on=[],
+        tools=[],
+        repositories=[],
+    )
+    config["gates"] = [gate]
+    runner = v.Runner(repo, config)
+    assert runner.execute(runner.select()) == 0
+    assert Path(runner.env["MOLPY_TESTED_WHEEL"]).read_text() == "wheel"
+
+
 def test_native_selection_omits_only_explicitly_unsupported_platforms(repo, config, monkeypatch):
     config["gates"][1]["os"] = ["Windows"]
     monkeypatch.setattr(v.platform, "system", lambda: "Darwin")

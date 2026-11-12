@@ -203,6 +203,8 @@ gates:
   - rustc
 - id: molpy-wheel
   stage: pre-push
+  env:
+    UV_PYTHON: 3.12.12
   run: |
     uv sync --locked --directory python --group dev --group doc --no-install-project --no-install-package molcrafts-molpy
     uv run --no-sync --directory python maturin build --locked --profile dev --manifest-path "$MOLCI_ROOT/../molpy/molpy/Cargo.toml" --out "$MOLPY_WHEEL_DIR"
@@ -222,6 +224,7 @@ gates:
   - '*.whl'
   artifact_directory: MOLPY_WHEEL_DIR
   artifact_environment: MOLPY_TESTED_WHEEL
+  artifact_export: 'molcrafts_molpy-*.whl'
   workspace_artifacts:
   - python/.venv/pyvenv.cfg
 - id: molpack-wheel
