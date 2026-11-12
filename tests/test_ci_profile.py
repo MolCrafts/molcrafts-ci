@@ -12,7 +12,9 @@ from molcrafts_ci.validation import Runner, profile
 ROOT = Path(__file__).parents[1]
 
 
-@pytest.mark.parametrize("name", ["node", "node-python", "python", "rust-python", "cpp-python"])
+@pytest.mark.parametrize(
+    "name", ["node", "node-python", "python", "rust-python", "cpp-python", "molpack"]
+)
 def test_named_profile_loads_without_schema_switch(tmp_path, name):
     pins = tmp_path / ".github/partners.env"
     pins.parent.mkdir()
@@ -54,3 +56,36 @@ def test_native_profile_preserves_all_gate_requirements(tmp_path):
     } <= ids
     assert {"measure-rust", "measure-conformance"}.isdisjoint(ids)
     assert [g["id"] for g in runner.select(lane="native")] == [g["id"] for g in runner.select()]
+
+
+@pytest.mark.parametrize("channel", ["1.99.1", "1.98.0"])
+def test_molpack_toolchain_ignores_checkout_line_endings(tmp_path, monkeypatch, channel):
+    from types import SimpleNamespace
+
+    from molcrafts_ci import partners
+
+    root = tmp_path / "molpack"
+    source = tmp_path / "molpy"
+    (root / ".github").mkdir(parents=True)
+    source.mkdir()
+    (root / ".github/partners.env").write_text("CI_PROFILE=molpack\nCI_REF=" + "a" * 40 + "\n")
+    (root / "rust-toolchain.toml").write_bytes(b'[toolchain]\nchannel = "1.99.1"\n')
+    (source / "rust-toolchain.toml").write_bytes(
+        f'[toolchain]\r\nchannel = "{channel}"\r\n'.encode()
+    )
+    monkeypatch.setattr(partners, "ROOT", root)
+    monkeypatch.setattr(partners, "load", lambda: {"MOLPY_REF": "expected"})
+    monkeypatch.setattr(
+        partners,
+        "git",
+        lambda *args, **kwargs: SimpleNamespace(
+            stdout="expected" if args[0] == "rev-parse" else ""
+        ),
+    )
+    gate = next(g for g in profile(root)["gates"] if g["id"] == "partners")
+    script = gate["run"].split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+    if channel == "1.99.1":
+        exec(script, {})
+    else:
+        with pytest.raises(AssertionError, match="same Rust toolchain"):
+            exec(script, {})

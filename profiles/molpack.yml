@@ -1,0 +1,306 @@
+name: molpack
+repository: MolCrafts/molpack
+global_inputs:
+- .github/**
+- .pre-commit-config.yaml
+- .cargo/**
+- '**/Cargo.toml'
+- Cargo.toml
+- '**/Cargo.lock'
+- Cargo.lock
+- python/pyproject.toml
+- python/uv.lock
+- rust-toolchain.toml
+environment:
+- PATH
+- LANG
+- LC_ALL
+- MACOSX_DEPLOYMENT_TARGET
+- RUSTFLAGS
+- CARGO_ENCODED_RUSTFLAGS
+- CARGO_TARGET_DIR
+- PYO3_PYTHON
+- SDKROOT
+- CC
+- CFLAGS
+- LDFLAGS
+- VCToolsVersion
+- WindowsSDKVersion
+- INCLUDE
+- LIB
+repositories:
+  molpy: ../molpy
+tools:
+  cargo:
+  - cargo
+  - --version
+  rustc:
+  - rustc
+  - -vV
+  rustfmt:
+  - rustfmt
+  - --version
+  clippy-driver:
+  - clippy-driver
+  - --version
+  uv:
+  - uv
+  - --version
+  python:
+  - uv
+  - run
+  - --no-project
+  - --python
+  - 3.12.12
+  - python
+  - --version
+gates:
+- id: workflows
+  stage: pre-commit
+  run: molci:workflows
+  inputs:
+  - .github/**
+  always: true
+- id: fmt
+  stage: pre-commit
+  run: cargo fmt -- --check && cargo fmt --manifest-path python/Cargo.toml -- --check
+  inputs:
+  - '**/*.rs'
+  tools:
+  - cargo
+  - rustc
+  - rustfmt
+- id: ruff
+  stage: pre-commit
+  run: uvx ruff@0.16.0 check --config python/pyproject.toml python/python python/tests python/examples
+    && uvx ruff@0.16.0 format --check --config python/pyproject.toml python/python python/tests python/examples
+  inputs:
+  - '**/*.py'
+  - '**/*.pyi'
+  tools:
+  - uv
+  - python
+- id: hygiene
+  stage: pre-commit
+  run: |
+    if git grep -nI '[[:blank:]]$'; then
+      echo "trailing whitespace" >&2
+      exit 1
+    fi
+
+    "$MOLCI_PYTHON" -c 'import textwrap,sys; exec(textwrap.dedent(sys.stdin.read()))' <<'PY'
+    import pathlib
+    import re
+    import subprocess
+    import sys
+
+    ignored = re.compile(r"```[a-z,_]*ignore|#\[ignore")
+    roots = ("src", "docs", "examples", "python/src")
+    bad = []
+    for root in roots:
+        for path in pathlib.Path(root).rglob("*"):
+            if path.suffix not in {".rs", ".md"} or not path.is_file():
+                continue
+            if ignored.search(path.read_text(encoding="utf-8", errors="replace")):
+                bad.append(str(path))
+    tracked = set(subprocess.check_output(["git", "ls-files", "-z"]).split(b"\0"))
+    missing_nl = []
+    for raw in tracked:
+        if not raw:
+            continue
+        path = pathlib.Path(raw.decode())
+        if not path.is_file() or path.stat().st_size == 0:
+            continue
+        data = path.read_bytes()
+        if b"\0" in data or data.endswith(b"\n"):
+            continue
+        missing_nl.append(str(path))
+    if bad or missing_nl:
+        if bad:
+            print("ignored test:\n" + "\n".join(bad))
+        if missing_nl:
+            print("missing final newline:\n" + "\n".join(missing_nl))
+        sys.exit(1)
+    PY
+  inputs:
+  - '**'
+  tools:
+  - python
+- id: partners
+  stage: pre-push
+  run: |
+    molci partners check
+    "$MOLCI_PYTHON" - <<'PY'
+    import tomllib
+    from molcrafts_ci.partners import ROOT, git, load
+    source = ROOT.parent / "molpy"
+    expected = load()["MOLPY_REF"]
+    actual = git("rev-parse", "HEAD", cwd=source, quiet=True).stdout.strip()
+    assert actual == expected, f"{source}: expected {expected}, found {actual}; use a matching sibling worktree"
+    assert not git("status", "--porcelain", "--untracked-files=no", cwd=source, quiet=True).stdout, f"{source}: uncommitted dependency changes"
+    assert tomllib.loads((ROOT / "rust-toolchain.toml").read_text(encoding="utf-8")) == tomllib.loads((source / "rust-toolchain.toml").read_text(encoding="utf-8")), "molpack and molpy must use the same Rust toolchain"
+    PY
+  inputs:
+  - .github/partners.env
+  tools:
+  - uv
+  - python
+  always: true
+- id: locks
+  stage: pre-push
+  run: |
+    cargo metadata --locked --format-version 1 > /dev/null
+    cargo metadata --locked --format-version 1 --manifest-path python/Cargo.toml > /dev/null
+    uv lock --check --directory python
+  inputs:
+  - Cargo.toml
+  - Cargo.lock
+  - python/Cargo.toml
+  - python/Cargo.lock
+  - python/pyproject.toml
+  - python/uv.lock
+  depends_on:
+  - partners
+  repositories:
+  - molpy
+  tools:
+  - cargo
+  - rustc
+  - uv
+  - python
+- id: clippy
+  stage: pre-push
+  run: cargo clippy --locked --all-targets --all-features -- -D warnings
+  inputs:
+  - src/**
+  - examples/**
+  depends_on:
+  - partners
+  repositories:
+  - molpy
+  tools:
+  - cargo
+  - rustc
+  - clippy-driver
+- id: rust
+  stage: pre-push
+  run: |
+    cargo test --locked --lib --features cli
+    cargo test --locked --doc --features cli
+    cargo check --locked --all-targets --features cli
+    cargo check --locked --lib --features cli
+    cargo check --locked --no-default-features
+    cargo check --locked --features rayon
+  inputs:
+  - src/**
+  - examples/**
+  - docs/**
+  depends_on:
+  - partners
+  repositories:
+  - molpy
+  tools:
+  - cargo
+  - rustc
+- id: molpy-wheel
+  stage: pre-push
+  env:
+    UV_PYTHON: 3.12.12
+  run: |
+    uv sync --locked --directory python --group dev --group doc --no-install-project --no-install-package molcrafts-molpy
+    uv run --no-sync --directory python maturin build --locked --profile dev --manifest-path "$MOLCI_ROOT/../molpy/molpy/Cargo.toml" --out "$MOLPY_WHEEL_DIR"
+  inputs:
+  - python/pyproject.toml
+  - python/uv.lock
+  depends_on:
+  - locks
+  repositories:
+  - molpy
+  tools:
+  - cargo
+  - rustc
+  - uv
+  - python
+  produces:
+  - '*.whl'
+  artifact_directory: MOLPY_WHEEL_DIR
+  artifact_environment: MOLPY_TESTED_WHEEL
+  artifact_export: 'molcrafts_molpy-*.whl'
+  workspace_artifacts:
+  - python/.venv/pyvenv.cfg
+- id: molpack-wheel
+  stage: pre-push
+  run: uv run --no-sync --directory python maturin build --locked --profile dev --out "$MOLPACK_WHEEL_DIR"
+  inputs:
+  - src/**
+  - python/src/**
+  - python/python/**
+  - README.md
+  - python/README.md
+  depends_on:
+  - molpy-wheel
+  repositories:
+  - molpy
+  tools:
+  - cargo
+  - rustc
+  - uv
+  - python
+  produces:
+  - '*.whl'
+  artifact_directory: MOLPACK_WHEEL_DIR
+  artifact_environment: MOLPACK_TESTED_WHEEL
+- id: python
+  stage: pre-push
+  run: |
+    interpreter=$(uv run --no-sync --directory python python -c 'import sys; print(sys.executable)')
+    uv pip install --python "$interpreter" --no-deps --force-reinstall "$MOLPY_TESTED_WHEEL" "$MOLPACK_TESTED_WHEEL"
+    uv run --no-sync --directory python python -I -c 'import molpy, molpack; assert "site-packages" in molpy.__file__ and "site-packages" in molpack.__file__'
+    PYTHONWARNDEFAULTENCODING=1 uv run --no-sync --directory python pytest -q
+  inputs:
+  - python/tests/**
+  - python/examples/**
+  depends_on:
+  - molpack-wheel
+  tools:
+  - uv
+  - python
+- id: types
+  stage: pre-push
+  run: uv run --no-sync --directory python ty check python tests examples
+  inputs:
+  - python/**
+  depends_on:
+  - python
+  tools:
+  - uv
+  - python
+- id: docs
+  stage: pre-push
+  run: uv run --no-sync --directory python zensical build --clean --strict -f ../zensical.toml
+  inputs:
+  - docs/**
+  - zensical.toml
+  depends_on:
+  - python
+  tools:
+  - uv
+  - python
+platforms:
+  native:
+    runner: ubuntu-latest
+    all_native: true
+  linux:
+    runner: ubuntu-latest
+    all_native: true
+    os: Linux
+  macos:
+    runner: macos-latest
+    gates:
+    - python
+    os: Darwin
+  windows:
+    runner: windows-latest
+    gates:
+    - python
+    os: Windows
